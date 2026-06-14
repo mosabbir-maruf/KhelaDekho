@@ -449,24 +449,12 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
         onMouseMove={handleMouseMove}
         onMouseLeave={() => videoRef.current && !videoRef.current.paused && setShowControls(false)}
         className="relative aspect-video w-full bg-[#030303] overflow-hidden border border-border-alt group cursor-default select-none shadow-2xl"
-        style={{
-          transform: "translate3d(0, 0, 0)",
-          willChange: "transform",
-          WebkitBackfaceVisibility: "hidden",
-          backfaceVisibility: "hidden",
-        }}
       >
         <video
           ref={videoRef}
           onClick={togglePlay}
           className="w-full h-full object-contain cursor-pointer"
           playsInline
-          style={{
-            transform: "translate3d(0, 0, 0)",
-            willChange: "transform",
-            WebkitBackfaceVisibility: "hidden",
-            backfaceVisibility: "hidden",
-          }}
         />
 
         {/* Loading Spinner / Error */}
