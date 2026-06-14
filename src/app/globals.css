@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --color-page: #fafafa;
+  --color-card: #ffffff;
+  --color-input: #f5f5f5;
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border-alt: rgba(0, 0, 0, 0.1);
+  --color-hover: rgba(0, 0, 0, 0.03);
+  --color-hover-alt: rgba(0, 0, 0, 0.05);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-fg: #09090b;
+  --color-fg-muted: #525252;
+  --color-fg-dim: #a1a1aa;
+  --color-fg-faint: #71717a;
+}
+
+.dark {
+  --color-page: #09090b;
+  --color-card: #0d0d10;
+  --color-input: #111115;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-alt: rgba(255, 255, 255, 0.12);
+  --color-hover: rgba(255, 255, 255, 0.04);
+  --color-hover-alt: rgba(255, 255, 255, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.7);
+  --color-fg: #fafafa;
+  --color-fg-muted: #a1a1aa;
+  --color-fg-dim: #71717a;
+  --color-fg-faint: #52525b;
+}
+
+@theme inline {
+  --color-page: var(--color-page);
+  --color-card: var(--color-card);
+  --color-input: var(--color-input);
+  --color-border: var(--color-border);
+  --color-border-alt: var(--color-border-alt);
+  --color-hover: var(--color-hover);
+  --color-hover-alt: var(--color-hover-alt);
+  --color-overlay: var(--color-overlay);
+  --color-fg: var(--color-fg);
+  --color-fg-muted: var(--color-fg-muted);
+  --color-fg-dim: var(--color-fg-dim);
+  --color-fg-faint: var(--color-fg-faint);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+*,
+*::before,
+*::after {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.15s ease;
+}
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background-color: var(--color-page);
+  color: var(--color-fg);
+}
+
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-red::-webkit-scrollbar {
+  display: block;
+  width: 1px;
+  height: 1px;
+}
+
+.scrollbar-red::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-red::-webkit-scrollbar-thumb {
+  background: rgb(239 68 68 / 0.25);
+  border-radius: 0.5px;
+}
+
+.scrollbar-red::-webkit-scrollbar-thumb:hover {
+  background: rgb(239 68 68 / 0.4);
+}
+
+.scrollbar-red {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(239 68 68 / 0.25) transparent;
+}
+
+/* Override aspect-ratio natively when entering browser fullscreen to prevent layout thrashing and space aborts */
+:fullscreen,
+:-webkit-full-screen,
+:-moz-full-screen,
+:-ms-fullscreen {
+  aspect-ratio: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Fullscreen Icon Toggling */
+.fullscreen-minimize-icon {
+  display: none !important;
+}
+.fullscreen-maximize-icon {
+  display: block !important;
+}
+
+:fullscreen .fullscreen-minimize-icon {
+  display: block !important;
+}
+:fullscreen .fullscreen-maximize-icon {
+  display: none !important;
+}
+
+:-webkit-full-screen .fullscreen-minimize-icon {
+  display: block !important;
+}
+:-webkit-full-screen .fullscreen-maximize-icon {
+  display: none !important;
+}
+
+:-moz-full-screen .fullscreen-minimize-icon {
+  display: block !important;
+}
+:-moz-full-screen .fullscreen-maximize-icon {
+  display: none !important;
+}
+
+:-ms-fullscreen .fullscreen-minimize-icon {
+  display: block !important;
+}
+:-ms-fullscreen .fullscreen-maximize-icon {
+  display: none !important;
+}
