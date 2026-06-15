@@ -62,11 +62,27 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
       return a.index - b.index;
     });
   }, [fallbackSources, isApple]);
+
+  // Pick the best initial source during render (no double-init)
+  const bestSource = useMemo(() => {
+    if (isApple && sortedSources && sortedSources.length > 0) {
+      return { url: sortedSources[0].url, type: sortedSources[0].type };
+    }
+    return null;
+  }, [isApple, sortedSources]);
+
+  // Reset fallback when channel changes so bestSource takes effect
+  useEffect(() => {
+    setFallbackUrl(null);
+    setFallbackType(null);
+    failedSourceIndex.current = 0;
+  }, [streamUrl]);
+
   const fallbackSourcesRef = useRef(sortedSources);
   fallbackSourcesRef.current = sortedSources;
 
-  const effectiveUrl = fallbackUrl || streamUrl;
-  const effectiveType = fallbackType || streamType;
+  const effectiveUrl = fallbackUrl || bestSource?.url || streamUrl;
+  const effectiveType = fallbackType || bestSource?.type || streamType;
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastMouseMoveRef = useRef<number>(0);
 
