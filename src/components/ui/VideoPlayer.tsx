@@ -27,7 +27,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [showControls, setShowControls] = useState(true);
@@ -155,6 +155,15 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [resetControlsTimeout]);
+
+  // Auto-play when video loads
+  useEffect(() => {
+    if (isLoading || playerError) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.play().catch(() => {});
+  }, [isLoading, playerError]);
 
   // Stringify clearKeys to prevent unnecessary useEffect cleanups due to object identity changes
   const clearKeysStr = clearKeys ? JSON.stringify(clearKeys) : "";
@@ -536,6 +545,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           onClick={togglePlay}
           className="w-full h-full object-contain cursor-pointer"
           playsInline
+          autoPlay
+          muted
         />
 
         {/* Loading Spinner / Error */}
