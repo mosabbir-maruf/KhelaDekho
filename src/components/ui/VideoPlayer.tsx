@@ -13,7 +13,7 @@ import Tv from "lucide-react/dist/esm/icons/tv";
 import Minimize from "lucide-react/dist/esm/icons/minimize";
 import type Hls from "hls.js";
 import { useDevicePlatform } from "@/hooks/useDevicePlatform";
-import { getFallbackSource, sortSourcesIOSFirst } from "@/lib/streamSelector";
+import { getFallbackSource } from "@/lib/streamSelector";
 import type { StreamSource } from "@/lib/api";
 
 interface VideoPlayerProps {
@@ -48,18 +48,26 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [fallbackType, setFallbackType] = useState<string | null>(null);
   const failedSourceIndex = useRef(0);
+  const streamUrlFallbackDone = useRef(false);
 
   const devicePlatform = useDevicePlatform();
   const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
 
+  // On Apple devices, sort sources so iOS servers are tried before standard sources
   const sortedSources = useMemo(() => {
     if (!fallbackSources || fallbackSources.length === 0) return undefined;
     if (!isApple) return fallbackSources;
-    return sortSourcesIOSFirst(fallbackSources);
+    return [...fallbackSources].sort((a, b) => {
+      const aIsIOS = a.name ? /^iOS\s*-/i.test(a.name.trim()) : false;
+      const bIsIOS = b.name ? /^iOS\s*-/i.test(b.name.trim()) : false;
+      if (aIsIOS !== bIsIOS) return aIsIOS ? -1 : 1;
+      return a.index - b.index;
+    });
   }, [fallbackSources, isApple]);
 
+  // Pick the best initial source during render (no double-init)
   const bestSource = useMemo(() => {
-    if (isApple && sortedSources?.length) {
+    if (isApple && sortedSources && sortedSources.length > 0) {
       return { url: sortedSources[0].url, type: sortedSources[0].type };
     }
     return null;
@@ -70,6 +78,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
     setFallbackUrl(null);
     setFallbackType(null);
     failedSourceIndex.current = 0;
+    streamUrlFallbackDone.current = false;
   }, [streamUrl]);
 
   const fallbackSourcesRef = useRef(sortedSources);
@@ -192,6 +201,13 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           return true;
         }
       }
+      // On Apple devices, try original streamUrl (DASH) as final fallback
+      if (bestSource && !streamUrlFallbackDone.current) {
+        streamUrlFallbackDone.current = true;
+        setFallbackUrl(streamUrl);
+        setFallbackType(streamType);
+        return true;
+      }
       return false;
     };
 
@@ -207,7 +223,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
 
           if (!shaka.Player.isBrowserSupported()) {
             console.error("Browser not supported for Shaka Player");
-            setPlayerError("Stream format not supported on this browser.");
+            video.src = effectiveUrl;
             setIsLoading(false);
             return;
           }
@@ -276,10 +292,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           setLevels(qualityList);
         } catch (err) {
           console.error("Shaka player initialization failed:", err);
-          if (!tryFallback()) {
-            setPlayerError("Stream failed to load — the feed may be unavailable.");
-            setIsLoading(false);
-          }
+          if (!tryFallback()) setIsLoading(false);
         }
       } else {
         try {
@@ -323,7 +336,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
                       break;
                     default:
                       console.error("Fatal HLS error, cannot recover");
-                      setPlayerError("Stream failed to load — the feed may be unavailable.");
                       cleanupPlayers();
                       break;
                   }
@@ -335,10 +347,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
             nativeErrorHandler = () => {
               if (video) video.removeEventListener("error", nativeErrorHandler!);
               nativeErrorHandler = null;
-              if (!tryFallback()) {
-                setPlayerError("Stream failed to load — the feed may be unavailable.");
-                setIsLoading(false);
-              }
+              if (!tryFallback()) setIsLoading(false);
             };
             video.addEventListener("error", nativeErrorHandler);
           } else {
@@ -347,10 +356,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           }
         } catch (err) {
           console.error("Failed to load hls.js dynamically:", err);
-          if (!tryFallback()) {
-            setPlayerError("Stream failed to load — the feed may be unavailable.");
-            setIsLoading(false);
-          }
+          if (!tryFallback()) setIsLoading(false);
         }
       }
     };
