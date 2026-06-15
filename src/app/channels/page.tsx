@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { ChannelInfo, StreamResponse, getChannels } from "@/lib/api";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -26,6 +27,9 @@ export default function ChannelsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
 
+  const devicePlatform = useDevicePlatform();
+  const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
+
   useEffect(() => {
     const loadChannels = async () => {
       setLoading(true);
@@ -33,7 +37,16 @@ export default function ChannelsPage() {
         const result = await getChannels();
         const chs = result?.channels || [];
         setChannels(chs);
-        if (chs.length > 0) setSelectedChannel(chs[0]);
+        if (chs.length > 0) {
+          if (isApple) {
+            const iosCh = chs.find(
+              (c) => c.source_types.includes("hls") && /^ios/i.test(c.name.trim())
+            );
+            setSelectedChannel(iosCh || chs[0]);
+          } else {
+            setSelectedChannel(chs[0]);
+          }
+        }
       } catch (err) {
         console.error("Failed to load channels:", err);
       } finally {
