@@ -13,7 +13,7 @@ import Tv from "lucide-react/dist/esm/icons/tv";
 import Minimize from "lucide-react/dist/esm/icons/minimize";
 import type Hls from "hls.js";
 import { useDevicePlatform } from "@/hooks/useDevicePlatform";
-import { getFallbackSource, sortSourcesIOSFirst, isiOSServer } from "@/lib/streamSelector";
+import { getFallbackSource, sortSourcesIOSFirst } from "@/lib/streamSelector";
 import type { StreamSource } from "@/lib/api";
 
 interface VideoPlayerProps {
@@ -59,7 +59,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   }, [fallbackSources, isApple]);
 
   const bestSource = useMemo(() => {
-    if (isApple && sortedSources?.length && isiOSServer(sortedSources[0])) {
+    if (isApple && sortedSources?.length) {
       return { url: sortedSources[0].url, type: sortedSources[0].type };
     }
     return null;
