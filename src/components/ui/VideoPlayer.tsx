@@ -308,68 +308,72 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           if (!tryFallback()) setIsLoading(false);
         }
       } else {
-        try {
-          const HlsClass = (await import("hls.js")).default;
-          if (HlsClass.isSupported()) {
-            const hls = new HlsClass({
-              enableWorker: true,
-              lowLatencyMode: true,
-              maxBufferLength: 15,
-              maxMaxBufferLength: 30,
-              backBufferLength: 10,
-              capLevelToPlayerSize: false,
-              autoStartLoad: true,
-            });
-            hlsPlayerRef.current = hls;
-            hls.loadSource(effectiveUrl);
-            hls.attachMedia(video);
+        if (isApple && video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = effectiveUrl;
+          const onLoaded = () => setIsLoading(false);
+          video.addEventListener("loadedmetadata", onLoaded);
+          nativeErrorHandler = () => {
+            video.removeEventListener("loadedmetadata", onLoaded);
+            if (video) video.removeEventListener("error", nativeErrorHandler!);
+            nativeErrorHandler = null;
+            if (!tryFallback()) setIsLoading(false);
+          };
+          video.addEventListener("error", nativeErrorHandler);
+        } else {
+          try {
+            const HlsClass = (await import("hls.js")).default;
+            if (HlsClass.isSupported()) {
+              const hls = new HlsClass({
+                enableWorker: true,
+                lowLatencyMode: true,
+                maxBufferLength: 15,
+                maxMaxBufferLength: 30,
+                backBufferLength: 10,
+                capLevelToPlayerSize: false,
+                autoStartLoad: true,
+              });
+              hlsPlayerRef.current = hls;
+              hls.loadSource(effectiveUrl);
+              hls.attachMedia(video);
 
-            hls.on(HlsClass.Events.MANIFEST_PARSED, (_, data) => {
-              setIsLoading(false);
-              const qualityList = data.levels.map((level, idx) => ({
-                id: idx,
-                name: level.height ? `${level.height}p` : `Level ${idx}`,
-              })).sort((a, b) => b.id - a.id);
+              hls.on(HlsClass.Events.MANIFEST_PARSED, (_, data) => {
+                setIsLoading(false);
+                const qualityList = data.levels.map((level, idx) => ({
+                  id: idx,
+                  name: level.height ? `${level.height}p` : `Level ${idx}`,
+                })).sort((a, b) => b.id - a.id);
+                setLevels(qualityList);
+              });
 
-              setLevels(qualityList);
-            });
-
-            hls.on(HlsClass.Events.ERROR, (_, data) => {
-              if (data.fatal) {
-                const recovered = tryFallback();
-                if (!recovered) {
-                  switch (data.type) {
-                    case HlsClass.ErrorTypes.NETWORK_ERROR:
-                      console.error("HLS Network error, trying to recover...");
-                      hls.startLoad();
-                      break;
-                    case HlsClass.ErrorTypes.MEDIA_ERROR:
-                      console.error("HLS Media error, trying to recover...");
-                      hls.recoverMediaError();
-                      break;
-                    default:
-                      console.error("Fatal HLS error, cannot recover");
-                      cleanupPlayers();
-                      break;
+              hls.on(HlsClass.Events.ERROR, (_, data) => {
+                if (data.fatal) {
+                  const recovered = tryFallback();
+                  if (!recovered) {
+                    switch (data.type) {
+                      case HlsClass.ErrorTypes.NETWORK_ERROR:
+                        console.error("HLS Network error, trying to recover...");
+                        hls.startLoad();
+                        break;
+                      case HlsClass.ErrorTypes.MEDIA_ERROR:
+                        console.error("HLS Media error, trying to recover...");
+                        hls.recoverMediaError();
+                        break;
+                      default:
+                        console.error("Fatal HLS error, cannot recover");
+                        cleanupPlayers();
+                        break;
+                    }
                   }
                 }
-              }
-            });
-          } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = effectiveUrl;
-            nativeErrorHandler = () => {
-              if (video) video.removeEventListener("error", nativeErrorHandler!);
-              nativeErrorHandler = null;
-              if (!tryFallback()) setIsLoading(false);
-            };
-            video.addEventListener("error", nativeErrorHandler);
-          } else {
-            console.error("HLS not supported in this browser");
-            setIsLoading(false);
+              });
+            } else {
+              console.error("HLS not supported in this browser");
+              setIsLoading(false);
+            }
+          } catch (err) {
+            console.error("Failed to load hls.js dynamically:", err);
+            if (!tryFallback()) setIsLoading(false);
           }
-        } catch (err) {
-          console.error("Failed to load hls.js dynamically:", err);
-          if (!tryFallback()) setIsLoading(false);
         }
       }
     };
