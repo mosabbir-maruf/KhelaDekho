@@ -5,4 +5,4 @@ compatibility_date = "2026-04-16"
 pages_build_output_dir = ".vercel/output/static"
 
 [vars]
-NEXT_PUBLIC_GA_MEASUREMENT_ID = "G-XXXXXXXXXX"
+NEXT_PUBLIC_GA_MEASUREMENT_ID = "G-RF383CBPS9"
