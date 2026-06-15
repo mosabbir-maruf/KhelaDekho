@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
         "X-Signature-Timestamp": timestamp,
         Accept: "application/json",
       },
-      next: { revalidate: 10 },
     });
 
     if (!res.ok) {

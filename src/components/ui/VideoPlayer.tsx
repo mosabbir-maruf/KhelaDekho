@@ -21,9 +21,10 @@ interface VideoPlayerProps {
   streamType: string;
   clearKeys?: Record<string, string> | null;
   fallbackSources?: StreamSource[];
+  onError?: () => void;
 }
 
-export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources }: VideoPlayerProps) {
+export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources, onError }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -210,13 +211,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           return true;
         }
       }
-      // On Apple devices, try original streamUrl (DASH) as final fallback
-      if (bestSource && !streamUrlFallbackDone.current) {
-        streamUrlFallbackDone.current = true;
-        setFallbackUrl(streamUrl);
-        setFallbackType(streamType);
-        return true;
-      }
+      if (onError) onError();
       return false;
     };
 

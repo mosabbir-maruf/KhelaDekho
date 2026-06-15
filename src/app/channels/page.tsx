@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { ChannelInfo, StreamResponse, getChannels } from "@/lib/api";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
@@ -33,70 +33,79 @@ export default function ChannelsPage() {
   const isApple = devicePlatform !== "unknown"
     && (devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos");
 
-  useEffect(() => {
-    const loadChannels = async () => {
-      setLoading(true);
-      try {
-        const result = await getChannels();
-        const chs = result?.channels || [];
-        setChannels(chs);
-      } catch (err) {
-        console.error("Failed to load channels:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadChannels();
+  const fetchStream = useCallback(async (channelKey: string, signal: AbortSignal) => {
+    const res = await fetch(`/api/stream?key=${encodeURIComponent(channelKey)}`, { signal });
+    if (!res.ok) throw new Error(`Stream fetch failed: ${res.status}`);
+    return res.json() as Promise<StreamResponse>;
   }, []);
 
   useEffect(() => {
-    if (channels.length === 0 || devicePlatform === "unknown" || autoSelectedRef.current) return;
-    if (isApple) {
-      const iosCh = channels.find(
-        (c) => c.source_types.includes("hls") && /^ios/i.test(c.name.trim())
-      );
-      setSelectedChannel(iosCh || channels[0]);
-    } else {
-      setSelectedChannel(channels[0]);
-    }
-    autoSelectedRef.current = true;
-  }, [channels, devicePlatform, isApple]);
+    let active = true;
+    const controller = new AbortController();
+
+    (async () => {
+      setLoading(true);
+      try {
+        const result = await getChannels({}, { signal: controller.signal });
+        if (!active) return;
+        const chs = result?.channels || [];
+        setChannels(chs);
+        setLoading(false);
+
+        if (chs.length > 0) {
+          const iosCh = isApple
+            ? chs.find((c) => c.source_types.includes("hls") && /^ios/i.test(c.name.trim()))
+            : null;
+          const initial = iosCh || chs[0];
+          autoSelectedRef.current = true;
+          setSelectedChannel(initial);
+
+          setStreamLoading(true);
+          try {
+            const data = await fetchStream(initial.key, controller.signal);
+            if (active) setStreamData(data);
+          } catch {
+            if (active) setStreamData(null);
+          } finally {
+            if (active) setStreamLoading(false);
+          }
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        console.error("Failed to load channels:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+
+    return () => { active = false; controller.abort(); };
+  }, [devicePlatform, isApple, fetchStream]);
 
   useEffect(() => {
     if (!selectedChannel) return;
+    if (autoSelectedRef.current) {
+      autoSelectedRef.current = false;
+      return;
+    }
 
     let active = true;
     const controller = new AbortController();
 
-    const loadStream = async () => {
+    (async () => {
       setStreamLoading(true);
       setStreamData(null);
       try {
-        const res = await fetch(`/api/stream?key=${encodeURIComponent(selectedChannel.key)}`, {
-          signal: controller.signal,
-        });
-        if (res.ok && active) {
-          const data: StreamResponse = await res.json();
-          setStreamData(data);
-        }
-      } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") {
-          return;
-        }
-        console.error("Failed to load stream:", err);
+        const data = await fetchStream(selectedChannel.key, controller.signal);
+        if (active) setStreamData(data);
+      } catch {
+        if (active) setStreamData(null);
       } finally {
-        if (active) {
-          setStreamLoading(false);
-        }
+        if (active) setStreamLoading(false);
       }
-    };
-    loadStream();
+    })();
 
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [selectedChannel]);
+    return () => { active = false; controller.abort(); };
+  }, [selectedChannel, fetchStream]);
 
   const filteredChannels = useMemo(() => {
     const filtered = channels.filter((ch) => {
@@ -114,6 +123,18 @@ export default function ChannelsPage() {
   }, [channels, searchQuery, isApple]);
 
   const liveCount = channels.filter((c) => c.live_viewers > 0).length;
+
+  const handleStreamError = useCallback(() => {
+    const idx = channels.findIndex((c) => c.key === selectedChannel?.key);
+    if (idx === -1) return;
+    for (let i = 1; i < channels.length; i++) {
+      const next = channels[(idx + i) % channels.length];
+      if (next.key !== selectedChannel?.key) {
+        setSelectedChannel(next);
+        return;
+      }
+    }
+  }, [channels, selectedChannel]);
 
   return (
     <div className="min-h-screen">
@@ -270,6 +291,7 @@ export default function ChannelsPage() {
                       streamType={streamData.type}
                       clearKeys={streamData.clearkey?.keys || null}
                       fallbackSources={streamData.sources || undefined}
+                      onError={handleStreamError}
                     />
                   ) : (
                     <div className="border border-red-500/10 bg-red-500/[0.02] p-12 text-center">
