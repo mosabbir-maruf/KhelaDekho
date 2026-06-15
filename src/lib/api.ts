@@ -38,11 +38,13 @@ interface PlatformStats {
   fetched_at: string;
 }
 
-interface StreamSource {
+export interface StreamSource {
   index: number;
   url: string;
   type: string;
   is_primary: boolean;
+  name?: string;
+  platform?: string;
 }
 
 interface ClearKeyData {
@@ -99,7 +101,6 @@ async function fetchAPI<T>(path: string, options: RequestInit = {}): Promise<T |
       ...options,
       headers: {
         Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
         ...options.headers,
       },
       next: { revalidate: 10 },

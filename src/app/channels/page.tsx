@@ -243,6 +243,7 @@ export default function ChannelsPage() {
                       streamUrl={streamData.url}
                       streamType={streamData.type}
                       clearKeys={streamData.clearkey?.keys || null}
+                      fallbackSources={streamData.sources || undefined}
                     />
                   ) : (
                     <div className="border border-red-500/10 bg-red-500/[0.02] p-12 text-center">

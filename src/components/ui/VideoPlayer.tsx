@@ -12,14 +12,17 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Minimize from "lucide-react/dist/esm/icons/minimize";
 import type Hls from "hls.js";
+import { getFallbackSource } from "@/lib/streamSelector";
+import type { StreamSource } from "@/lib/api";
 
 interface VideoPlayerProps {
   streamUrl: string;
   streamType: string;
   clearKeys?: Record<string, string> | null;
+  fallbackSources?: StreamSource[];
 }
 
-export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerProps) {
+export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -39,6 +42,16 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shakaPlayerRef = useRef<any>(null);
   const hlsPlayerRef = useRef<Hls | null>(null);
+
+  // Fallback state
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
+  const [fallbackType, setFallbackType] = useState<string | null>(null);
+  const failedSourceIndex = useRef(0);
+  const fallbackSourcesRef = useRef(fallbackSources);
+  fallbackSourcesRef.current = fallbackSources;
+
+  const effectiveUrl = fallbackUrl || streamUrl;
+  const effectiveType = fallbackType || streamType;
 
   // Auto-hide controls timer
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -116,7 +129,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !streamUrl) return;
+    if (!video || !effectiveUrl) return;
 
     setIsLoading(true);
     setIsPlaying(false);
@@ -124,7 +137,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
     setCurrentLevel(-1);
     setPlayerError(null);
 
-    // Clean up function for previous stream
     const cleanupPlayers = async () => {
       if (shakaPlayerRef.current) {
         try {
@@ -140,11 +152,21 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
       }
     };
 
+    const tryFallback = () => {
+      const sources = fallbackSourcesRef.current;
+      if (!sources || sources.length === 0) return false;
+      const next = getFallbackSource(sources, failedSourceIndex.current);
+      if (!next) return false;
+      failedSourceIndex.current = next.index;
+      setFallbackUrl(next.url);
+      setFallbackType(next.type);
+      return true;
+    };
+
     const initStream = async () => {
       await cleanupPlayers();
 
-      // Check stream type
-      const isDash = streamType === "dash" || streamUrl.includes(".mpd");
+      const isDash = effectiveType === "dash" || effectiveUrl.includes(".mpd");
 
       if (isDash) {
         try {
@@ -153,7 +175,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
 
           if (!shaka.Player.isBrowserSupported()) {
             console.error("Browser not supported for Shaka Player");
-            video.src = streamUrl;
+            video.src = effectiveUrl;
             setIsLoading(false);
             return;
           }
@@ -162,20 +184,18 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
           shakaPlayerRef.current = player;
           await player.attach(video);
 
-          // Configure for performance and ABR size restrictions
           player.configure({
             streaming: {
-              bufferingGoal: 15,       // Raised buffer limit to absorb layout changes
-              rebufferingGoal: 3,      // Rebuffer when buffer falls below 3s
-              bufferBehind: 10,        // Clear played buffer segments after 10s to save memory
+              bufferingGoal: 15,
+              rebufferingGoal: 3,
+              bufferBehind: 10,
             },
             abr: {
               enabled: true,
-              restrictToElementSize: false, // Disabled to prevent ABR quality switch stalls
+              restrictToElementSize: false,
             }
           });
 
-          // Configure ClearKey DRM if keys exist
           const keysObj = clearKeysStr ? JSON.parse(clearKeysStr) : null;
           if (keysObj && Object.keys(keysObj).length > 0) {
             player.configure({
@@ -190,19 +210,24 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
             const err = customEvent.detail as { code?: number; category?: string; severity?: string };
             console.error("Shaka Player Error:", err || event);
             setIsLoading(false);
+
+            const isFatal = !err || !err.code || err.code === 4032 || (err.code !== 4010);
+            if (isFatal && tryFallback()) return;
+
             if (!err || !err.code) {
               setPlayerError("Stream failed to load — the feed may be unavailable.");
-              return;
+            } else if (err.code === 4032) {
+              setPlayerError("Stream manifest not found — the feed may have expired.");
+            } else if (err.code === 4010) {
+              setPlayerError("Failed to decrypt stream — invalid DRM keys.");
+            } else {
+              setPlayerError(`Stream error (code ${err.code}).`);
             }
-            if (err.code === 4032) setPlayerError("Stream manifest not found — the feed may have expired.");
-            else if (err.code === 4010) setPlayerError("Failed to decrypt stream — invalid DRM keys.");
-            else setPlayerError(`Stream error (code ${err.code}).`);
           });
 
-          await player.load(streamUrl);
+          await player.load(effectiveUrl);
           setIsLoading(false);
 
-          // Set up quality tracks
           const tracks = player.getVariantTracks();
           const uniqueQualities = new Map<number, string>();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -219,24 +244,23 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
           setLevels(qualityList);
         } catch (err) {
           console.error("Shaka player initialization failed:", err);
-          setIsLoading(false);
+          if (!tryFallback()) setIsLoading(false);
         }
       } else {
-        // HLS Stream (.m3u8)
         try {
           const HlsClass = (await import("hls.js")).default;
           if (HlsClass.isSupported()) {
             const hls = new HlsClass({
-              enableWorker: true,            // Run demuxing in web worker for UI responsiveness
-              lowLatencyMode: true,          // Optimize for low latency streams
-              maxBufferLength: 15,           // Raised buffer limit to absorb layout changes
+              enableWorker: true,
+              lowLatencyMode: true,
+              maxBufferLength: 15,
               maxMaxBufferLength: 30,
-              backBufferLength: 10,          // Prune back buffer to free memory
-              capLevelToPlayerSize: false,   // Disabled to prevent ABR quality switch stalls
+              backBufferLength: 10,
+              capLevelToPlayerSize: false,
               autoStartLoad: true,
             });
             hlsPlayerRef.current = hls;
-            hls.loadSource(streamUrl);
+            hls.loadSource(effectiveUrl);
             hls.attachMedia(video);
 
             hls.on(HlsClass.Events.MANIFEST_PARSED, (_, data) => {
@@ -251,31 +275,34 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
 
             hls.on(HlsClass.Events.ERROR, (_, data) => {
               if (data.fatal) {
-                switch (data.type) {
-                  case HlsClass.ErrorTypes.NETWORK_ERROR:
-                    console.error("HLS Network error, trying to recover...");
-                    hls.startLoad();
-                    break;
-                  case HlsClass.ErrorTypes.MEDIA_ERROR:
-                    console.error("HLS Media error, trying to recover...");
-                    hls.recoverMediaError();
-                    break;
-                  default:
-                    console.error("Fatal HLS error, cannot recover");
-                    cleanupPlayers();
-                    break;
+                const recovered = tryFallback();
+                if (!recovered) {
+                  switch (data.type) {
+                    case HlsClass.ErrorTypes.NETWORK_ERROR:
+                      console.error("HLS Network error, trying to recover...");
+                      hls.startLoad();
+                      break;
+                    case HlsClass.ErrorTypes.MEDIA_ERROR:
+                      console.error("HLS Media error, trying to recover...");
+                      hls.recoverMediaError();
+                      break;
+                    default:
+                      console.error("Fatal HLS error, cannot recover");
+                      cleanupPlayers();
+                      break;
+                  }
                 }
               }
             });
           } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = streamUrl;
+            video.src = effectiveUrl;
           } else {
             console.error("HLS not supported in this browser");
             setIsLoading(false);
           }
         } catch (err) {
           console.error("Failed to load hls.js dynamically:", err);
-          setIsLoading(false);
+          if (!tryFallback()) setIsLoading(false);
         }
       }
     };
@@ -285,7 +312,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys }: VideoPlayerPro
     return () => {
       cleanupPlayers();
     };
-  }, [streamUrl, streamType, clearKeysStr]);
+  }, [effectiveUrl, effectiveType, clearKeysStr]);
 
   // Sync volume state to video ref
   useEffect(() => {

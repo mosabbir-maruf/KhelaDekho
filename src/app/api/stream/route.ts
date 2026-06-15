@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
         "X-Signature-Token": signature,
         "X-Signature-Timestamp": timestamp,
         Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
       },
       next: { revalidate: 10 },
     });

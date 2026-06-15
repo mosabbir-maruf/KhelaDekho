@@ -288,6 +288,7 @@ export default function LiveMatchPage() {
             streamUrl={streamData.url}
             streamType={streamData.type}
             clearKeys={streamData.clearkey?.keys || null}
+            fallbackSources={streamData.sources || undefined}
           />
         </div>
 
