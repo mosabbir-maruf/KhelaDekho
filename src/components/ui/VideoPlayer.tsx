@@ -48,6 +48,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [fallbackType, setFallbackType] = useState<string | null>(null);
   const failedSourceIndex = useRef(0);
+  const streamUrlFallbackDone = useRef(false);
+
   const devicePlatform = useDevicePlatform();
   const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
 
@@ -76,6 +78,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
     setFallbackUrl(null);
     setFallbackType(null);
     failedSourceIndex.current = 0;
+    streamUrlFallbackDone.current = false;
   }, [streamUrl]);
 
   const fallbackSourcesRef = useRef(sortedSources);
@@ -189,13 +192,23 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
 
     const tryFallback = () => {
       const sources = fallbackSourcesRef.current;
-      if (!sources || sources.length === 0) return false;
-      const next = getFallbackSource(sources, failedSourceIndex.current);
-      if (!next) return false;
-      failedSourceIndex.current = next.index;
-      setFallbackUrl(next.url);
-      setFallbackType(next.type);
-      return true;
+      if (sources && sources.length > 0) {
+        const next = getFallbackSource(sources, failedSourceIndex.current);
+        if (next) {
+          failedSourceIndex.current = next.index;
+          setFallbackUrl(next.url);
+          setFallbackType(next.type);
+          return true;
+        }
+      }
+      // On Apple devices, try original streamUrl (DASH) as final fallback
+      if (bestSource && !streamUrlFallbackDone.current) {
+        streamUrlFallbackDone.current = true;
+        setFallbackUrl(streamUrl);
+        setFallbackType(streamType);
+        return true;
+      }
+      return false;
     };
 
     const initStream = async () => {
