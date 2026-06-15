@@ -81,17 +81,15 @@ export default function LiveMatchPage() {
           }) || liveMatches[0] || null;
         setAssociatedMatch(matched);
 
-        for (let attempt = 0; attempt <= 2; attempt++) {
-          const res = await fetch(`/api/stream?key=${channelKey}`, { signal: controller.signal });
-          if (res.ok) {
-            if (!active) return;
-            const strData: StreamResponse = await res.json();
-            setStreamData(strData);
-            return;
-          }
-          if (attempt < 2) await new Promise((r) => setTimeout(r, 1500));
+        const res = await fetch(`/api/stream?key=${channelKey}`, { signal: controller.signal });
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.error || `Error ${res.status} retrieving stream`);
         }
-        if (active) throw new Error(`Stream failed after retries`);
+        if (!active) return;
+
+        const strData: StreamResponse = await res.json();
+        setStreamData(strData);
       } catch (err: unknown) {
         if (err instanceof Error && err.name === "AbortError") {
           return;
