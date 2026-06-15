@@ -33,10 +33,20 @@ export default function ChannelsPage() {
   const isApple = devicePlatform !== "unknown"
     && (devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos");
 
-  const fetchStream = useCallback(async (channelKey: string, signal: AbortSignal) => {
-    const res = await fetch(`/api/stream?key=${encodeURIComponent(channelKey)}`, { signal });
-    if (!res.ok) throw new Error(`Stream fetch failed: ${res.status}`);
-    return res.json() as Promise<StreamResponse>;
+  const fetchStream = useCallback(async (channelKey: string, signal: AbortSignal, retries = 2) => {
+    let lastErr: unknown;
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const res = await fetch(`/api/stream?key=${encodeURIComponent(channelKey)}`, { signal });
+        if (!res.ok) throw new Error(`Stream fetch failed: ${res.status}`);
+        return res.json() as Promise<StreamResponse>;
+      } catch (err) {
+        lastErr = err;
+        if (err instanceof Error && err.name === "AbortError") throw err;
+        if (i < retries) await new Promise((r) => setTimeout(r, 1500));
+      }
+    }
+    throw lastErr;
   }, []);
 
   useEffect(() => {
