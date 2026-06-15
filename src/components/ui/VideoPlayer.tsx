@@ -11,7 +11,6 @@ import PictureInPicture2 from "lucide-react/dist/esm/icons/picture-in-picture-2"
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Minimize from "lucide-react/dist/esm/icons/minimize";
-import AlertTriangle from "lucide-react/dist/esm/icons/alert-triangle";
 import type Hls from "hls.js";
 import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { getFallbackSource } from "@/lib/streamSelector";
@@ -33,13 +32,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   const [isLoading, setIsLoading] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
-  const [switchNotify, setSwitchNotify] = useState<{ sourceName?: string; reason: string } | null>(null);
-
-  useEffect(() => {
-    if (!switchNotify) return;
-    const t = setTimeout(() => setSwitchNotify(null), 5000);
-    return () => clearTimeout(t);
-  }, [switchNotify]);
 
   // Quality States
   const [levels, setLevels] = useState<{ id: number; name: string }[]>([]);
@@ -87,7 +79,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
     setFallbackType(null);
     failedSourceIndex.current = 0;
     streamUrlFallbackDone.current = false;
-    setSwitchNotify(null);
   }, [streamUrl]);
 
   const fallbackSourcesRef = useRef(sortedSources);
@@ -251,10 +242,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           failedSourceIndex.current = next.index;
           setFallbackUrl(next.url);
           setFallbackType(next.type);
-          setSwitchNotify({
-            sourceName: sources[next.index].name ?? sources[next.index].url.slice(-30),
-            reason: "Stream failed / not responding — switched to backup source",
-          });
           return true;
         }
       }
@@ -599,9 +586,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
           <div className="absolute inset-0 flex items-center justify-center bg-overlay z-20">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-              <span className="font-mono text-xs text-fg-dim tracking-wider uppercase">
-                {switchNotify ? "Switching to backup source..." : "Buffering feed..."}
-              </span>
+              <span className="font-mono text-xs text-fg-dim tracking-wider uppercase">Buffering feed...</span>
             </div>
           </div>
         )}
@@ -611,17 +596,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
               <div className="border border-red-500/20 bg-red-500/5 px-6 py-4">
                 <span className="font-mono text-xs text-red-500 uppercase tracking-widest">[ STREAM_ERROR ]</span>
                 <p className="font-mono text-[10px] text-fg-dim mt-2">{playerError}</p>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Source Switch Notification */}
-        {switchNotify && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-25 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 px-4 py-2 shadow-lg">
-              <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
-              <div className="font-mono text-[10px] text-yellow-500 uppercase tracking-wider leading-tight">
-                {switchNotify.reason}
               </div>
             </div>
           </div>
