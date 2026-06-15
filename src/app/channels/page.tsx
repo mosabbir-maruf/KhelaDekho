@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { ChannelInfo, StreamResponse, getChannels } from "@/lib/api";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
@@ -28,7 +28,7 @@ export default function ChannelsPage() {
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
 
   const devicePlatform = useDevicePlatform();
-  const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
+  const autoSelectedRef = useRef(false);
 
   useEffect(() => {
     const loadChannels = async () => {
@@ -37,16 +37,6 @@ export default function ChannelsPage() {
         const result = await getChannels();
         const chs = result?.channels || [];
         setChannels(chs);
-        if (chs.length > 0) {
-          if (isApple) {
-            const iosCh = chs.find(
-              (c) => c.source_types.includes("hls") && /^ios/i.test(c.name.trim())
-            );
-            setSelectedChannel(iosCh || chs[0]);
-          } else {
-            setSelectedChannel(chs[0]);
-          }
-        }
       } catch (err) {
         console.error("Failed to load channels:", err);
       } finally {
@@ -55,6 +45,20 @@ export default function ChannelsPage() {
     };
     loadChannels();
   }, []);
+
+  useEffect(() => {
+    if (channels.length === 0 || devicePlatform === "unknown" || autoSelectedRef.current) return;
+    const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
+    if (isApple) {
+      const iosCh = channels.find(
+        (c) => c.source_types.includes("hls") && /^ios/i.test(c.name.trim())
+      );
+      setSelectedChannel(iosCh || channels[0]);
+    } else {
+      setSelectedChannel(channels[0]);
+    }
+    autoSelectedRef.current = true;
+  }, [channels, devicePlatform]);
 
   useEffect(() => {
     if (!selectedChannel) return;
