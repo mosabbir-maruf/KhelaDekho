@@ -16,14 +16,14 @@ const sections = [
     icon: UserX,
     title: "1. Information We Collect",
     content:
-      "KhelaDekho does not require user registration. We do not collect personal information such as names, email addresses, or payment details. Anonymous usage data may be collected through standard browser analytics to improve platform performance.",
+      "KhelaDekho does not require user registration. We do not collect personal information such as names, email addresses, or payment details. Anonymous usage data may be collected through Google Analytics 4 to improve platform performance. This is an opt-in feature that is only active when a Google Analytics measurement ID is configured.",
   },
   {
     id: "cookies",
     icon: Cookie,
     title: "2. Cookies & Local Storage",
     content:
-      "We do not use tracking cookies. Local storage is used solely for saving user preferences such as streaming quality presets and API endpoint configurations. No data is shared with third-party advertisers or analytics providers.",
+      "We do not use tracking cookies. Local storage is used solely for saving user preferences such as streaming quality presets. Google Analytics uses its own cookies and tracking mechanisms when enabled. No data is shared with third-party advertisers.",
   },
   {
     id: "third-party",

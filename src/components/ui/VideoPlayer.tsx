@@ -166,7 +166,13 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
     setCurrentLevel(-1);
     setPlayerError(null);
 
+    let nativeErrorHandler: (() => void) | null = null;
+
     const cleanupPlayers = async () => {
+      if (nativeErrorHandler) {
+        video.removeEventListener("error", nativeErrorHandler);
+        nativeErrorHandler = null;
+      }
       if (shakaPlayerRef.current) {
         try {
           await shakaPlayerRef.current.destroy();
@@ -325,6 +331,12 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
             });
           } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
             video.src = effectiveUrl;
+            nativeErrorHandler = () => {
+              if (video) video.removeEventListener("error", nativeErrorHandler!);
+              nativeErrorHandler = null;
+              if (!tryFallback()) setIsLoading(false);
+            };
+            video.addEventListener("error", nativeErrorHandler);
           } else {
             console.error("HLS not supported in this browser");
             setIsLoading(false);

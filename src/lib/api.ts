@@ -73,10 +73,14 @@ interface Envelope<T> {
 const DEFAULT_API_URL = "";
 
 // Helper to get base API URL from environment variables or default
+const isDebugMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_DEBUG === "true";
+
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("kheladekho_api_url");
-    if (stored) return stored;
+    if (isDebugMode) {
+      const stored = localStorage.getItem("kheladekho_api_url");
+      if (stored) return stored;
+    }
     const injected = (window as Window & { __KHELADEKHO_API_URL?: string }).__KHELADEKHO_API_URL;
     if (injected) return injected;
     return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;

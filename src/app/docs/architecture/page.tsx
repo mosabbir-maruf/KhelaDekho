@@ -98,13 +98,11 @@ export default function ArchitecturePage() {
                 <p className="text-fg-dim font-mono text-sm leading-relaxed">
                     The presentation layer is built with Next.js 14 and Tailwind CSS. It focuses on a premium, glassmorphic aesthetic while dynamically rendering live sports channels. All API requests to the proxy backend are authenticated securely.
                 </p>
-                <CodeBlock code={`// Client-side stream fetching
-const response = await fetch('/api/v1/channels/wctveng/stream', {
-    headers: {
-        'X-Signature-Token': hmacToken,
-        'X-Signature-Timestamp': timestamp
-    }
-});`} />
+                <CodeBlock code={`// Stream fetching is proxied through Next.js, which signs the request server-side
+// The secret key never reaches the browser
+const response = await fetch('/api/stream?key=wctveng');
+const stream = await response.json();
+// stream.url / stream.sources / stream.clearkey are now available for the player`} />
             </section>
 
             {/* Layer 2: API Gateway */}
