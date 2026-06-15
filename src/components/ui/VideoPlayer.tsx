@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Play from "lucide-react/dist/esm/icons/play";
 import Pause from "lucide-react/dist/esm/icons/pause";
 import Volume2 from "lucide-react/dist/esm/icons/volume-2";
@@ -12,6 +12,7 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Minimize from "lucide-react/dist/esm/icons/minimize";
 import type Hls from "hls.js";
+import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { getFallbackSource } from "@/lib/streamSelector";
 import type { StreamSource } from "@/lib/api";
 
@@ -47,13 +48,25 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [fallbackType, setFallbackType] = useState<string | null>(null);
   const failedSourceIndex = useRef(0);
-  const fallbackSourcesRef = useRef(fallbackSources);
-  fallbackSourcesRef.current = fallbackSources;
+  const devicePlatform = useDevicePlatform();
+  const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
+
+  // On Apple devices, sort sources so iOS servers are tried before standard sources
+  const sortedSources = useMemo(() => {
+    if (!fallbackSources || fallbackSources.length === 0) return undefined;
+    if (!isApple) return fallbackSources;
+    return [...fallbackSources].sort((a, b) => {
+      const aIsIOS = a.name ? /^iOS\s*-/i.test(a.name.trim()) : false;
+      const bIsIOS = b.name ? /^iOS\s*-/i.test(b.name.trim()) : false;
+      if (aIsIOS !== bIsIOS) return aIsIOS ? -1 : 1;
+      return a.index - b.index;
+    });
+  }, [fallbackSources, isApple]);
+  const fallbackSourcesRef = useRef(sortedSources);
+  fallbackSourcesRef.current = sortedSources;
 
   const effectiveUrl = fallbackUrl || streamUrl;
   const effectiveType = fallbackType || streamType;
-
-  // Auto-hide controls timer
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastMouseMoveRef = useRef<number>(0);
 
