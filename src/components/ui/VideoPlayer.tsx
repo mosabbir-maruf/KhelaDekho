@@ -21,10 +21,9 @@ interface VideoPlayerProps {
   streamType: string;
   clearKeys?: Record<string, string> | null;
   fallbackSources?: StreamSource[];
-  onError?: () => void;
 }
 
-export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources, onError }: VideoPlayerProps) {
+export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -222,7 +221,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
           return true;
         }
       }
-      if (onError) onError();
       return false;
     };
 

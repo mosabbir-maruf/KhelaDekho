@@ -124,18 +124,6 @@ export default function ChannelsPage() {
 
   const liveCount = channels.filter((c) => c.live_viewers > 0).length;
 
-  const handleStreamError = useCallback(() => {
-    const idx = channels.findIndex((c) => c.key === selectedChannel?.key);
-    if (idx === -1) return;
-    for (let i = 1; i < channels.length; i++) {
-      const next = channels[(idx + i) % channels.length];
-      if (next.key !== selectedChannel?.key) {
-        setSelectedChannel(next);
-        return;
-      }
-    }
-  }, [channels, selectedChannel]);
-
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
@@ -291,7 +279,6 @@ export default function ChannelsPage() {
                       streamType={streamData.type}
                       clearKeys={streamData.clearkey?.keys || null}
                       fallbackSources={streamData.sources || undefined}
-                      onError={handleStreamError}
                     />
                   ) : (
                     <div className="border border-red-500/10 bg-red-500/[0.02] p-12 text-center">
