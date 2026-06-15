@@ -28,7 +28,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [showControls, setShowControls] = useState(true);
@@ -157,13 +157,24 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     };
   }, [resetControlsTimeout]);
 
-  // Auto-play when video loads
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
+
+  // Auto-play when video loads (muted required for browser policy, then unmute)
   useEffect(() => {
     if (isLoading || playerError) return;
     const video = videoRef.current;
     if (!video) return;
     video.muted = true;
+    const unmute = () => {
+      video.muted = false;
+      video.volume = volumeRef.current;
+      setIsMuted(false);
+      video.removeEventListener("playing", unmute);
+    };
+    video.addEventListener("playing", unmute);
     video.play().catch(() => {});
+    return () => video.removeEventListener("playing", unmute);
   }, [isLoading, playerError]);
 
   // Stringify clearKeys to prevent unnecessary useEffect cleanups due to object identity changes
