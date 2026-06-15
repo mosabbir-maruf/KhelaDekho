@@ -158,6 +158,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
 
   const volumeRef = useRef(volume);
   volumeRef.current = volume;
+  const isMutedRef = useRef(isMuted);
+  isMutedRef.current = isMuted;
 
   // Auto-play when video loads (muted required for browser policy, then unmute)
   useEffect(() => {
@@ -169,12 +171,34 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
       video.muted = false;
       video.volume = volumeRef.current;
       setIsMuted(false);
-      video.removeEventListener("playing", unmute);
     };
     video.addEventListener("playing", unmute);
     video.play().catch(() => {});
     return () => video.removeEventListener("playing", unmute);
   }, [isLoading, playerError]);
+
+  // Re-assert unmute on Apple after HLS bitrate switches reset audio
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isApple) return;
+    let debounce: ReturnType<typeof setTimeout>;
+    const enforce = () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        if (video && !isMutedRef.current) {
+          video.muted = false;
+          video.volume = volumeRef.current;
+        }
+      }, 100);
+    };
+    video.addEventListener("ratechange", enforce);
+    video.addEventListener("waiting", enforce);
+    return () => {
+      clearTimeout(debounce);
+      video.removeEventListener("ratechange", enforce);
+      video.removeEventListener("waiting", enforce);
+    };
+  }, [isApple]);
 
   // Stringify clearKeys to prevent unnecessary useEffect cleanups due to object identity changes
   const clearKeysStr = clearKeys ? JSON.stringify(clearKeys) : "";
