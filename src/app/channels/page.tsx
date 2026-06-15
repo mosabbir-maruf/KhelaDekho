@@ -30,6 +30,9 @@ export default function ChannelsPage() {
   const devicePlatform = useDevicePlatform();
   const autoSelectedRef = useRef(false);
 
+  const isApple = devicePlatform !== "unknown"
+    && (devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos");
+
   useEffect(() => {
     const loadChannels = async () => {
       setLoading(true);
@@ -48,7 +51,6 @@ export default function ChannelsPage() {
 
   useEffect(() => {
     if (channels.length === 0 || devicePlatform === "unknown" || autoSelectedRef.current) return;
-    const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
     if (isApple) {
       const iosCh = channels.find(
         (c) => c.source_types.includes("hls") && /^ios/i.test(c.name.trim())
@@ -58,7 +60,7 @@ export default function ChannelsPage() {
       setSelectedChannel(channels[0]);
     }
     autoSelectedRef.current = true;
-  }, [channels, devicePlatform]);
+  }, [channels, devicePlatform, isApple]);
 
   useEffect(() => {
     if (!selectedChannel) return;
@@ -97,12 +99,19 @@ export default function ChannelsPage() {
   }, [selectedChannel]);
 
   const filteredChannels = useMemo(() => {
-    return channels.filter((ch) => {
+    const filtered = channels.filter((ch) => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return ch.name.toLowerCase().includes(q) || ch.category.toLowerCase().includes(q);
     });
-  }, [channels, searchQuery]);
+    if (searchQuery.trim() || !isApple) return filtered;
+    return [...filtered].sort((a, b) => {
+      const aIsIOS = a.source_types.includes("hls") && /^ios/i.test(a.name.trim());
+      const bIsIOS = b.source_types.includes("hls") && /^ios/i.test(b.name.trim());
+      if (aIsIOS !== bIsIOS) return aIsIOS ? -1 : 1;
+      return 0;
+    });
+  }, [channels, searchQuery, isApple]);
 
   const liveCount = channels.filter((c) => c.live_viewers > 0).length;
 
