@@ -62,7 +62,7 @@ export default async function Home() {
               [ Stream TV Live ]
             </Link>
             <Link
-              href="/channels"
+              href="/matches"
               className="inline-flex items-center justify-center rounded-sm text-xs font-mono uppercase tracking-widest font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 disabled:pointer-events-none disabled:opacity-50 border border-border-alt bg-transparent hover:bg-hover h-10 px-8 py-2 text-fg-muted w-full sm:w-auto"
             >
               <Trophy className="mr-3 h-4 w-4 text-fg-dim" />
