@@ -272,6 +272,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
         const player = shakaPlayerRef.current;
         if (!player) return;
 
+        try { await player.unload(); } catch {}
+
         const keysObj = clearKeysStr ? JSON.parse(clearKeysStr) : null;
         if (keysObj && Object.keys(keysObj).length > 0) {
           player.configure({ drm: { clearKeys: keysObj } });
