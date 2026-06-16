@@ -60,10 +60,8 @@ export default function ChannelsPage() {
         setChannels(chs);
         setLoading(false);
 
-        if (chs.length > 0) {
-          const alive = chs.find((c) => c.is_alive && c.stream_url);
-          setSelectedChannel(alive || chs[0]);
-        }
+        const alive = chs.find((c) => c.is_alive && c.stream_url);
+        if (alive) setSelectedChannel(alive);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
         console.error("Failed to load channels:", err);
@@ -76,11 +74,10 @@ export default function ChannelsPage() {
   }, []);
 
   const filteredChannels = useMemo(() => {
-    const filtered = channels.filter((ch) => {
-      if (!searchQuery.trim()) return true;
-      return ch.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-    return filtered;
+    const alive = channels.filter((ch) => ch.is_alive && ch.stream_url);
+    if (!searchQuery.trim()) return alive;
+    const q = searchQuery.toLowerCase();
+    return alive.filter((ch) => ch.name.toLowerCase().includes(q));
   }, [channels, searchQuery]);
 
   const aliveCount = channels.filter((c) => c.is_alive).length;
