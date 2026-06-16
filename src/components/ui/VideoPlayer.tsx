@@ -15,7 +15,6 @@ import type Hls from "hls.js";
 import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { getFallbackSource } from "@/lib/streamSelector";
 import type { StreamSource } from "@/lib/api";
-import { getApiBaseUrl } from "@/lib/api";
 
 let shakaModule: any = null;
 async function getShaka() {
@@ -24,11 +23,6 @@ async function getShaka() {
     shakaModule.polyfill.installAll();
   }
   return shakaModule;
-}
-
-function getProxyBase(): string {
-  const base = getApiBaseUrl();
-  return base ? `${base.replace(/\/+$/, '')}/api/v2/proxy?url=` : '/api/v2/proxy?url=';
 }
 
 interface VideoPlayerProps {
@@ -49,13 +43,9 @@ function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
   const player = new shaka.Player();
   const netEngine = player.getNetworkingEngine();
   if (netEngine) {
-    const proxyBase = getProxyBase();
     netEngine.registerRequestFilter((type: any, request: any) => {
-      if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
-        request.uris = request.uris.map((u: string) => {
-          if (u.includes('/api/v2/')) return u;
-          return proxyBase + encodeURIComponent(u);
-        });
+      if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
+        request.headers['Referer'] = 'https://kickbd.com/';
       }
     });
     netEngine.registerResponseFilter((type: any, response: any) => {
