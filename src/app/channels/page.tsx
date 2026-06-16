@@ -84,9 +84,9 @@ export default function ChannelsPage() {
 
   const rawStreamUrl = selectedChannel?.stream_url || null;
   const apiBase = getApiBaseUrl();
-  const streamUrl = rawStreamUrl && (rawStreamUrl.includes('storage.googleapis.com') || rawStreamUrl.includes('soccerball.st'))
+  const streamUrl = rawStreamUrl
     ? `${apiBase.replace(/\/+$/, '')}/api/v2/proxy?url=${encodeURIComponent(rawStreamUrl)}`
-    : rawStreamUrl;
+    : null;
   const streamType = selectedChannel?.stream_type || "hls";
   const clearkey = selectedChannel?.drm_kid && selectedChannel?.drm_key
     ? { [selectedChannel.drm_kid]: selectedChannel.drm_key }
