@@ -84,7 +84,7 @@ export default function ChannelsPage() {
 
   const rawStreamUrl = selectedChannel?.stream_url || null;
   const apiBase = getApiBaseUrl();
-  const streamUrl = rawStreamUrl && rawStreamUrl.includes('storage.googleapis.com')
+  const streamUrl = rawStreamUrl && (rawStreamUrl.includes('storage.googleapis.com') || rawStreamUrl.includes('soccerball.st'))
     ? `${apiBase.replace(/\/+$/, '')}/api/v2/proxy?url=${encodeURIComponent(rawStreamUrl)}`
     : rawStreamUrl;
   const streamType = selectedChannel?.stream_type || "hls";
