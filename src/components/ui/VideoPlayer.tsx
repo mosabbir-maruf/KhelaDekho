@@ -52,7 +52,10 @@ function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
     const proxyBase = getProxyBase();
     netEngine.registerRequestFilter((type: any, request: any) => {
       if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
-        request.uris = request.uris.map((u: string) => proxyBase + encodeURIComponent(u));
+        request.uris = request.uris.map((u: string) => {
+          if (u.includes('/api/v2/')) return u;
+          return proxyBase + encodeURIComponent(u);
+        });
       }
     });
     netEngine.registerResponseFilter((type: any, response: any) => {
