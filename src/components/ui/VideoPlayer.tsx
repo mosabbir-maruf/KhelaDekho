@@ -161,21 +161,15 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   const isMutedRef = useRef(isMuted);
   isMutedRef.current = isMuted;
 
-  // Auto-play when video loads (muted required for browser policy, then unmute)
-  useEffect(() => {
-    if (isLoading || playerError) return;
-    const video = videoRef.current;
-    if (!video) return;
+  async function autoPlayVideo(video: HTMLVideoElement) {
     video.muted = true;
-    const unmute = () => {
+    try {
+      await video.play();
       video.muted = false;
       video.volume = volumeRef.current;
       setIsMuted(false);
-    };
-    video.addEventListener("playing", unmute);
-    video.play().catch(() => {});
-    return () => video.removeEventListener("playing", unmute);
-  }, [isLoading, playerError]);
+    } catch { /* autoplay blocked — user must tap play */ }
+  }
 
   // Re-assert unmute on Apple after HLS bitrate switches reset audio
   useEffect(() => {
@@ -312,6 +306,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
 
           await player.load(effectiveUrl);
           setIsLoading(false);
+          autoPlayVideo(video);
 
           const tracks = player.getVariantTracks();
           const uniqueQualities = new Map<number, string>();
@@ -334,7 +329,10 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
       } else {
         if (isApple && video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = effectiveUrl;
-          const onLoaded = () => setIsLoading(false);
+          const onLoaded = () => {
+            setIsLoading(false);
+            autoPlayVideo(video);
+          };
           video.addEventListener("loadedmetadata", onLoaded);
           nativeErrorHandler = () => {
             video.removeEventListener("loadedmetadata", onLoaded);
@@ -362,6 +360,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
 
               hls.on(HlsClass.Events.MANIFEST_PARSED, (_, data) => {
                 setIsLoading(false);
+                autoPlayVideo(video);
                 const qualityList = data.levels.map((level, idx) => ({
                   id: idx,
                   name: level.height ? `${level.height}p` : `Level ${idx}`,
