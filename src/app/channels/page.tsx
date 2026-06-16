@@ -109,6 +109,9 @@ export default function ChannelsPage() {
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
                 {aliveCount} active &middot; {channels.length.toLocaleString()} indexed
               </p>
+              <p className="text-[11px] font-mono text-yellow-500/80 max-w-2xl leading-relaxed">
+                Stream buffering? Switch channel or server.
+              </p>
             </div>
             <Link
               href="/"
