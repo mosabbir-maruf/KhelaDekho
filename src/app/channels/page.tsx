@@ -156,25 +156,20 @@ export default function ChannelsPage() {
                   <button
                     key={ch.id}
                     onClick={() => {
-                      if (!ch.is_alive) return;
                       setSelectedChannel(ch);
                       event("stream_view", { channel_name: ch.name, channel_key: String(ch.id), stream_type: "channel_browse" });
                     }}
                     className={`w-full text-left border p-3 transition-all cursor-pointer group ${
-                      !ch.is_alive
-                        ? "border-border-alt bg-card opacity-40 cursor-not-allowed"
-                        : selectedChannel?.id === ch.id
-                          ? "border-red-500/30 bg-red-500/[0.03]"
-                          : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
+                      selectedChannel?.id === ch.id
+                        ? "border-red-500/30 bg-red-500/[0.03]"
+                        : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`relative w-8 h-8 border flex items-center justify-center shrink-0 overflow-hidden transition-all ${
-                        !ch.is_alive
-                          ? "border-border-alt bg-hover"
-                          : selectedChannel?.id === ch.id
-                            ? "border-red-500/20 bg-red-500/10"
-                            : "border-border-alt bg-hover group-hover:border-red-500/20 group-hover:bg-red-500/10"
+                        selectedChannel?.id === ch.id
+                          ? "border-red-500/20 bg-red-500/10"
+                          : "border-border-alt bg-hover group-hover:border-red-500/20 group-hover:bg-red-500/10"
                       }`}>
                         {ch.logo ? (
                           <Image src={ch.logo} alt="" fill className="object-cover" unoptimized />
@@ -191,12 +186,10 @@ export default function ChannelsPage() {
                           {ch.name}
                         </div>
                         <div className="text-[9px] font-mono text-fg-dim mt-0.5">
-                          {ch.stream_type.toUpperCase()} &middot; {ch.is_alive ? "Live" : "Offline"}
+                          {ch.stream_type.toUpperCase()}
                         </div>
                       </div>
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                        ch.is_alive ? "bg-green-500" : "bg-red-500"
-                      }`} />
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-green-500" />
                     </div>
                   </button>
                 ))}
@@ -221,14 +214,14 @@ export default function ChannelsPage() {
                       <div>
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
                         <p className="font-mono text-xs text-fg-dim">
-                          {selectedChannel.stream_type.toUpperCase()} &middot; {selectedChannel.is_alive ? "Live" : "Offline"}
+                          {selectedChannel.stream_type.toUpperCase()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs font-mono text-fg-dim">
-                      <span className={`flex items-center gap-1.5 ${selectedChannel.is_alive ? "" : "opacity-40"}`}>
-                        <span className={`w-2 h-2 rounded-full ${selectedChannel.is_alive ? "bg-green-500" : "bg-red-500"}`} />
-                        <span className="text-fg font-bold">{selectedChannel.is_alive ? "ACTIVE" : "OFFLINE"}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="text-fg font-bold">ACTIVE</span>
                       </span>
                     </div>
                   </div>
@@ -240,16 +233,12 @@ export default function ChannelsPage() {
                       streamType={streamType}
                       clearKeys={clearkey}
                     />
-                  ) : selectedChannel?.is_alive === false ? (
+                  ) : (
                     <div className="border border-border-alt bg-card p-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-red-500" />
-                        <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">This channel is currently offline</span>
+                        <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Stream unavailable</span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="border border-red-500/10 bg-red-500/[0.02] p-12 text-center">
-                      <span className="font-mono text-xs text-red-400 uppercase tracking-widest">Stream Unavailable</span>
                     </div>
                   )}
 
@@ -293,31 +282,26 @@ export default function ChannelsPage() {
                             <button
                               key={ch.id}
                               type="button"
-                              onClick={() => {
-                                if (!ch.is_alive) return;
-                                setSelectedChannel(ch);
-                                setIsMobileDropdownOpen(false);
-                                event("stream_view", { channel_name: ch.name, channel_key: String(ch.id), stream_type: "channel_browse_mobile" });
-                              }}
-                              className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
-                                !ch.is_alive
-                                  ? "border-border-alt bg-card opacity-40 cursor-not-allowed"
-                                  : selectedChannel?.id === ch.id
-                                    ? "border-red-500/30 bg-red-500/[0.03] text-red-400 font-semibold"
-                                    : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
-                              }`}
+                  onClick={() => {
+                    setSelectedChannel(ch);
+                    setIsMobileDropdownOpen(false);
+                    event("stream_view", { channel_name: ch.name, channel_key: String(ch.id), stream_type: "channel_browse_mobile" });
+                  }}
+                  className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
+                    selectedChannel?.id === ch.id
+                      ? "border-red-500/30 bg-red-500/[0.03] text-red-400 font-semibold"
+                      : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
+                  }`}
                             >
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="min-w-0">
                                   <div className="text-xs font-mono truncate">{ch.name}</div>
                                   <div className="text-[9px] font-mono text-fg-dim mt-0.5">
-                                    {ch.stream_type.toUpperCase()} &middot; {ch.is_alive ? "Live" : "Offline"}
+                                    {ch.stream_type.toUpperCase()}
                                   </div>
                                 </div>
                               </div>
-                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                ch.is_alive ? "bg-green-500" : "bg-red-500"
-                              }`} />
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-green-500" />
                             </button>
                           ))}
                           {filteredChannels.length === 0 && (
@@ -334,12 +318,10 @@ export default function ChannelsPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
                       <div className="flex items-center justify-center gap-1.5 mb-2">
-                        <span className={`w-1.5 h-1.5 rounded-full ${selectedChannel.is_alive ? "bg-green-500" : "bg-red-500"} animate-pulse`} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                         <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Signal</span>
                       </div>
-                      <p className={`font-mono text-sm font-bold ${selectedChannel.is_alive ? "text-green-500" : "text-red-500"}`}>
-                        {selectedChannel.is_alive ? "ACTIVE" : "OFFLINE"}
-                      </p>
+                      <p className="font-mono text-sm font-bold text-green-500">ACTIVE</p>
                       <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Status</p>
                     </div>
                     <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
