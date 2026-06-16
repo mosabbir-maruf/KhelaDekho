@@ -161,8 +161,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
     if (!video) return;
     const handlePlay = () => { setIsPlaying(true); resetControlsTimeout(); };
     const handlePause = () => { setIsPlaying(false); resetControlsTimeout(); };
-    const handleWaiting = () => setIsLoading(true);
-    const handlePlaying = () => { setIsLoading(false); if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; } };
+    const handleWaiting = () => { setIsLoading(true); if (playerError) setPlayerError(null); };
+    const handlePlaying = () => { setIsLoading(false); if (playerError) setPlayerError(null); if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; } };
     const handleLoadedMetadata = () => setIsLoading(false);
     video.addEventListener("play", handlePlay);
     video.addEventListener("pause", handlePause);
