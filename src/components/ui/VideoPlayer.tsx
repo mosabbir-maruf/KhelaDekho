@@ -261,6 +261,27 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
 
           const player = new shaka.Player();
           shakaPlayerRef.current = player;
+
+          // Strip Widevine/PlayReady PSSH so Shaka uses our ClearKey config
+          const netEngine = player.getNetworkingEngine();
+          if (netEngine) {
+            const widevineUuid = "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
+            const playreadyUuid = "urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95";
+            const psshRegex = new RegExp(
+              `<ContentProtection[^>]*schemeIdUri="(${widevineUuid}|${playreadyUuid})"[^>]*>[\\s\\S]*?<\\/ContentProtection>`,
+              "g"
+            );
+            netEngine.registerResponseFilter((type, response) => {
+              if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST && response.data) {
+                const text = new TextDecoder().decode(response.data);
+                const stripped = text.replace(psshRegex, "");
+                if (stripped.length !== text.length) {
+                  response.data = new TextEncoder().encode(stripped).buffer;
+                }
+              }
+            });
+          }
+
           await player.attach(video);
 
           player.configure({
