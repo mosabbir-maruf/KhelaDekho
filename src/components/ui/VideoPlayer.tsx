@@ -32,6 +32,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   const [isLoading, setIsLoading] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Quality States
   const [levels, setLevels] = useState<{ id: number; name: string }[]>([]);
@@ -134,7 +135,10 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
       resetControlsTimeout();
     };
     const handleWaiting = () => setIsLoading(true);
-    const handlePlaying = () => setIsLoading(false);
+    const handlePlaying = () => {
+      setIsLoading(false);
+      if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
+    };
     const handleLoadedMetadata = () => setIsLoading(false);
 
     video.addEventListener("play", handlePlay);
@@ -207,9 +211,16 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
     setCurrentLevel(-1);
     setPlayerError(null);
 
+    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+    loadingTimeoutRef.current = setTimeout(() => {
+      setPlayerError("Stream is taking too long to load — the feed may be unavailable.");
+      setIsLoading(false);
+    }, 30000);
+
     let nativeErrorHandler: (() => void) | null = null;
 
     const cleanupPlayers = async () => {
+      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
       if (nativeErrorHandler) {
         video.removeEventListener("error", nativeErrorHandler);
         nativeErrorHandler = null;
@@ -310,6 +321,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
             const err = customEvent.detail as { code?: number; category?: string; severity?: string };
             console.error("Shaka Player Error:", err || event);
             setIsLoading(false);
+            if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
 
             const isFatal = !err || !err.code || err.code === 4032 || (err.code !== 4010);
             if (isFatal && tryFallback()) return;
