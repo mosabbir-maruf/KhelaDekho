@@ -1,43 +1,52 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { useDevicePlatform } from "@/hooks/useDevicePlatform";
-import { ChannelInfo, StreamResponse, getChannels } from "@/lib/api";
+import { useEffect, useState, useMemo } from "react";
+import { getApiBaseUrl } from "@/lib/api";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Tv from "lucide-react/dist/esm/icons/tv";
-import Users from "lucide-react/dist/esm/icons/users";
 import Search from "lucide-react/dist/esm/icons/search";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import X from "lucide-react/dist/esm/icons/x";
 import Monitor from "lucide-react/dist/esm/icons/monitor";
 import Zap from "lucide-react/dist/esm/icons/zap";
-import Globe from "lucide-react/dist/esm/icons/globe";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Shield from "lucide-react/dist/esm/icons/shield";
 import Link from "next/link";
 import Image from "next/image";
 import { event } from "@/lib/analytics";
 
+interface V2Channel {
+  id: number;
+  name: string;
+  logo: string | null;
+  stream_type: string;
+  stream_url: string | null;
+  drm_kid: string | null;
+  drm_key: string | null;
+  is_alive: boolean;
+  cached_at: string;
+}
+
+async function fetchV2Channels(signal: AbortSignal): Promise<V2Channel[]> {
+  const rawBaseUrl = getApiBaseUrl();
+  if (!rawBaseUrl) return [];
+  const baseUrl = rawBaseUrl.replace(/\/+$/, "");
+  const res = await fetch(`${baseUrl}/api/v2/channels`, {
+    signal,
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return [];
+  const body = await res.json();
+  return body?.data?.channels || [];
+}
+
 export default function ChannelsPage() {
-  const [channels, setChannels] = useState<ChannelInfo[]>([]);
+  const [channels, setChannels] = useState<V2Channel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedChannel, setSelectedChannel] = useState<ChannelInfo | null>(null);
-  const [streamData, setStreamData] = useState<StreamResponse | null>(null);
-  const [streamLoading, setStreamLoading] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<V2Channel | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
-
-  const devicePlatform = useDevicePlatform();
-  const autoSelectedRef = useRef(false);
-
-  const isApple = devicePlatform !== "unknown"
-    && (devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos");
-
-  const fetchStream = useCallback(async (channelKey: string, signal: AbortSignal) => {
-    const res = await fetch(`/api/stream?key=${encodeURIComponent(channelKey)}`, { signal });
-    if (!res.ok) throw new Error(`Stream fetch failed: ${res.status}`);
-    return res.json() as Promise<StreamResponse>;
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -46,29 +55,14 @@ export default function ChannelsPage() {
     (async () => {
       setLoading(true);
       try {
-        const result = await getChannels({}, { signal: controller.signal });
+        const chs = await fetchV2Channels(controller.signal);
         if (!active) return;
-        const chs = result?.channels || [];
         setChannels(chs);
         setLoading(false);
 
         if (chs.length > 0) {
-          const iosCh = isApple
-            ? chs.find((c) => c.source_types.includes("hls") && /^ios/i.test(c.name.trim()))
-            : null;
-          const initial = iosCh || chs[0];
-          autoSelectedRef.current = true;
-          setSelectedChannel(initial);
-
-          setStreamLoading(true);
-          try {
-            const data = await fetchStream(initial.key, controller.signal);
-            if (active) setStreamData(data);
-          } catch {
-            if (active) setStreamData(null);
-          } finally {
-            if (active) setStreamLoading(false);
-          }
+          const alive = chs.find((c) => c.is_alive && c.stream_url);
+          setSelectedChannel(alive || chs[0]);
         }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
@@ -79,50 +73,24 @@ export default function ChannelsPage() {
     })();
 
     return () => { active = false; controller.abort(); };
-  }, [devicePlatform, isApple, fetchStream]);
-
-  useEffect(() => {
-    if (!selectedChannel) return;
-    if (autoSelectedRef.current) {
-      autoSelectedRef.current = false;
-      return;
-    }
-
-    let active = true;
-    const controller = new AbortController();
-
-    (async () => {
-      setStreamLoading(true);
-      setStreamData(null);
-      try {
-        const data = await fetchStream(selectedChannel.key, controller.signal);
-        if (active) setStreamData(data);
-      } catch {
-        if (active) setStreamData(null);
-      } finally {
-        if (active) setStreamLoading(false);
-      }
-    })();
-
-    return () => { active = false; controller.abort(); };
-  }, [selectedChannel, fetchStream]);
+  }, []);
 
   const filteredChannels = useMemo(() => {
     const filtered = channels.filter((ch) => {
       if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase();
-      return ch.name.toLowerCase().includes(q) || ch.category.toLowerCase().includes(q);
+      return ch.name.toLowerCase().includes(searchQuery.toLowerCase());
     });
-    if (searchQuery.trim() || !isApple) return filtered;
-    return [...filtered].sort((a, b) => {
-      const aIsIOS = a.source_types.includes("hls") && /^ios/i.test(a.name.trim());
-      const bIsIOS = b.source_types.includes("hls") && /^ios/i.test(b.name.trim());
-      if (aIsIOS !== bIsIOS) return aIsIOS ? -1 : 1;
-      return 0;
-    });
-  }, [channels, searchQuery, isApple]);
+    return filtered;
+  }, [channels, searchQuery]);
 
-  const liveCount = channels.filter((c) => c.live_viewers > 0).length;
+  const aliveCount = channels.filter((c) => c.is_alive).length;
+
+  const streamUrl = selectedChannel?.stream_url || null;
+  const streamType = selectedChannel?.stream_type || "hls";
+  const clearkey = selectedChannel?.drm_kid && selectedChannel?.drm_key
+    ? { [selectedChannel.drm_kid]: selectedChannel.drm_key }
+    : null;
+  const hasDrm = !!(selectedChannel?.drm_kid && selectedChannel?.drm_key);
 
   return (
     <div className="min-h-screen">
@@ -142,7 +110,7 @@ export default function ChannelsPage() {
                 Channels<span className="text-red-500">.</span>
               </h1>
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
-                {liveCount} active &middot; {channels.length.toLocaleString()} indexed
+                {aliveCount} active &middot; {channels.length.toLocaleString()} indexed
               </p>
             </div>
             <Link
@@ -186,45 +154,44 @@ export default function ChannelsPage() {
               <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
                 {filteredChannels.map((ch) => (
                   <button
-                    key={ch.key}
+                    key={ch.id}
                     onClick={() => {
                       setSelectedChannel(ch);
-                      event("stream_view", { channel_name: ch.name, channel_key: ch.key, stream_type: "channel_browse" });
+                      event("stream_view", { channel_name: ch.name, channel_key: String(ch.id), stream_type: "channel_browse" });
                     }}
                     className={`w-full text-left border p-3 transition-all cursor-pointer group ${
-                      selectedChannel?.key === ch.key
+                      selectedChannel?.id === ch.id
                         ? "border-red-500/30 bg-red-500/[0.03]"
                         : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`relative w-8 h-8 border flex items-center justify-center shrink-0 overflow-hidden transition-all ${
-                        selectedChannel?.key === ch.key
+                        selectedChannel?.id === ch.id
                           ? "border-red-500/20 bg-red-500/10"
                           : "border-border-alt bg-hover group-hover:border-red-500/20 group-hover:bg-red-500/10"
                       }`}>
-                        {ch.image_url ? (
-                          <Image src={ch.image_url} alt="" fill className="object-cover" unoptimized />
+                        {ch.logo ? (
+                          <Image src={ch.logo} alt="" fill className="object-cover" unoptimized />
                         ) : (
                           <Tv className={`w-3.5 h-3.5 transition-colors ${
-                            selectedChannel?.key === ch.key ? "text-red-400" : "text-fg-dim group-hover:text-red-400"
+                            selectedChannel?.id === ch.id ? "text-red-400" : "text-fg-dim group-hover:text-red-400"
                           }`} />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className={`text-xs font-mono font-semibold truncate transition-colors ${
-                          selectedChannel?.key === ch.key ? "text-red-400" : "text-fg group-hover:text-red-400"
+                          selectedChannel?.id === ch.id ? "text-red-400" : "text-fg group-hover:text-red-400"
                         }`}>
                           {ch.name}
                         </div>
                         <div className="text-[9px] font-mono text-fg-dim mt-0.5">
-                          {ch.category} &middot; {ch.quality} &middot; {ch.resolution}
+                          {ch.stream_type.toUpperCase()} &middot; {ch.is_alive ? "Live" : "Offline"}
                         </div>
                       </div>
-                      <span className="text-[9px] font-mono text-fg-faint flex items-center gap-0.5 shrink-0">
-                        <Users className="w-2.5 h-2.5 text-red-500/60" />
-                        {ch.live_viewers.toLocaleString()}
-                      </span>
+                      {ch.is_alive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                      )}
                     </div>
                   </button>
                 ))}
@@ -249,36 +216,24 @@ export default function ChannelsPage() {
                       <div>
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
                         <p className="font-mono text-xs text-fg-dim">
-                          {selectedChannel.category} &middot; {selectedChannel.quality} &middot; {selectedChannel.resolution} &middot; {selectedChannel.live_viewers.toLocaleString()} watching
+                          {selectedChannel.stream_type.toUpperCase()} &middot; {selectedChannel.is_alive ? "Live" : "Offline"}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs font-mono text-fg-dim">
-                      <span className="flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-red-500" />
-                        <span className="text-fg font-bold">{selectedChannel.live_viewers.toLocaleString()}</span>
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5" />
-                        <span className="text-fg font-bold">{selectedChannel.total_views.toLocaleString()}</span>
+                      <span className={`flex items-center gap-1.5 ${selectedChannel.is_alive ? "" : "opacity-40"}`}>
+                        <span className={`w-2 h-2 rounded-full ${selectedChannel.is_alive ? "bg-green-500" : "bg-red-500"}`} />
+                        <span className="text-fg font-bold">{selectedChannel.is_alive ? "ACTIVE" : "OFFLINE"}</span>
                       </span>
                     </div>
                   </div>
 
                   {/* Video Player Box */}
-                  {streamLoading ? (
-                    <div className="flex items-center justify-center py-20 border border-border-alt bg-card">
-                      <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="w-6 h-6 text-red-500 animate-spin" />
-                        <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Initializing stream...</span>
-                      </div>
-                    </div>
-                  ) : streamData ? (
+                  {streamUrl ? (
                     <VideoPlayer
-                      streamUrl={streamData.url}
-                      streamType={streamData.type}
-                      clearKeys={streamData.clearkey?.keys || null}
-                      fallbackSources={streamData.sources || undefined}
+                      streamUrl={streamUrl}
+                      streamType={streamType}
+                      clearKeys={clearkey}
                     />
                   ) : (
                     <div className="border border-red-500/10 bg-red-500/[0.02] p-12 text-center">
@@ -286,7 +241,7 @@ export default function ChannelsPage() {
                     </div>
                   )}
 
-                  {/* MOBILE ONLY: Dropdown Selector Trigger & Dropdown Menu (directly under video player!) */}
+                  {/* MOBILE ONLY: Dropdown Selector Trigger & Dropdown Menu */}
                   <div className="relative lg:hidden w-full">
                     <button
                       type="button"
@@ -324,15 +279,15 @@ export default function ChannelsPage() {
                         <div className="flex-1 overflow-y-auto space-y-1 p-1 scrollbar-red">
                           {filteredChannels.map((ch) => (
                             <button
-                              key={ch.key}
+                              key={ch.id}
                               type="button"
                               onClick={() => {
                                 setSelectedChannel(ch);
                                 setIsMobileDropdownOpen(false);
-                                event("stream_view", { channel_name: ch.name, channel_key: ch.key, stream_type: "channel_browse_mobile" });
+                                event("stream_view", { channel_name: ch.name, channel_key: String(ch.id), stream_type: "channel_browse_mobile" });
                               }}
                               className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
-                                selectedChannel?.key === ch.key
+                                selectedChannel?.id === ch.id
                                   ? "border-red-500/30 bg-red-500/[0.03] text-red-400 font-semibold"
                                   : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
                               }`}
@@ -340,13 +295,14 @@ export default function ChannelsPage() {
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="min-w-0">
                                   <div className="text-xs font-mono truncate">{ch.name}</div>
-                                  <div className="text-[9px] font-mono text-fg-dim mt-0.5">{ch.category} &middot; {ch.resolution}</div>
+                                  <div className="text-[9px] font-mono text-fg-dim mt-0.5">
+                                    {ch.stream_type.toUpperCase()} &middot; {ch.is_alive ? "Live" : "Offline"}
+                                  </div>
                                 </div>
                               </div>
-                              <span className="text-[9px] font-mono text-fg-faint flex items-center gap-0.5 shrink-0">
-                                <Users className="w-2.5 h-2.5 text-red-500/60" />
-                                {ch.live_viewers.toLocaleString()}
-                              </span>
+                              {ch.is_alive && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                              )}
                             </button>
                           ))}
                           {filteredChannels.length === 0 && (
@@ -363,26 +319,28 @@ export default function ChannelsPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
                       <div className="flex items-center justify-center gap-1.5 mb-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[10px] font-mono font-bold text-red-500 uppercase tracking-widest">Live</span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${selectedChannel.is_alive ? "bg-green-500" : "bg-red-500"} animate-pulse`} />
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Signal</span>
                       </div>
-                      <p className="font-mono text-sm font-bold text-fg">{selectedChannel.status.toUpperCase()}</p>
+                      <p className={`font-mono text-sm font-bold ${selectedChannel.is_alive ? "text-green-500" : "text-red-500"}`}>
+                        {selectedChannel.is_alive ? "ACTIVE" : "OFFLINE"}
+                      </p>
                       <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Status</p>
                     </div>
                     <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
                       <Zap className="w-4 h-4 text-fg-faint group-hover:text-red-500/60 mx-auto mb-2 transition-colors" />
-                      <p className="font-mono text-sm font-bold text-fg">{streamData?.type.toUpperCase() || "—"}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Sources</p>
+                      <p className="font-mono text-sm font-bold text-fg">{selectedChannel.stream_type.toUpperCase()}</p>
+                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Stream Type</p>
                     </div>
                     <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
-                      <Globe className="w-4 h-4 text-fg-faint group-hover:text-red-500/60 mx-auto mb-2 transition-colors" />
-                      <p className="font-mono text-sm font-bold text-fg">{selectedChannel.total_views.toLocaleString()}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Total Views</p>
+                      <Shield className="w-4 h-4 text-fg-faint group-hover:text-red-500/60 mx-auto mb-2 transition-colors" />
+                      <p className="font-mono text-sm font-bold text-fg">{hasDrm ? "PRESENT" : "NONE"}</p>
+                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Drm</p>
                     </div>
                     <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
                       <Monitor className="w-4 h-4 text-fg-faint group-hover:text-red-500/60 mx-auto mb-2 transition-colors" />
-                      <p className="font-mono text-sm font-bold text-fg">{selectedChannel.resolution} {selectedChannel.quality}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Resolution</p>
+                      <p className="font-mono text-sm font-bold text-fg">ID {selectedChannel.id}</p>
+                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Channel</p>
                     </div>
                   </div>
                 </>
