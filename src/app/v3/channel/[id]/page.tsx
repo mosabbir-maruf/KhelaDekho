@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
+import { StatsGrid } from "@/components/ui/StatsGrid";
 import { getV3Channels } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Zap from "lucide-react/dist/esm/icons/zap";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
@@ -66,7 +68,30 @@ export default function V3ChannelPage() {
                 ))}
               </div>
             )}
+            <div className="flex items-center justify-between border border-border-alt bg-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <Tv className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{channel?.name}</h2>
+                  <p className="font-mono text-xs text-fg-dim">{channel?.sourceLabel || "V3"} · {urls.length} source{urls.length > 1 ? "s" : ""}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigator.clipboard.writeText(window.location.href)}
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                Share
+              </button>
+            </div>
             <VideoPlayer streamUrl={selectedUrl.url} streamType={isTs ? "direct" : "hls"} clearKeys={null} />
+            <StatsGrid items={[
+              { label: "Server", value: "V3", icon: "zap" },
+              { label: "URLs", value: `${urls.length}`, icon: "shield" },
+              { label: "Status", value: "ONLINE", highlight: true, icon: "monitor" },
+            ]} />
           </>
         ) : (
           <div className="text-center py-20 font-mono text-fg-dim">Stream unavailable</div>

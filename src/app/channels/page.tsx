@@ -14,6 +14,7 @@ import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Search from "lucide-react/dist/esm/icons/search";
 import X from "lucide-react/dist/esm/icons/x";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
@@ -388,10 +389,44 @@ export default function ChannelsPage() {
                         </p>
                       </div>
                     </div>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(window.location.href)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      Share
+                    </button>
                   </div>
-                  {selectedVersion === "v1" && v1StreamData?.url ? <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} /> : selectedVersion === "v1" && v1StreamData ? <p className="font-mono text-xs text-fg-dim text-center py-12">Stream unavailable</p> : null}
-                  {selectedVersion === "v2" && v2Url ? <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} /> : null}
-                  {selectedVersion === "v4" && v4Url ? <VideoPlayer streamUrl={v4Url} streamType={v4Ch?.stream_type || "dash"} clearKeys={v4Ch?.drm_kid && v4Ch?.drm_key ? { [v4Ch.drm_kid]: v4Ch.drm_key } : null} /> : null}
+                  {selectedVersion === "v1" && v1StreamData?.url ? (
+                    <>
+                      <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} />
+                      <StatsGrid items={[
+                        { label: "Server", value: "V1", icon: "zap" },
+                        { label: "Type", value: (v1StreamData.type || "HLS").toUpperCase(), icon: "shield" },
+                        { label: "Status", value: "LIVE", highlight: true, icon: "monitor" },
+                      ]} />
+                    </>
+                  ) : selectedVersion === "v1" && v1StreamData ? <p className="font-mono text-xs text-fg-dim text-center py-12">Stream unavailable</p> : null}
+                  {selectedVersion === "v2" && v2Url ? (
+                    <>
+                      <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} />
+                      <StatsGrid items={[
+                        { label: "Server", value: "V2", icon: "zap" },
+                        { label: "Type", value: (v2Ch?.stream_type || "HLS").toUpperCase(), icon: "shield" },
+                        { label: "Status", value: "ACTIVE", highlight: true, icon: "monitor" },
+                      ]} />
+                    </>
+                  ) : null}
+                  {selectedVersion === "v4" && v4Url ? (
+                    <>
+                      <VideoPlayer streamUrl={v4Url} streamType={v4Ch?.stream_type || "dash"} clearKeys={v4Ch?.drm_kid && v4Ch?.drm_key ? { [v4Ch.drm_kid]: v4Ch.drm_key } : null} />
+                      <StatsGrid items={[
+                        { label: "Server", value: "V4", icon: "zap" },
+                        { label: "Type", value: (v4Ch?.stream_type || "DASH").toUpperCase(), icon: "shield" },
+                        { label: "Status", value: "ACTIVE", highlight: true, icon: "monitor" },
+                      ]} />
+                    </>
+                  ) : null}
                   {selectedVersion === "v3" && v3Url ? (
                     <>
                       <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
