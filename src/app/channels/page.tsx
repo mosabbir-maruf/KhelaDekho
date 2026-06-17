@@ -78,7 +78,11 @@ export default function ChannelsPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v4");
+  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => {
+    const { v } = getUrlParams();
+    if (v && ["v1", "v2", "v3", "v4"].includes(v)) return v as ApiVersion;
+    return loadAdminConfig().defaultVersion || "v4";
+  });
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -177,7 +181,7 @@ export default function ChannelsPage() {
     return () => { active = false; controller.abort(); };
   }, [selectedChannel, selectedVersion]);
 
-  const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : apiVersion === "v4" ? "V4 Streams" : "Browse Streams";
+  const label = isV3 ? "V2 Streams" : apiVersion === "v1" ? "V1 Streams" : apiVersion === "v4" ? "V4 Streams" : "Browse Streams";
 
   const apiBase = getApiBaseUrl();
 
@@ -266,7 +270,7 @@ export default function ChannelsPage() {
                 {filteredChannels.map((ch: any, idx: number) => (
                   <ChannelListItem
                     key={`${apiVersion}-${getChannelId(ch, apiVersion) || idx}`}
-                    item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
+                    item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? "V2 Streams" : apiVersion === "v1" ? "V1 Streams" : apiVersion === "v4" ? "V4 Streams" : "V2 Streams" }}
                     selected={selectedChannel === ch && selectedVersion === apiVersion}
                     onClick={() => selectAndReplaceUrl(ch)}
                     showExtra

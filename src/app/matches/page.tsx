@@ -85,8 +85,12 @@ function MatchesContent() {
     let active = true;
     (async () => {
       setLoading(true);
-      const data = await fetchV2Events(controller.signal, activeTab !== "all" ? activeTab : undefined);
-      if (active) { setEvents(data); setLoading(false); }
+      try {
+        const data = await fetchV2Events(controller.signal, activeTab !== "all" ? activeTab : undefined);
+        if (active) { setEvents(data); setLoading(false); }
+      } catch (e) {
+        if (active) setLoading(false);
+      }
     })();
     return () => { active = false; controller.abort(); };
   }, [activeTab]);
@@ -161,14 +165,14 @@ function MatchesContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredEvents.map((ev) => {
+          {filteredEvents.map((ev, idx) => {
             const isLive = ev.status === "live";
             const isFinished = ev.status === "finished";
             const { time, date } = formatTime(ev.starts_at);
 
             return (
               <div
-                key={ev.id}
+                key={`${ev.id}-${idx}`}
                 className="rounded-xl border border-border-alt bg-card p-6 flex flex-col relative overflow-hidden group shadow-2xl min-h-[240px]"
               >
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_14px] pointer-events-none" />
