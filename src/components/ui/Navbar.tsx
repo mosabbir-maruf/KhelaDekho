@@ -308,6 +308,13 @@ export function Navbar() {
                     <Trophy className="w-4 h-4 text-yellow-400" />
                     FIFA World Cup
                   </Link>
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
+                  >
+                    <Tv className="w-4 h-4 text-red-400" />
+                    Admin
+                  </Link>
                 </div>
               </div>
 

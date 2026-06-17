@@ -2,10 +2,6 @@ export const runtime = "edge";
 
 import { NextResponse, NextRequest } from "next/server";
 
-export const runtime = "edge";
-
-import { NextResponse, NextRequest } from "next/server";
-
 async function signHMACSHA256(secret: string, data: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(

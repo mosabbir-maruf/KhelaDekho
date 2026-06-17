@@ -6,6 +6,8 @@ import { getApiBaseUrl } from "@/lib/api";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
+import { loadAdminConfig, getV3Channels } from "@/data/admin";
+import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 
 interface V2Channel {
@@ -30,16 +32,22 @@ interface V1Channel {
   live_viewers: number;
 }
 
-function isAlive(ch: any, v1: boolean): boolean {
-  return v1 ? ch.status === "live" : ch.is_alive && ch.stream_url;
+type ApiVersion = "v1" | "v2" | "v3";
+
+function isAlive(ch: any, v: ApiVersion): boolean {
+  if (v === "v1") return ch.status === "live";
+  if (v === "v2") return ch.is_alive && ch.stream_url;
+  return true;
 }
 
 export default function ChannelsPage() {
   const router = useRouter();
-  const [apiVersion, setApiVersion] = useState<"v1" | "v2">("v2");
+  const [apiVersion, setApiVersion] = useState<ApiVersion>("v2");
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const isV3 = apiVersion === "v3";
 
   useEffect(() => {
     let active = true;
@@ -49,14 +57,19 @@ export default function ChannelsPage() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${baseUrl}/api/${apiVersion}/channels?limit=100`, {
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-        });
-        if (!res.ok) throw new Error();
-        const body = await res.json();
-        if (!active) return;
-        setChannels(body?.data?.channels || []);
+        if (apiVersion === "v3") {
+          const cfg = loadAdminConfig();
+          if (cfg.enabled.v3) setChannels(getV3Channels());
+          else setChannels([]);
+        } else {
+          const res = await fetch(`${baseUrl}/api/${apiVersion}/channels?limit=200`, {
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+          });
+          const body = res.ok ? await res.json() : { data: { channels: [] } };
+          if (!active) return;
+          setChannels(body?.data?.channels || []);
+        }
       } catch {
         if (active) setChannels([]);
       } finally {
@@ -73,17 +86,30 @@ export default function ChannelsPage() {
   }, [channels, searchQuery]);
 
   const aliveCount = useMemo(
-    () => channels.filter((ch) => isAlive(ch, apiVersion === "v1")).length,
+    () => channels.filter((ch) => isAlive(ch, apiVersion)).length,
     [channels, apiVersion],
   );
 
-  const isV1 = apiVersion === "v1";
-
   const navigateToChannel = useCallback((ch: any) => {
-    router.push(isV1 ? `/v1/channel/${(ch as V1Channel).key}` : `/v2/channel/${(ch as V2Channel).id}`);
-  }, [isV1, router]);
+    if (apiVersion === "v1") router.push(`/v1/channel/${(ch as V1Channel).key}`);
+    else if (apiVersion === "v2") router.push(`/v2/channel/${(ch as V2Channel).id}`);
+    else router.push(`/v3/channel/${(ch as V3Channel).id}`);
+  }, [apiVersion, router]);
 
-  const onSearch = useCallback(setSearchQuery, []);
+  const cycleVersion = useCallback(() => {
+    setApiVersion((prev) => prev === "v1" ? "v2" : prev === "v2" ? "v3" : "v1");
+  }, []);
+
+  const enabled = useMemo(() => {
+    const cfg = loadAdminConfig();
+    return cfg.enabled;
+  }, []);
+
+  const availableVersions = useMemo(() => {
+    return (["v1", "v2", "v3"] as ApiVersion[]).filter((v) => v === "v3" ? enabled.v3 : true);
+  }, [enabled]);
+
+  const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : "Browse Streams";
 
   return (
     <div className="min-h-screen">
@@ -95,7 +121,7 @@ export default function ChannelsPage() {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
                 <Tv className="w-3 h-3 text-red-500" />
-                {isV1 ? "Legacy Streams" : "Browse Streams"}
+                {label}
               </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-fg font-mono leading-tight">
                 Channels<span className="text-red-500">.</span>
@@ -105,11 +131,11 @@ export default function ChannelsPage() {
               </p>
             </div>
             <button
-              onClick={() => setApiVersion((prev) => prev === "v1" ? "v2" : "v1")}
+              onClick={cycleVersion}
               className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
             >
-              <span className={`w-2 h-2 rounded-full ${isV1 ? "bg-yellow-500" : "bg-green-500"}`} />
-              API v{isV1 ? "1" : "2"}
+              <span className={`w-2 h-2 rounded-full ${isV3 ? "bg-blue-500" : apiVersion === "v1" ? "bg-yellow-500" : "bg-green-500"}`} />
+              API v{apiVersion.toUpperCase()}
             </button>
           </div>
           <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-6">
@@ -122,15 +148,15 @@ export default function ChannelsPage() {
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0">
-              <SearchInput value={searchQuery} onChange={onSearch} />
+              <SearchInput value={searchQuery} onChange={setSearchQuery} />
               <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1 mt-3 mb-1 shrink-0">
                 {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
               </div>
               <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
                 {filteredChannels.map((ch: any) => (
                   <ChannelListItem
-                    key={isV1 ? ch.key : ch.id}
-                    item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV1 ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
+                    key={isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}
+                    item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV3 ? (ch.type || "M3U").toUpperCase() : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={false}
                     onClick={() => navigateToChannel(ch)}
                     showExtra
