@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, sanitizeBaseUrl } from "@/lib/api";
@@ -10,6 +10,7 @@ import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
+import { useCopyButton } from "@/hooks/useCopyButton";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -87,15 +88,9 @@ export default function ChannelsPage() {
   const [v1Error, setV1Error] = useState<string | null>(null);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: handleShare } = useCopyButton();
 
   const isV3 = apiVersion === "v3";
-
-  function handleShare() {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
 
   function selectAndReplaceUrl(ch: any) {
     setSelectedChannel(ch);
@@ -159,10 +154,6 @@ export default function ChannelsPage() {
     () => channels.filter((ch) => isAlive(ch, apiVersion)).length,
     [channels, apiVersion],
   );
-
-  const selectChannel = useCallback((ch: any) => {
-    selectAndReplaceUrl(ch);
-  }, [apiVersion, router, pathname]);
 
   useEffect(() => {
     if (!selectedChannel || selectedVersion !== "v1") return;
@@ -277,7 +268,7 @@ export default function ChannelsPage() {
                     key={`${apiVersion}-${getChannelId(ch, apiVersion)}`}
                     item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={selectedChannel === ch && selectedVersion === apiVersion}
-                    onClick={() => selectChannel(ch)}
+                    onClick={() => selectAndReplaceUrl(ch)}
                     showExtra
                   />
                 ))}
@@ -327,7 +318,7 @@ export default function ChannelsPage() {
                         <button
                           key={`mobile-${getChannelId(ch, apiVersion)}`}
                           type="button"
-                          onClick={() => { selectChannel(ch); setIsMobileDropdownOpen(false); }}
+                          onClick={() => { selectAndReplaceUrl(ch); setIsMobileDropdownOpen(false); }}
                           className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
                             selectedChannel === ch && selectedVersion === apiVersion
                               ? "border-red-500/30 bg-red-500/[0.03] text-red-400 font-semibold"
@@ -393,7 +384,7 @@ export default function ChannelsPage() {
                       </div>
                     </div>
                     <button
-                      onClick={handleShare}
+                      onClick={() => handleShare(window.location.href)}
                       className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
                     >
                       <Share2 className="w-3.5 h-3.5" />

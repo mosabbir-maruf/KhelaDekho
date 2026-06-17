@@ -1,21 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import Check from "lucide-react/dist/esm/icons/check";
+import { useCopyButton } from "@/hooks/useCopyButton";
 
 interface CodeBlockProps {
     code: string;
 }
 
 export function CodeBlock({ code }: CodeBlockProps) {
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = () => {
-        navigator.clipboard.writeText(code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+    const { copied, copy } = useCopyButton();
 
     return (
         <div className="relative group bg-card border border-border-alt shadow-2xl overflow-hidden font-mono text-xs my-6">
@@ -35,7 +29,7 @@ export function CodeBlock({ code }: CodeBlockProps) {
 
             {/* Copy Button */}
             <button
-                onClick={handleCopy}
+                onClick={() => copy(code)}
                 className="absolute top-2 right-2 p-1.5 rounded-md bg-hover-alt hover:bg-hover-alt text-fg-dim hover:text-fg transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md border border-border-alt"
                 aria-label="Copy code"
             >

@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { getV3Channels } from "@/data/admin";
+import { useCopyButton } from "@/hooks/useCopyButton";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Zap from "lucide-react/dist/esm/icons/zap";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
@@ -18,7 +19,7 @@ export default function V3ChannelPage() {
   const [channel, setChannel] = useState<any>(null);
   const [qualityIdx, setQualityIdx] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: handleShare } = useCopyButton();
 
   useEffect(() => {
     if (!id) return;
@@ -80,7 +81,7 @@ export default function V3ChannelPage() {
                 </div>
               </div>
               <button
-                onClick={() => { navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                onClick={() => handleShare(window.location.href)}
                 className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5" />

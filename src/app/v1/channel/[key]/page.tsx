@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { StatsGrid } from "@/components/ui/StatsGrid";
+import { useCopyButton } from "@/hooks/useCopyButton";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
 
@@ -16,7 +17,7 @@ export default function V1ChannelPage() {
   const [streamData, setStreamData] = useState<{ url: string; type: string; clearkey: any } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: handleShare } = useCopyButton();
 
   useEffect(() => {
     if (!key) return;
@@ -61,7 +62,7 @@ export default function V1ChannelPage() {
                 </div>
               </div>
               <button
-                onClick={() => { navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                onClick={() => handleShare(window.location.href)}
                 className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5" />

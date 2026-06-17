@@ -3,9 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
-import { ChannelListItem } from "@/components/ui/ChannelListItem";
-import { StatsGrid } from "@/components/ui/StatsGrid";
-import { CATEGORIES, CATEGORY_KEYWORDS, LOGO_BASE, LOGO_MAP, getCategory } from "@/data/liveTv";
+import { CATEGORIES, LOGO_BASE, LOGO_MAP, getCategory } from "@/data/liveTv";
 import type { Category } from "@/data/liveTv";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Image from "next/image";
