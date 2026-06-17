@@ -105,13 +105,7 @@ export function Navbar() {
               >
                 About
               </Link>
-              <Link
-                href="/terms"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/terms") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
-                  }`}
-              >
-                Terms
-              </Link>
+
               <Link
                 href="/contact"
                 className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/contact") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
@@ -208,14 +202,7 @@ export function Navbar() {
                   <Calendar className="w-4 h-4" />
                   Schedule & Matches
                 </Link>
-                <Link
-                  href="/terms"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/terms") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <FileText className="w-4 h-4" />
-                  Terms & Conditions
-                </Link>
+
                 <Link
                   href="/privacy"
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/privacy") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
