@@ -173,7 +173,9 @@ export default function ChannelsPage() {
         const data = await res.json();
         if (!active) return;
         if (!data.url) throw new Error("Empty stream URL");
-        setV1StreamData({ url: data.url, type: data.type || "hls", clearkey: data.clearkey || null });
+        const ck = data.clearkey;
+        const clearkey = ck?.kid && ck?.key ? { [ck.kid]: ck.key } : null;
+        setV1StreamData({ url: data.url, type: data.type || "hls", clearkey });
       } catch (e: any) {
         if (e.name === "AbortError") return;
         if (active) setV1Error(e.message || "Failed to load stream");

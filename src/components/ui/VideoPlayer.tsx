@@ -291,9 +291,14 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
             const key = keysObj[kid];
             const hexKid = kid.length === 24 ? base64ToHex(kid) : kid;
             const hexKey = key.length === 24 ? base64ToHex(key) : key;
-            hexKeys[hexKid] = hexKey;
+            const validHex = /^[0-9a-fA-F]+$/;
+            if (validHex.test(hexKid) && hexKid.length % 2 === 0 && validHex.test(hexKey) && hexKey.length % 2 === 0) {
+              hexKeys[hexKid] = hexKey;
+            }
           }
-          player.configure({ drm: { clearKeys: hexKeys } });
+          if (Object.keys(hexKeys).length > 0) {
+            player.configure({ drm: { clearKeys: hexKeys } });
+          }
         }
 
         player.removeEventListener("error", player._kdErrorHandler);
