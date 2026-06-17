@@ -12,7 +12,6 @@ import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
-import Server from "lucide-react/dist/esm/icons/server";
 import Search from "lucide-react/dist/esm/icons/search";
 import X from "lucide-react/dist/esm/icons/x";
 
@@ -218,7 +217,7 @@ export default function ChannelsPage() {
                 onClick={() => setIsServerDropdownOpen((prev) => !prev)}
                 className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
               >
-                <Server className="w-3.5 h-3.5" />
+                <span className={`w-2 h-2 rounded-full ${isV3 ? "bg-blue-500" : apiVersion === "v1" ? "bg-yellow-500" : apiVersion === "v2" ? "bg-green-500" : "bg-purple-500"}`} />
                 Switch Server
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
               </button>
