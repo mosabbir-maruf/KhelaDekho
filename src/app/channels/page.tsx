@@ -235,7 +235,7 @@ export default function ChannelsPage() {
                       }`}
                     >
                       <span className={`w-2 h-2 rounded-full ${v === "v3" ? "bg-blue-500" : v === "v1" ? "bg-yellow-500" : v === "v2" ? "bg-green-500" : "bg-purple-500"}`} />
-                      V{v.toUpperCase()}
+                      {v.toUpperCase()}
                     </button>
                   ))}
                 </div>
