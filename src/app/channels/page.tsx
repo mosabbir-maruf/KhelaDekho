@@ -6,7 +6,6 @@ import { getApiBaseUrl } from "@/lib/api";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
-import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Tv from "lucide-react/dist/esm/icons/tv";
 
 interface V2Channel {
@@ -31,33 +30,8 @@ interface V1Channel {
   live_viewers: number;
 }
 
-function needsProxy(u: string) {
-  return u.includes('storage.googleapis.com') || u.includes('soccerball.st');
-}
-
-async function fetchChannels(version: "v1" | "v2", signal: AbortSignal): Promise<any[]> {
-  const rawBaseUrl = getApiBaseUrl();
-  if (!rawBaseUrl) return [];
-  const baseUrl = rawBaseUrl.replace(/\/+$/, "");
-  try {
-    const res = await fetch(`${baseUrl}/api/${version}/channels?limit=100`, {
-      signal,
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return [];
-    const body = await res.json();
-    return body?.data?.channels || [];
-  } catch {
-    return [];
-  }
-}
-
-function isV1Alive(ch: any): boolean {
-  return ch.status === "live";
-}
-
-function isV2Alive(ch: any): boolean {
-  return ch.is_alive && ch.stream_url;
+function isAlive(ch: any, v1: boolean): boolean {
+  return v1 ? ch.status === "live" : ch.is_alive && ch.stream_url;
 }
 
 export default function ChannelsPage() {
@@ -70,12 +44,24 @@ export default function ChannelsPage() {
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
+    const rawBaseUrl = getApiBaseUrl();
+    const baseUrl = rawBaseUrl ? rawBaseUrl.replace(/\/+$/, "") : "";
     (async () => {
       setLoading(true);
-      const chs = await fetchChannels(apiVersion, controller.signal);
-      if (!active) return;
-      setChannels(chs);
-      setLoading(false);
+      try {
+        const res = await fetch(`${baseUrl}/api/${apiVersion}/channels?limit=100`, {
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error();
+        const body = await res.json();
+        if (!active) return;
+        setChannels(body?.data?.channels || []);
+      } catch {
+        if (active) setChannels([]);
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
     return () => { active = false; controller.abort(); };
   }, [apiVersion]);
@@ -87,22 +73,17 @@ export default function ChannelsPage() {
   }, [channels, searchQuery]);
 
   const aliveCount = useMemo(
-    () => channels.filter(apiVersion === "v1" ? isV1Alive : isV2Alive).length,
+    () => channels.filter((ch) => isAlive(ch, apiVersion === "v1")).length,
     [channels, apiVersion],
   );
 
   const isV1 = apiVersion === "v1";
 
   const navigateToChannel = useCallback((ch: any) => {
-    const path = isV1
-      ? `/v1/channel/${(ch as V1Channel).key}`
-      : `/v2/channel/${(ch as V2Channel).id}`;
-    router.push(path);
+    router.push(isV1 ? `/v1/channel/${(ch as V1Channel).key}` : `/v2/channel/${(ch as V2Channel).id}`);
   }, [isV1, router]);
 
-  const toggleVersion = useCallback(() => {
-    setApiVersion((prev) => (prev === "v1" ? "v2" : "v1"));
-  }, []);
+  const onSearch = useCallback(setSearchQuery, []);
 
   return (
     <div className="min-h-screen">
@@ -110,7 +91,6 @@ export default function ChannelsPage() {
         <div className="relative border border-border-alt bg-card overflow-hidden p-8 md:p-12">
           <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-
           <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
@@ -124,21 +104,13 @@ export default function ChannelsPage() {
                 {aliveCount} active &middot; {channels.length.toLocaleString()} indexed
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={toggleVersion}
-                className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
-              >
-                <span className={`w-2 h-2 rounded-full ${isV1 ? "bg-yellow-500" : "bg-green-500"}`} />
-                API v{isV1 ? "1" : "2"}
-              </button>
-              <a
-                href="/"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-border-alt transition-all shrink-0"
-              >
-                <ChevronDown className="w-3.5 h-3.5 rotate-90" /> Lobby
-              </a>
-            </div>
+            <button
+              onClick={() => setApiVersion((prev) => prev === "v1" ? "v2" : "v1")}
+              className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
+            >
+              <span className={`w-2 h-2 rounded-full ${isV1 ? "bg-yellow-500" : "bg-green-500"}`} />
+              API v{isV1 ? "1" : "2"}
+            </button>
           </div>
           <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-6">
             Stream buffering? Switch channel or server.
@@ -150,11 +122,10 @@ export default function ChannelsPage() {
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0">
-              <SearchInput value={searchQuery} onChange={setSearchQuery} />
+              <SearchInput value={searchQuery} onChange={onSearch} />
               <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1 mt-3 mb-1 shrink-0">
                 {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
               </div>
-
               <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
                 {filteredChannels.map((ch: any) => (
                   <ChannelListItem
@@ -177,9 +148,7 @@ export default function ChannelsPage() {
               <div className="text-center space-y-3">
                 <Tv className="w-8 h-8 text-fg-dim mx-auto" />
                 <p className="font-mono text-sm text-fg-dim font-semibold">Select a channel</p>
-                <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">
-                  Choose from the left panel to start watching
-                </p>
+                <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">Choose from the left panel</p>
               </div>
             </div>
           </div>
