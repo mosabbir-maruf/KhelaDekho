@@ -26,8 +26,24 @@ export interface AdminConfig {
 
 const STORAGE_KEY = "khela_admin_config";
 
+const DEFAULT_FIFA_CHANNELS: V3Channel[] = [
+  { id: "fifa-0", name: "STARSPORTS1 (New)", urls: [{ url: "http://41.205.93.154/STARSPORTS1/index.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/5/52/Star_Sports_logo.svg", sourceLabel: "FIFA" },
+  { id: "fifa-1", name: "T Sports HD (FIFA BD)", urls: [{ url: "https://tvsen7.aynaott.com/tsportsfhd/index.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/e/e0/T_Sports_logo.jpg", sourceLabel: "FIFA" },
+  { id: "fifa-2", name: "FOX Sports (FIFA USA)", urls: [{ url: "https://d1jzu95oc8fgt3.cloudfront.net/FOX_Sports.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/1/15/Fox_Sports_logo.svg", sourceLabel: "FIFA" },
+  { id: "fifa-3", name: "Telemundo Deportes Florida", urls: [{ url: "https://nbcu-telemundoflorida-firetv.amagi.tv/playlist.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Telemundo_logo.svg", sourceLabel: "FIFA" },
+  { id: "fifa-4", name: "BBC One (FIFA UK)", urls: [{ url: "https://vs-hls-pushb-uk-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_one_scotland_hd/mobile_wifi_main_hd_abr_v2.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/4/41/BBC_One_logo_2021.svg", sourceLabel: "FIFA" },
+  { id: "fifa-5", name: "TF1 HD (FIFA France)", urls: [{ url: "https://viamotionhsi.netplus.ch/live/eds/tf1hd/browser-HLS8/tf1hd.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/1/18/Logo_TF1_2013.svg", sourceLabel: "FIFA" },
+  { id: "fifa-6", name: "Coze TV (Caze TV FIFA 2026)", urls: [{ url: "https://dfr80qz435crc.cloudfront.net/MNOP/Amagi/Caze/Caze_TV_BR/1080p-vtt/index.m3u8", label: "1080p" }], logo: "https://upload.wikimedia.org/wikipedia/commons/a/a7/FIFA_Logo.svg", sourceLabel: "FIFA" },
+  { id: "fifa-7", name: "Caze TV Brazil (FIFA)", urls: [{ url: "https://dfr80qz435crc.cloudfront.net/MNOP/Amagi/Caze/Caze_TV_BR/Caze_TV.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/a/a7/FIFA_Logo.svg", sourceLabel: "FIFA" },
+  { id: "fifa-8", name: "beIN SPORTS XTRA (FIFA)", urls: [{ url: "https://bein-esp-xumo.amagi.tv/playlistR720P.m3u8", label: "720p" }], logo: "https://upload.wikimedia.org/wikipedia/commons/c/c5/BeIN_Sports_logo.svg", sourceLabel: "FIFA" },
+  { id: "fifa-9", name: "beIN Sports 1 (FIFA)", urls: [{ url: "https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/c/c5/BeIN_Sports_logo.svg", sourceLabel: "FIFA" },
+  { id: "fifa-10", name: "Sony Sports Ten 1 HD (FIFA)", urls: [{ url: "https://sl.vodep39240327.workers.dev/channel/SONY%20TEN%201%20HD.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/8/87/Sony_Sports_Network_logo.png", sourceLabel: "FIFA" },
+  { id: "fifa-11", name: "Sony Sports Ten 2 HD (FIFA)", urls: [{ url: "https://sl.vodep39240327.workers.dev/channel/SONY%20TEN%202%20HD.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/8/87/Sony_Sports_Network_logo.png", sourceLabel: "FIFA" },
+  { id: "fifa-12", name: "Star Sports 2 HD (FIFA)", urls: [{ url: "https://tvsen7.aynaott.com/ssport2hd/index.m3u8", label: "HD" }], logo: "https://upload.wikimedia.org/wikipedia/commons/5/52/Star_Sports_logo.svg", sourceLabel: "FIFA" },
+];
+
 function defaultConfig(): AdminConfig {
-  return { enabled: { v1: true, v2: true, v3: true }, sources: [] };
+  return { enabled: { v1: true, v2: true, v3: true }, sources: [{ label: "FIFA 2026", type: "github-json", url: "hardcoded", channels: DEFAULT_FIFA_CHANNELS, lastFetched: Date.now() }] };
 }
 
 export function loadAdminConfig(): AdminConfig {
