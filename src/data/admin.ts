@@ -20,8 +20,8 @@ export interface V3Source {
 }
 
 export interface AdminConfig {
-  enabled: { v1: boolean; v2: boolean; v3: boolean };
-  defaultVersion: "v1" | "v2" | "v3";
+  enabled: { v1: boolean; v2: boolean; v3: boolean; v4: boolean };
+  defaultVersion: "v1" | "v2" | "v3" | "v4";
   sources: V3Source[];
 }
 
@@ -44,7 +44,7 @@ const DEFAULT_FIFA_CHANNELS: V3Channel[] = [
 ];
 
 function defaultConfig(): AdminConfig {
-  return { enabled: { v1: true, v2: true, v3: true }, defaultVersion: "v3", sources: [{ label: "FIFA 2026", type: "github-json", url: "hardcoded", channels: DEFAULT_FIFA_CHANNELS, lastFetched: Date.now() }] };
+  return { enabled: { v1: true, v2: true, v3: true, v4: true }, defaultVersion: "v4", sources: [{ label: "FIFA 2026", type: "github-json", url: "hardcoded", channels: DEFAULT_FIFA_CHANNELS, lastFetched: Date.now() }] };
 }
 
 export function loadAdminConfig(): AdminConfig {

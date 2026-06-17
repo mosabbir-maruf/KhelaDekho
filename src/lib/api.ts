@@ -160,4 +160,29 @@ export async function getPlatformStats(options?: RequestInit): Promise<{ stats: 
   return fetchAPI<{ stats: PlatformStats; cached_at: string }>("/api/v1/stats", options);
 }
 
+// V4: Proxybdix channel types
+export interface V4Channel {
+  id: string;
+  name: string;
+  logo: string | null;
+  stream_url: string | null;
+  stream_type: string;
+  drm_kid: string | null;
+  drm_key: string | null;
+  is_alive: boolean;
+  cached_at: string;
+}
+
+// Fetch v4 channels
+export async function getV4Channels(params: {
+  q?: string;
+  alive?: boolean;
+} = {}, options?: RequestInit): Promise<{ channels: V4Channel[]; total: number; cached_at: string } | null> {
+  const query = buildQuery(params as Record<string, string | number | undefined>);
+  return fetchAPI<{ channels: V4Channel[]; total: number; cached_at: string }>(
+    `/api/v4/channels${query ? `?${query}` : ""}`,
+    options
+  );
+}
+
 

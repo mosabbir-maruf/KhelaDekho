@@ -25,6 +25,18 @@ interface V2Channel {
   cached_at: string;
 }
 
+interface V4Channel {
+  id: string;
+  name: string;
+  logo: string | null;
+  stream_url: string | null;
+  stream_type: string;
+  drm_kid: string | null;
+  drm_key: string | null;
+  is_alive: boolean;
+  cached_at: string;
+}
+
 interface V1Channel {
   key: string;
   name: string;
@@ -35,18 +47,19 @@ interface V1Channel {
   live_viewers: number;
 }
 
-type ApiVersion = "v1" | "v2" | "v3";
+type ApiVersion = "v1" | "v2" | "v3" | "v4";
 
 function isAlive(ch: any, v: ApiVersion): boolean {
   if (v === "v1") return ch.status === "live";
   if (v === "v2") return ch.is_alive && ch.stream_url;
+  if (v === "v4") return ch.is_alive && ch.stream_url;
   return true;
 }
 
 export default function ChannelsPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v3");
+  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v4");
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +86,8 @@ export default function ChannelsPage() {
           const cfg = loadAdminConfig();
           setChannels(cfg.enabled.v3 ? getV3Channels() : []);
         } else {
-          const res = await fetch(`${baseUrl}/api/${apiVersion}/channels?limit=200`, {
+          const fetchLimit = apiVersion === "v1" ? "?limit=200" : apiVersion === "v4" ? "?alive=true" : "?limit=200";
+          const res = await fetch(`${baseUrl}/api/${apiVersion}/channels${fetchLimit}`, {
             signal: controller.signal,
             headers: { Accept: "application/json" },
           });
@@ -106,9 +120,9 @@ export default function ChannelsPage() {
     setSelectedVersion(apiVersion);
     setV1StreamData(null);
     setV1Error(null);
-    const id = apiVersion === "v1" ? (ch as V1Channel).key : apiVersion === "v2" ? String((ch as V2Channel).id) : (ch as V3Channel).id;
+    const id = apiVersion === "v1" ? (ch as V1Channel).key : apiVersion === "v2" ? String((ch as V2Channel).id) : isV3 ? (ch as V3Channel).id : (ch as V4Channel).id;
     router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
-  }, [apiVersion, router, pathname]);
+  }, [apiVersion, router, pathname, isV3]);
 
   useEffect(() => {
     if (!selectedChannel || selectedVersion !== "v1") return;
@@ -133,7 +147,7 @@ export default function ChannelsPage() {
   }, [selectedChannel, selectedVersion]);
 
   const cycleVersion = useCallback(() => {
-    setApiVersion((prev) => prev === "v1" ? "v2" : prev === "v2" ? "v3" : "v1");
+    setApiVersion((prev) => prev === "v1" ? "v2" : prev === "v2" ? "v3" : prev === "v3" ? "v4" : "v1");
   }, []);
 
   const enabled = useMemo(() => {
@@ -141,7 +155,7 @@ export default function ChannelsPage() {
     return cfg.enabled;
   }, []);
 
-  const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : "Browse Streams";
+  const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : apiVersion === "v4" ? "ProxyBDIX Streams" : "Browse Streams";
 
   const apiBase = getApiBaseUrl();
 
@@ -159,6 +173,10 @@ export default function ChannelsPage() {
   const v2Url = needsProxy && apiBase
     ? `${apiBase.replace(/\/+$/, "")}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
     : rawUrl;
+
+  const v4Ch = selectedVersion === "v4" ? (selectedChannel as V4Channel) : null;
+  const v4RawUrl = v4Ch?.stream_url;
+  const v4Url = v4RawUrl;
 
   const showPlayer = selectedChannel && selectedVersion === apiVersion;
   const v1Loading = selectedVersion === "v1" && !v1StreamData && !v1Error;
@@ -186,7 +204,7 @@ export default function ChannelsPage() {
               onClick={cycleVersion}
               className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
             >
-              <span className={`w-2 h-2 rounded-full ${isV3 ? "bg-blue-500" : apiVersion === "v1" ? "bg-yellow-500" : "bg-green-500"}`} />
+              <span className={`w-2 h-2 rounded-full ${isV3 ? "bg-blue-500" : apiVersion === "v1" ? "bg-yellow-500" : apiVersion === "v2" ? "bg-green-500" : "bg-purple-500"}`} />
               API v{apiVersion.toUpperCase()}
             </button>
           </div>
@@ -207,7 +225,7 @@ export default function ChannelsPage() {
               <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
                 {filteredChannels.map((ch: any) => (
                   <ChannelListItem
-                    key={`${apiVersion}-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}`}
+                    key={`${apiVersion}-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : apiVersion === "v4" ? ch.id : ch.id}`}
                     item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={selectedChannel === ch && selectedVersion === apiVersion}
                     onClick={() => selectChannel(ch)}
@@ -245,7 +263,7 @@ export default function ChannelsPage() {
                     <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Decrypting stream...</span>
                   </div>
                 </div>
-              ) : !v1StreamData?.url && !v2Url && !v3Url ? (
+              ) : !v1StreamData?.url && !v2Url && !v3Url && !v4Url ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <p className="font-mono text-xs text-fg-dim">Stream unavailable</p>
                 </div>
@@ -259,13 +277,14 @@ export default function ChannelsPage() {
                       <div>
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel?.name}</h2>
                         <p className="font-mono text-xs text-fg-dim">
-                          {selectedVersion === "v1" ? `${(selectedChannel as V1Channel)?.category || ""} · LIVE` : selectedVersion === "v2" ? `${((selectedChannel as V2Channel)?.stream_type || "HLS").toUpperCase()} · ACTIVE` : `${v3Channel?.sourceLabel || "V3"} · ${v3Channel?.urls?.length || 1} source${(v3Channel?.urls?.length || 1) > 1 ? "s" : ""}`}
+                          {selectedVersion === "v1" ? `${(selectedChannel as V1Channel)?.category || ""} · LIVE` : selectedVersion === "v2" ? `${((selectedChannel as V2Channel)?.stream_type || "HLS").toUpperCase()} · ACTIVE` : selectedVersion === "v4" ? `${((selectedChannel as V4Channel)?.stream_type || "DASH").toUpperCase()} · ACTIVE` : `${v3Channel?.sourceLabel || "V3"} · ${v3Channel?.urls?.length || 1} source${(v3Channel?.urls?.length || 1) > 1 ? "s" : ""}`}
                         </p>
                       </div>
                     </div>
                   </div>
                   {selectedVersion === "v1" && v1StreamData?.url ? <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} /> : selectedVersion === "v1" && v1StreamData ? <p className="font-mono text-xs text-fg-dim text-center py-12">Stream unavailable</p> : null}
                   {selectedVersion === "v2" && v2Url ? <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} /> : null}
+                  {selectedVersion === "v4" && v4Url ? <VideoPlayer streamUrl={v4Url} streamType={v4Ch?.stream_type || "dash"} clearKeys={v4Ch?.drm_kid && v4Ch?.drm_key ? { [v4Ch.drm_kid]: v4Ch.drm_key } : null} /> : null}
                   {selectedVersion === "v3" && v3Url ? (
                     <>
                       <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
