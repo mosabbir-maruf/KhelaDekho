@@ -112,14 +112,32 @@ export default function ChannelsPage() {
   }, []);
 
   const isV1 = apiVersion === "v1";
+  const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: any } | null>(null);
+
+  useEffect(() => {
+    if (!isV1 || !selectedChannel) { setV1StreamData(null); return; }
+    let active = true;
+    const key = (selectedChannel as V1Channel).key;
+    if (!key) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/stream?key=${encodeURIComponent(key)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        setV1StreamData({
+          url: data.url || "",
+          type: data.type || "hls",
+          clearkey: data.clearkey || null,
+        });
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, [isV1, selectedChannel]);
 
   const streamUrl = useMemo(() => {
     if (!selectedChannel) return null;
-    if (isV1) {
-      const key = (selectedChannel as V1Channel).key;
-      if (!key) return null;
-      return `/api/stream?key=${encodeURIComponent(key)}`;
-    }
+    if (isV1) return v1StreamData?.url || null;
     const v2ch = selectedChannel as V2Channel;
     const raw = v2ch.stream_url;
     if (!raw) return null;
@@ -128,13 +146,15 @@ export default function ChannelsPage() {
       return `${apiBase.replace(/\/+$/, "")}/api/v2/proxy?url=${encodeURIComponent(raw)}`;
     }
     return raw;
-  }, [selectedChannel, isV1]);
+  }, [selectedChannel, isV1, v1StreamData]);
 
-  const streamType = isV1 ? "hls" : (selectedChannel as V2Channel)?.stream_type || "hls";
-  const clearkey = isV1 || !(selectedChannel as V2Channel)?.drm_kid
-    ? null
-    : { [(selectedChannel as V2Channel).drm_kid!]: (selectedChannel as V2Channel).drm_key! };
-  const hasDrm = !isV1 && !!(selectedChannel as V2Channel)?.drm_kid;
+  const streamType = isV1 ? v1StreamData?.type || "hls" : (selectedChannel as V2Channel)?.stream_type || "hls";
+  const clearkey = isV1
+    ? v1StreamData?.clearkey || null
+    : ((selectedChannel as V2Channel)?.drm_kid
+        ? { [(selectedChannel as V2Channel).drm_kid!]: (selectedChannel as V2Channel).drm_key! }
+        : null);
+  const hasDrm = isV1 ? !!v1StreamData?.clearkey : !!(selectedChannel as V2Channel)?.drm_kid;
 
   return (
     <div className="min-h-screen">
