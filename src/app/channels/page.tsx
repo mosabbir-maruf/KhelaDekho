@@ -279,14 +279,12 @@ export default function ChannelsPage() {
                 <button
                   type="button"
                   onClick={() => setIsMobileDropdownOpen((prev) => !prev)}
-                  className="w-full flex items-center justify-between border border-border-alt bg-card px-4 py-3.5 hover:border-red-500/20 transition-all text-left shadow-md cursor-pointer"
+                  className="w-full flex items-center justify-between border border-border-alt bg-card px-4 py-3.5 hover:border-red-500/20 transition-all shadow-md cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Tv className="w-4 h-4 text-red-500 shrink-0" />
-                    <div className="min-w-0">
-                      <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Change Channel" : "Select Channel"}</span>
-                      <span className="font-mono text-xs font-bold text-fg truncate block">{selectedChannel?.name || "Tap to browse"}</span>
-                    </div>
+                  <Tv className="w-4 h-4 text-red-500 shrink-0" />
+                  <div className="min-w-0 text-center flex-1">
+                    <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Change Channel" : "Select Channel"}</span>
+                    <span className="font-mono text-xs font-bold text-fg truncate block">{selectedChannel?.name || "Tap to browse"}</span>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-fg-dim transition-transform duration-200 ${isMobileDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
