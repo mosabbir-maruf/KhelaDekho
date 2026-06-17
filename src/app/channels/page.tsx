@@ -208,7 +208,7 @@ export default function ChannelsPage() {
                 {filteredChannels.map((ch: any) => (
                   <ChannelListItem
                     key={`${apiVersion}-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}`}
-                    item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
+                    item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={selectedChannel === ch && selectedVersion === apiVersion}
                     onClick={() => selectChannel(ch)}
                     showExtra
