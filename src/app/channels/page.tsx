@@ -161,6 +161,7 @@ export default function ChannelsPage() {
     : rawUrl;
 
   const showPlayer = selectedChannel && selectedVersion === apiVersion;
+  const v1Loading = selectedVersion === "v1" && !v1StreamData && !v1Error;
 
   return (
     <div className="min-h-screen">
@@ -222,67 +223,7 @@ export default function ChannelsPage() {
             </div>
 
             <div className="flex-1 min-w-0 space-y-4 w-full">
-              {showPlayer && selectedVersion === "v1" && v1StreamData?.url ? (
-                <>
-                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                        <Tv className="w-5 h-5 text-red-400" />
-                      </div>
-                      <div>
-                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{(selectedChannel as V1Channel).name}</h2>
-                        <p className="font-mono text-xs text-fg-dim">{(selectedChannel as V1Channel).category} · LIVE</p>
-                      </div>
-                    </div>
-                  </div>
-                  <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} />
-                </>
-              ) : showPlayer && selectedVersion === "v1" && v1Error ? (
-                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
-                  <p className="font-mono text-xs text-red-500">{v1Error}</p>
-                </div>
-              ) : showPlayer && selectedVersion === "v2" && v2Url ? (
-                <>
-                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                        <Tv className="w-5 h-5 text-red-400" />
-                      </div>
-                      <div>
-                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{(selectedChannel as V2Channel).name}</h2>
-                        <p className="font-mono text-xs text-fg-dim">{((selectedChannel as V2Channel).stream_type || "HLS").toUpperCase()} · ACTIVE</p>
-                      </div>
-                    </div>
-                  </div>
-                  <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} />
-                </>
-              ) : showPlayer && selectedVersion === "v3" && v3Url ? (
-                <>
-                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                        <Tv className="w-5 h-5 text-red-400" />
-                      </div>
-                      <div>
-                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{v3Channel?.name}</h2>
-                        <p className="font-mono text-xs text-fg-dim">{v3Channel?.sourceLabel || "V3"} · {v3Channel?.urls?.length || 1} source{(v3Channel?.urls?.length || 1) > 1 ? "s" : ""}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
-                  <StatsGrid
-                    items={[
-                      { label: "Source", value: v3Channel?.sourceLabel || "V3", icon: "zap" },
-                      { label: "URLs", value: `${v3Channel?.urls?.length || 1}`, icon: "shield" },
-                      { label: "Status", value: "ONLINE", highlight: true, icon: "monitor" },
-                    ]}
-                  />
-                </>
-              ) : showPlayer ? (
-                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
-                  <p className="font-mono text-xs text-fg-dim">Stream unavailable</p>
-                </div>
-              ) : (
+              {!showPlayer ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <div className="text-center space-y-3">
                     <Tv className="w-8 h-8 text-fg-dim mx-auto" />
@@ -290,6 +231,52 @@ export default function ChannelsPage() {
                     <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">Choose from the left panel</p>
                   </div>
                 </div>
+              ) : selectedVersion === "v1" && v1Error ? (
+                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
+                  <p className="font-mono text-xs text-red-500">{v1Error}</p>
+                </div>
+              ) : selectedVersion === "v1" && !v1StreamData ? (
+                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
+                  <div className="flex flex-col items-center gap-3">
+                    <svg className="w-8 h-8 text-red-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Decrypting stream...</span>
+                  </div>
+                </div>
+              ) : !v1StreamData?.url && !v2Url && !v3Url && selectedVersion !== "v1" ? (
+                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
+                  <p className="font-mono text-xs text-fg-dim">Stream unavailable</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                        <Tv className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div>
+                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel?.name}</h2>
+                        <p className="font-mono text-xs text-fg-dim">
+                          {selectedVersion === "v1" ? `${(selectedChannel as V1Channel)?.category || ""} · LIVE` : selectedVersion === "v2" ? `${((selectedChannel as V2Channel)?.stream_type || "HLS").toUpperCase()} · ACTIVE` : `${v3Channel?.sourceLabel || "V3"} · ${v3Channel?.urls?.length || 1} source${(v3Channel?.urls?.length || 1) > 1 ? "s" : ""}`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {selectedVersion === "v1" && v1StreamData?.url ? <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} /> : null}
+                  {selectedVersion === "v2" && v2Url ? <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} /> : null}
+                  {selectedVersion === "v3" && v3Url ? (
+                    <>
+                      <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
+                      <StatsGrid items={[
+                        { label: "Source", value: v3Channel?.sourceLabel || "V3", icon: "zap" },
+                        { label: "URLs", value: `${v3Channel?.urls?.length || 1}`, icon: "shield" },
+                        { label: "Status", value: "ONLINE", highlight: true, icon: "monitor" },
+                      ]} />
+                    </>
+                  ) : null}
+                </>
               )}
             </div>
 
