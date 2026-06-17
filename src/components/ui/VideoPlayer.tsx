@@ -284,12 +284,13 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         const player = shakaPlayerRef.current;
         if (!player) return;
 
-        const keysObj = clearKeysStr ? JSON.parse(clearKeysStr) : null;
+        const keysObj: Record<string, string> | null = clearKeysStr ? JSON.parse(clearKeysStr) : null;
         if (keysObj && Object.keys(keysObj).length > 0) {
           const hexKeys: Record<string, string> = {};
-          for (const [kid, key] of Object.entries(keysObj)) {
+          for (const kid of Object.keys(keysObj)) {
+            const key = keysObj[kid];
             const hexKid = kid.length === 24 ? base64ToHex(kid) : kid;
-            const hexKey = key.length === 24 ? base64ToHex(key as string) : key;
+            const hexKey = key.length === 24 ? base64ToHex(key) : key;
             hexKeys[hexKid] = hexKey;
           }
           player.configure({ drm: { clearKeys: hexKeys } });
