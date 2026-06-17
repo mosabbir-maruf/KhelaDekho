@@ -335,7 +335,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         return;
       }
 
-      if (isApple && video.canPlayType("application/vnd.apple.mpegurl")) {
+      if (typeof video.canPlayType === "function" && video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = effectiveUrl;
         const onLoaded = () => { setIsLoading(false); autoPlayVideo(video); };
         video.addEventListener("loadedmetadata", onLoaded);
