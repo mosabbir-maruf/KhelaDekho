@@ -1,7 +1,12 @@
+export interface V3ChannelUrl {
+  url: string;
+  label: string;
+}
+
 export interface V3Channel {
   id: string;
   name: string;
-  url: string;
+  urls: V3ChannelUrl[];
   logo?: string;
 }
 
@@ -56,8 +61,16 @@ export function getV3Channels(): V3Channel[] {
   return result;
 }
 
+function normalizeName(name: string): string {
+  return name.replace(/\s*\((\d+p|HD|FHD|UHD|4K|HEVC)\)\s*$/i, "").trim();
+}
+
+function qualityLabel(name: string): string {
+  const m = name.match(/\((\d+p|HD|FHD|UHD|4K|HEVC)\)\s*$/i);
+  return m ? m[1].toUpperCase() : "HD";
+}
+
 export function parseM3u(text: string, sourceLabel: string): V3Channel[] {
-  // Auto-detect and parse JSON arrays within M3U files
   const textTrimmed = text.trim();
   if (textTrimmed.startsWith("[") || textTrimmed.startsWith('{"')) {
     try {
@@ -66,33 +79,44 @@ export function parseM3u(text: string, sourceLabel: string): V3Channel[] {
       return arr.map((item: any, i: number) => ({
         id: `${sourceLabel}-${i}`,
         name: item.name || item.label || item.channel || `Channel ${i + 1}`,
-        url: item.url || item.stream_url || item.file || "",
+        urls: [{ url: item.url || item.stream_url || item.file || "", label: "Auto" }].filter((u) => u.url),
         logo: item.logo || item.tvg_logo || item.image_url || item.icon || undefined,
-      })).filter((c: V3Channel) => c.url);
+      })).filter((c: V3Channel) => c.urls.length > 0);
     } catch {}
   }
-  const lines = text.split("\n");
-  const entries: V3Channel[] = [];
-  let currentName: string | null = null;
-  let currentLogo: string | undefined;
-  for (const raw of lines) {
+
+  const rawEntries: { name: string; url: string; logo?: string; qual: string }[] = [];
+  let currentExtinf: string | null = null;
+  for (const raw of text.split("\n")) {
     const line = raw.trim();
     if (line.startsWith("#EXTINF:")) {
-      const logoMatch = line.match(/tvg-logo="([^"]*)"/);
-      currentLogo = logoMatch?.[1] || undefined;
-      currentName = line.split(",").pop()?.trim() || "Unknown";
-    } else if (line && !line.startsWith("#") && currentName) {
-      entries.push({
-        id: `${sourceLabel}-${entries.length}`,
-        name: currentName,
+      currentExtinf = line;
+    } else if (line && !line.startsWith("#") && currentExtinf) {
+      const logoMatch = currentExtinf.match(/tvg-logo="([^"]*)"/);
+      const fullName = currentExtinf.split(",").pop()?.trim() || "Unknown";
+      rawEntries.push({
+        name: fullName,
         url: line,
-        logo: currentLogo,
+        logo: logoMatch?.[1] || undefined,
+        qual: qualityLabel(fullName),
       });
-      currentName = null;
-      currentLogo = undefined;
+      currentExtinf = null;
     }
   }
-  return entries;
+
+  const groups = new Map<string, { id: string; name: string; urls: V3ChannelUrl[]; logo?: string }>();
+  let idx = 0;
+  for (const e of rawEntries) {
+    const base = normalizeName(e.name);
+    const key = `${base}`;
+    if (!groups.has(key)) {
+      groups.set(key, { id: `${sourceLabel}-${idx++}`, name: base, urls: [], logo: e.logo });
+    }
+    const g = groups.get(key)!;
+    g.urls.push({ url: e.url, label: e.qual });
+    if (e.logo && !g.logo) g.logo = e.logo;
+  }
+  return Array.from(groups.values()).filter((g) => g.urls.length > 0);
 }
 
 export function isGithubUrl(url: string): boolean {
@@ -117,12 +141,15 @@ export async function fetchAndParseSource(source: V3Source): Promise<V3Channel[]
   if (source.type === "github-json") {
     const data = JSON.parse(text);
     const arr = Array.isArray(data) ? data : data.channels || data.data || [];
-    return arr.map((item: any, i: number) => ({
-      id: `${source.label}-${i}`,
-      name: item.name || item.label || `Channel ${i + 1}`,
-      url: item.url || item.stream_url || item.file || "",
-      logo: item.logo || item.tvg_logo || item.image_url || undefined,
-    })).filter((c: V3Channel) => c.url);
+    return arr.map((item: any, i: number) => {
+      const rawUrls = item.urls || (item.url ? [{ url: item.url, label: "Auto" }] : []) || item.sources?.map((s: any) => ({ url: s.url || s.file || "", label: s.label || "Auto" })) || [];
+      return {
+        id: `${source.label}-${i}`,
+        name: item.name || item.label || item.channel || `Channel ${i + 1}`,
+        urls: rawUrls.filter((u: any) => u.url).map((u: any) => ({ url: u.url, label: u.label || "Auto" })),
+        logo: item.logo || item.tvg_logo || item.image_url || item.icon || undefined,
+      };
+    }).filter((c: V3Channel) => c.urls.length > 0);
   }
 
   // github-txt — treat each line as a potential URL
@@ -130,6 +157,6 @@ export async function fetchAndParseSource(source: V3Source): Promise<V3Channel[]
   return urls.map((url, i) => ({
     id: `${source.label}-${i}`,
     name: url.split("/").pop() || `Stream ${i + 1}`,
-    url,
+    urls: [{ url, label: "Auto" }],
   }));
 }

@@ -1,7 +1,7 @@
 "use client";
 export const runtime = "edge";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { loadAdminConfig, saveAdminConfig, fetchAndParseSource, isGithubUrl, toRawGithubUrl, parseM3u } from "@/data/admin";
 import type { AdminConfig, V3Source } from "@/data/admin";
 import { PageHero } from "@/components/ui/PageHero";
@@ -11,9 +11,111 @@ import Plus from "lucide-react/dist/esm/icons/plus";
 import Upload from "lucide-react/dist/esm/icons/upload";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Check from "lucide-react/dist/esm/icons/check";
-import File from "lucide-react/dist/esm/icons/file";
+import Lock from "lucide-react/dist/esm/icons/lock";
+import Shield from "lucide-react/dist/esm/icons/shield";
+
+const AUTH_KEY = "khela_admin_auth";
+
+function hashPassword(pw: string): string {
+  let h = 0;
+  for (let i = 0; i < pw.length; i++) {
+    h = ((h << 5) - h) + pw.charCodeAt(i);
+    h |= 0;
+  }
+  return "h" + Math.abs(h).toString(36);
+}
+
+function isAuthenticated(): boolean {
+  try {
+    return localStorage.getItem(AUTH_KEY) === "1";
+  } catch { return false; }
+}
+
+function setAuthenticated() {
+  try { localStorage.setItem(AUTH_KEY, "1"); } catch {}
+}
 
 export default function AdminPage() {
+  const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    setAuthed(isAuthenticated());
+    setChecking(false);
+  }, []);
+
+  if (checking) return null;
+  if (!authed) return <AuthGate onAuth={() => setAuthed(true)} />;
+  return <AdminPanel />;
+}
+
+function AuthGate({ onAuth }: { onAuth: () => void }) {
+  const [pw, setPw] = useState("");
+  const [error, setError] = useState("");
+  const [isSetup, setIsSetup] = useState(false);
+
+  useEffect(() => {
+    try { setIsSetup(!!localStorage.getItem("khela_admin_password")); } catch {}
+  }, []);
+
+  const handleSubmit = () => {
+    if (!pw) return;
+    if (!isSetup) {
+      try {
+        localStorage.setItem("khela_admin_password", hashPassword(pw));
+        setAuthenticated();
+        onAuth();
+      } catch {}
+      return;
+    }
+    try {
+      const stored = localStorage.getItem("khela_admin_password");
+      if (hashPassword(pw) === stored) {
+        setAuthenticated();
+        onAuth();
+      } else {
+        setError("Wrong password");
+      }
+    } catch {}
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-page p-4">
+      <div className="w-full max-w-sm border border-border-alt bg-card p-8 space-y-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+            <Lock className="w-6 h-6 text-red-400" />
+          </div>
+          <h1 className="font-mono text-lg font-bold text-fg">Admin Access</h1>
+          <p className="font-mono text-xs text-fg-dim">{isSetup ? "Enter password to continue" : "Set an admin password"}</p>
+        </div>
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+          className="space-y-4"
+        >
+          <input
+            type="password"
+            value={pw}
+            onChange={(e) => { setPw(e.target.value); setError(""); }}
+            placeholder={isSetup ? "Password" : "New password"}
+            className="w-full bg-input border border-border-alt px-3 py-2.5 text-xs font-mono text-fg placeholder:text-fg-faint outline-none"
+            autoFocus
+          />
+          {error && <p className="text-[10px] font-mono text-red-500 text-center">{error}</p>}
+          <button
+            type="submit"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-red-500/30 bg-red-500/[0.03] text-xs font-mono text-fg hover:bg-red-500/[0.06] transition-all cursor-pointer"
+          >
+            <Shield className="w-3.5 h-3.5" />
+            {isSetup ? "Unlock" : "Set Password"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AdminPanel() {
   const [config, setConfig] = useState<AdminConfig>(loadAdminConfig);
   const [newLabel, setNewLabel] = useState("");
   const [newUrl, setNewUrl] = useState("");
@@ -49,15 +151,9 @@ export default function AdminPage() {
       const isM3u = text.includes("#EXTM3U") || text.includes("#EXTINF:");
       const isJson = url.match(/\.json$/i) || text.trim().startsWith("[") || text.trim().startsWith("{");
       const source: V3Source = {
-        label,
-        url,
+        label, url,
         type: isM3u ? "m3u8" : isJson ? "github-json" : "github-txt",
-        channels: await fetchAndParseSource({
-          label, url,
-          type: isM3u ? "m3u8" : isJson ? "github-json" : "github-txt",
-          channels: [],
-          lastFetched: 0,
-        }),
+        channels: await fetchAndParseSource({ label, url, type: isM3u ? "m3u8" : isJson ? "github-json" : "github-txt", channels: [], lastFetched: 0 }),
         lastFetched: Date.now(),
       };
       updateConfig({ ...config, sources: [...config.sources, source] });
@@ -75,8 +171,7 @@ export default function AdminPage() {
     setFetching(true);
     try {
       const channels = await fetchAndParseSource(old);
-      const next = { ...config, sources: config.sources.map((s, idx) => idx === i ? { ...s, channels, lastFetched: Date.now() } : s) };
-      updateConfig(next);
+      updateConfig({ ...config, sources: config.sources.map((s, idx) => idx === i ? { ...s, channels, lastFetched: Date.now() } : s) });
     } catch (e: any) {
       setFetchError(e.message);
     } finally {
@@ -97,7 +192,6 @@ export default function AdminPage() {
           hint={saved ? "Saved!" : "All data stored in browser localStorage"}
         />
 
-        {/* API Toggles */}
         <div className="border border-border-alt bg-card p-6 space-y-3">
           <h2 className="font-mono text-xs uppercase tracking-widest text-fg-dim">API Endpoints</h2>
           <div className="flex flex-wrap gap-3">
@@ -118,7 +212,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Add Source */}
         <div className="border border-border-alt bg-card p-6 space-y-3">
           <h2 className="font-mono text-xs uppercase tracking-widest text-fg-dim">Add V3 Source</h2>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -147,7 +240,6 @@ export default function AdminPage() {
           <p className="text-[10px] font-mono text-fg-faint">Supports M3U playlists, GitHub JSON arrays, or raw TXT URLs</p>
         </div>
 
-        {/* Upload File */}
         <div className="border border-border-alt bg-card p-6 space-y-3">
           <h2 className="font-mono text-xs uppercase tracking-widest text-fg-dim">Upload File</h2>
           <div
@@ -156,17 +248,15 @@ export default function AdminPage() {
             onDrop={async (e) => {
               e.preventDefault();
               e.currentTarget.classList.remove("border-red-500/50");
-              const file = e.dataTransfer.files[0];
+              const file = e.dataTransfer.files?.[0];
               if (!file) return;
               setFetchError("");
               setFetching(true);
               try {
                 const text = await file.text();
-                const label = file.name.replace(/\.(m3u8?|txt|json)$/i, "");
                 const channels = parseM3u(text, `upload-${Date.now()}`);
                 const type = file.name.match(/\.m3u8?$/i) ? "m3u8" : file.name.match(/\.json$/i) ? "github-json" : "github-txt";
-                const source: V3Source = { label, url: `[upload] ${file.name}`, type, channels, lastFetched: Date.now() };
-                updateConfig({ ...config, sources: [...config.sources, source] });
+                updateConfig({ ...config, sources: [...config.sources, { label: file.name.replace(/\.(m3u8?|txt|json)$/i, ""), url: `[upload] ${file.name}`, type, channels, lastFetched: Date.now() }] });
               } catch (e: any) {
                 setFetchError(e.message || "Failed to parse file");
               } finally {
@@ -175,11 +265,7 @@ export default function AdminPage() {
             }}
             className="border-2 border-dashed border-border-alt p-8 text-center transition-colors cursor-pointer hover:border-red-500/30"
           >
-            <input
-              type="file"
-              accept=".m3u8,.m3u,.txt,.json"
-              className="hidden"
-              id="file-upload"
+            <input type="file" accept=".m3u8,.m3u,.txt,.json" className="hidden" id="file-upload"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
@@ -187,11 +273,9 @@ export default function AdminPage() {
                 setFetching(true);
                 try {
                   const text = await file.text();
-                  const label = file.name.replace(/\.(m3u8?|txt|json)$/i, "");
                   const channels = parseM3u(text, `upload-${Date.now()}`);
                   const type = file.name.match(/\.m3u8?$/i) ? "m3u8" : file.name.match(/\.json$/i) ? "github-json" : "github-txt";
-                  const source: V3Source = { label, url: `[upload] ${file.name}`, type, channels, lastFetched: Date.now() };
-                  updateConfig({ ...config, sources: [...config.sources, source] });
+                  updateConfig({ ...config, sources: [...config.sources, { label: file.name.replace(/\.(m3u8?|txt|json)$/i, ""), url: `[upload] ${file.name}`, type, channels, lastFetched: Date.now() }] });
                 } catch (e: any) {
                   setFetchError(e.message || "Failed to parse file");
                 } finally {
@@ -207,7 +291,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Sources List */}
         <div className="space-y-3">
           {config.sources.length === 0 && (
             <div className="text-center py-12 font-mono text-[10px] text-fg-faint uppercase tracking-widest">No sources added yet</div>
