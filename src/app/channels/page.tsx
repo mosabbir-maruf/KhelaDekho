@@ -284,7 +284,7 @@ export default function ChannelsPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <Tv className="w-4 h-4 text-red-500 shrink-0" />
                     <div className="min-w-0">
-                      <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Active Channel" : "Select Channel"}</span>
+                      <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Change Channel" : "Select Channel"}</span>
                       <span className="font-mono text-xs font-bold text-fg truncate block">{selectedChannel?.name || "Tap to browse"}</span>
                     </div>
                   </div>
