@@ -143,14 +143,18 @@ export default function ChannelsPage() {
 
   const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : "Browse Streams";
 
+  const apiBase = getApiBaseUrl();
+
   const v3Channel = selectedVersion === "v3" ? (selectedChannel as V3Channel) : null;
   const v3QualityIdx = 0;
-  const v3Url = v3Channel?.urls?.[v3QualityIdx]?.url;
-  const v3IsTs = v3Url?.match(/\.ts($|\?)/);
+  const v3RawUrl = v3Channel?.urls?.[v3QualityIdx]?.url;
+  const v3IsTs = v3RawUrl?.match(/\.ts($|\?)/);
+  const v3Url = v3RawUrl && !v3IsTs && apiBase
+    ? `${apiBase.replace(/\/+$/, "")}/api/v2/proxy?url=${encodeURIComponent(v3RawUrl)}`
+    : v3RawUrl;
 
   const v2Ch = selectedVersion === "v2" ? (selectedChannel as V2Channel) : null;
   const rawUrl = v2Ch?.stream_url;
-  const apiBase = getApiBaseUrl();
   const needsProxy = rawUrl && (rawUrl.includes("storage.googleapis.com") || rawUrl.includes("soccerball.st"));
   const v2Url = needsProxy && apiBase
     ? `${apiBase.replace(/\/+$/, "")}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
@@ -282,42 +286,6 @@ export default function ChannelsPage() {
               )}
             </div>
 
-            {/* Right: Filters */}
-            <div className="hidden lg:flex lg:flex-col lg:w-48 shrink-0 border border-border-alt bg-card overflow-hidden min-h-0">
-              <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-3 py-2 border-b border-border-alt shrink-0">
-                {isV3 ? "Sources" : apiVersion === "v1" ? "Categories" : "Filters"}
-              </div>
-              <div className="flex-1 overflow-y-auto min-h-0 space-y-1 p-2 scrollbar-red">
-                {isV3 ? (
-                  (() => {
-                    const sources = [...new Set(channels.map((ch: any) => ch.sourceLabel || "Unknown"))];
-                    return sources.map((src) => (
-                      <button
-                        key={src}
-                        onClick={() => setSearchQuery(searchQuery === src ? "" : src)}
-                        className={`w-full text-left border p-2 text-[10px] font-mono transition-all cursor-pointer ${
-                          searchQuery === src ? "border-red-500/30 bg-red-500/[0.03] text-red-400" : "border-border-alt bg-card text-fg-dim hover:text-fg"
-                        }`}
-                      >
-                        {src}
-                      </button>
-                    ));
-                  })()
-                ) : apiVersion === "v1" ? (
-                  ["Sports", "Entertainment", "News"].map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSearchQuery(searchQuery === cat.toLowerCase() ? "" : cat.toLowerCase())}
-                      className={`w-full text-left border p-2 text-[10px] font-mono transition-all cursor-pointer ${
-                        searchQuery === cat.toLowerCase() ? "border-red-500/30 bg-red-500/[0.03] text-red-400" : "border-border-alt bg-card text-fg-dim hover:text-fg"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))
-                ) : null}
-              </div>
-            </div>
           </div>
         )}
       </div>

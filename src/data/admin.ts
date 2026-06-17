@@ -142,7 +142,16 @@ export async function fetchAndParseSource(source: V3Source): Promise<V3Channel[]
 
   if (source.type === "github-json") {
     const data = JSON.parse(text);
-    const arr = Array.isArray(data) ? data : data.channels || data.data || [];
+    let arr = Array.isArray(data) ? data : data.channels || data.data || null;
+    if (!arr && typeof data === "object" && data !== null) {
+      arr = [];
+      for (const key of Object.keys(data)) {
+        if (Array.isArray(data[key])) {
+          arr.push(...data[key].map((item: any) => ({ ...item, _group: key })));
+        }
+      }
+    }
+    if (!Array.isArray(arr)) arr = [];
     return arr.map((item: any, i: number) => {
       const rawUrls = item.urls || (item.url ? [{ url: item.url, label: "Auto" }] : []) || item.sources?.map((s: any) => ({ url: s.url || s.file || "", label: s.label || "Auto" })) || [];
       return {
