@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { getApiBaseUrl } from "@/lib/api";
+import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
@@ -42,10 +43,15 @@ function isAlive(ch: any, v: ApiVersion): boolean {
 
 export default function ChannelsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [apiVersion, setApiVersion] = useState<ApiVersion>("v2");
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedChannel, setSelectedChannel] = useState<any | null>(null);
+  const [selectedVersion, setSelectedVersion] = useState<ApiVersion | null>(null);
+  const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: any } | null>(null);
+  const [v1Error, setV1Error] = useState<string | null>(null);
 
   const isV3 = apiVersion === "v3";
 
@@ -56,11 +62,14 @@ export default function ChannelsPage() {
     const baseUrl = rawBaseUrl ? rawBaseUrl.replace(/\/+$/, "") : "";
     (async () => {
       setLoading(true);
+      setSelectedChannel(null);
+      setSelectedVersion(null);
+      setV1StreamData(null);
+      setV1Error(null);
       try {
         if (apiVersion === "v3") {
           const cfg = loadAdminConfig();
-          if (cfg.enabled.v3) setChannels(getV3Channels());
-          else setChannels([]);
+          setChannels(cfg.enabled.v3 ? getV3Channels() : []);
         } else {
           const res = await fetch(`${baseUrl}/api/${apiVersion}/channels?limit=200`, {
             signal: controller.signal,
@@ -90,11 +99,36 @@ export default function ChannelsPage() {
     [channels, apiVersion],
   );
 
-  const navigateToChannel = useCallback((ch: any) => {
-    if (apiVersion === "v1") router.push(`/v1/channel/${(ch as V1Channel).key}`);
-    else if (apiVersion === "v2") router.push(`/v2/channel/${(ch as V2Channel).id}`);
-    else router.push(`/v3/channel/${(ch as V3Channel).id}`);
-  }, [apiVersion, router]);
+  const selectChannel = useCallback((ch: any) => {
+    setSelectedChannel(ch);
+    setSelectedVersion(apiVersion);
+    setV1StreamData(null);
+    setV1Error(null);
+    const id = apiVersion === "v1" ? (ch as V1Channel).key : apiVersion === "v2" ? String((ch as V2Channel).id) : (ch as V3Channel).id;
+    router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
+  }, [apiVersion, router, pathname]);
+
+  useEffect(() => {
+    if (!selectedChannel || selectedVersion !== "v1") return;
+    const key = (selectedChannel as V1Channel).key;
+    if (!key) return;
+    let active = true;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/stream?key=${encodeURIComponent(key)}`, { signal: controller.signal });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        if (!active) return;
+        if (!data.url) throw new Error("Empty stream URL");
+        setV1StreamData({ url: data.url, type: data.type || "hls", clearkey: data.clearkey || null });
+      } catch (e: any) {
+        if (e.name === "AbortError") return;
+        if (active) setV1Error(e.message || "Failed to load stream");
+      }
+    })();
+    return () => { active = false; controller.abort(); };
+  }, [selectedChannel, selectedVersion]);
 
   const cycleVersion = useCallback(() => {
     setApiVersion((prev) => prev === "v1" ? "v2" : prev === "v2" ? "v3" : "v1");
@@ -105,11 +139,22 @@ export default function ChannelsPage() {
     return cfg.enabled;
   }, []);
 
-  const availableVersions = useMemo(() => {
-    return (["v1", "v2", "v3"] as ApiVersion[]).filter((v) => v === "v3" ? enabled.v3 : true);
-  }, [enabled]);
-
   const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : "Browse Streams";
+
+  const v3Channel = selectedVersion === "v3" ? (selectedChannel as V3Channel) : null;
+  const v3QualityIdx = 0;
+  const v3Url = v3Channel?.urls?.[v3QualityIdx]?.url;
+  const v3IsTs = v3Url?.match(/\.ts($|\?)/);
+
+  const v2Ch = selectedVersion === "v2" ? (selectedChannel as V2Channel) : null;
+  const rawUrl = v2Ch?.stream_url;
+  const apiBase = getApiBaseUrl();
+  const needsProxy = rawUrl && (rawUrl.includes("storage.googleapis.com") || rawUrl.includes("soccerball.st"));
+  const v2Url = needsProxy && apiBase
+    ? `${apiBase.replace(/\/+$/, "")}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
+    : rawUrl;
+
+  const showPlayer = selectedChannel && selectedVersion === apiVersion;
 
   return (
     <div className="min-h-screen">
@@ -155,10 +200,10 @@ export default function ChannelsPage() {
               <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
                 {filteredChannels.map((ch: any) => (
                   <ChannelListItem
-                    key={isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}
+                    key={`${apiVersion}-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}`}
                     item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={false}
-                    onClick={() => navigateToChannel(ch)}
+                    onClick={() => selectChannel(ch)}
                     showExtra
                   />
                 ))}
@@ -170,12 +215,30 @@ export default function ChannelsPage() {
               </div>
             </div>
 
-            <div className="flex-1 min-w-0 w-full flex items-center justify-center py-32 border border-border-alt bg-card">
-              <div className="text-center space-y-3">
-                <Tv className="w-8 h-8 text-fg-dim mx-auto" />
-                <p className="font-mono text-sm text-fg-dim font-semibold">Select a channel</p>
-                <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">Choose from the left panel</p>
-              </div>
+            <div className="flex-1 min-w-0 space-y-4 w-full">
+              {showPlayer && selectedVersion === "v1" && v1StreamData?.url ? (
+                <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} />
+              ) : showPlayer && selectedVersion === "v1" && v1Error ? (
+                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
+                  <p className="font-mono text-xs text-red-500">{v1Error}</p>
+                </div>
+              ) : showPlayer && selectedVersion === "v2" && v2Url ? (
+                <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} />
+              ) : showPlayer && selectedVersion === "v3" && v3Url ? (
+                <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
+              ) : showPlayer ? (
+                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
+                  <p className="font-mono text-xs text-fg-dim">Stream unavailable</p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
+                  <div className="text-center space-y-3">
+                    <Tv className="w-8 h-8 text-fg-dim mx-auto" />
+                    <p className="font-mono text-sm text-fg-dim font-semibold">Select a channel</p>
+                    <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">Choose from the left panel</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
