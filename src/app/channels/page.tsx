@@ -245,7 +245,7 @@ export default function ChannelsPage() {
                     <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Decrypting stream...</span>
                   </div>
                 </div>
-              ) : !v1StreamData?.url && !v2Url && !v3Url && selectedVersion !== "v1" ? (
+              ) : !v1StreamData?.url && !v2Url && !v3Url ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <p className="font-mono text-xs text-fg-dim">Stream unavailable</p>
                 </div>
@@ -264,7 +264,7 @@ export default function ChannelsPage() {
                       </div>
                     </div>
                   </div>
-                  {selectedVersion === "v1" && v1StreamData?.url ? <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} /> : null}
+                  {selectedVersion === "v1" && v1StreamData?.url ? <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} /> : selectedVersion === "v1" && v1StreamData ? <p className="font-mono text-xs text-fg-dim text-center py-12">Stream unavailable</p> : null}
                   {selectedVersion === "v2" && v2Url ? <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} /> : null}
                   {selectedVersion === "v3" && v3Url ? (
                     <>
