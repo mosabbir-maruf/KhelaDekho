@@ -53,8 +53,7 @@ type ApiVersion = "v1" | "v2" | "v3" | "v4";
 
 function isAlive(ch: any, v: ApiVersion): boolean {
   if (v === "v1") return ch.status === "live";
-  if (v === "v2") return ch.is_alive && ch.stream_url;
-  if (v === "v4") return ch.is_alive && ch.stream_url;
+  if (v === "v2" || v === "v4") return !!ch.stream_url;
   return true;
 }
 
