@@ -283,7 +283,7 @@ export default function ChannelsPage() {
                 >
                   <Tv className="w-4 h-4 text-red-500 shrink-0" />
                   <div className="min-w-0 text-center flex-1">
-                    <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Change Channel" : "Select Channel"}</span>
+                    <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Switch Channel" : "Select Channel"}</span>
                     <span className="font-mono text-xs font-bold text-fg truncate block">{selectedChannel?.name || "Tap to browse"}</span>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-fg-dim transition-transform duration-200 ${isMobileDropdownOpen ? "rotate-180" : ""}`} />
