@@ -34,6 +34,11 @@ interface VideoPlayerProps {
   className?: string;
 }
 
+function base64ToHex(b64: string): string {
+  const raw = atob(b64);
+  return Array.from(raw).map(ch => ch.charCodeAt(0).toString(16).padStart(2, "0")).join("");
+}
+
 const WIDEVINE_UUID = "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
 const PLAYREADY_UUID = "urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95";
 const PSSH_REGEX = new RegExp(
@@ -281,7 +286,13 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
         const keysObj = clearKeysStr ? JSON.parse(clearKeysStr) : null;
         if (keysObj && Object.keys(keysObj).length > 0) {
-          player.configure({ drm: { clearKeys: keysObj } });
+          const hexKeys: Record<string, string> = {};
+          for (const [kid, key] of Object.entries(keysObj)) {
+            const hexKid = kid.length === 24 ? base64ToHex(kid) : kid;
+            const hexKey = key.length === 24 ? base64ToHex(key as string) : key;
+            hexKeys[hexKid] = hexKey;
+          }
+          player.configure({ drm: { clearKeys: hexKeys } });
         } else {
           player.configure({ drm: { clearKeys: {} } });
         }
