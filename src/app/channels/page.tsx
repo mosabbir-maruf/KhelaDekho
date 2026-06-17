@@ -62,7 +62,26 @@ function isAlive(ch: any, v: ApiVersion): boolean {
 export default function ChannelsPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v4");
+  useMemo(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get("v");
+      const ch = params.get("ch");
+      if (v && ["v1", "v2", "v3", "v4"].includes(v)) {
+        localStorage.setItem("kheladekho_url_v", v);
+        localStorage.setItem("kheladekho_url_ch", ch || "");
+      }
+    }
+  }, []);
+
+  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get("v");
+      if (v && ["v1", "v2", "v3", "v4"].includes(v)) return v as ApiVersion;
+    }
+    return loadAdminConfig().defaultVersion || "v4";
+  });
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,9 +111,12 @@ export default function ChannelsPage() {
           const list = cfg.enabled.v3 ? getV3Channels() : [];
           setChannels(list);
           if (list.length > 0) {
-            setSelectedChannel(list[0]);
+            const urlCh = typeof location !== "undefined" ? new URLSearchParams(location.search).get("ch") : null;
+            let target = urlCh ? list.find((ch: any) => ch.id === urlCh) : null;
+            target = target || list[0];
+            setSelectedChannel(target);
             setSelectedVersion(apiVersion);
-            router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(list[0].id)}`, { scroll: false });
+            router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(target.id)}`, { scroll: false });
           }
         } else {
           const fetchLimit = apiVersion === "v1" ? "?limit=200" : apiVersion === "v4" ? "?alive=true" : "?limit=200";
@@ -107,12 +129,15 @@ export default function ChannelsPage() {
           const list = body?.data?.channels || [];
           setChannels(list);
           if (list.length > 0) {
-            const first = list.find((ch: any) => isAlive(ch, apiVersion)) || list[0];
-            setSelectedChannel(first);
+            const params = new URLSearchParams(location.search);
+            const urlCh = params.get("ch");
+            let target = urlCh ? list.find((ch: any) => String(ch.id || ch.key) === urlCh) : null;
+            target = target || list.find((ch: any) => isAlive(ch, apiVersion)) || list[0];
+            setSelectedChannel(target);
             setSelectedVersion(apiVersion);
             setV1StreamData(null);
             setV1Error(null);
-            const id = apiVersion === "v1" ? (first as V1Channel).key : apiVersion === "v2" ? String((first as V2Channel).id) : isV3 ? (first as V3Channel).id : (first as V4Channel).id;
+            const id = apiVersion === "v1" ? (target as V1Channel).key : apiVersion === "v2" ? String((target as V2Channel).id) : isV3 ? (target as V3Channel).id : (target as V4Channel).id;
             router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
           }
         }
