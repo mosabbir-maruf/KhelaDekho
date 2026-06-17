@@ -121,77 +121,32 @@ cp .env.example .env.local`} />
                     </div>
                     <div className="ml-[3px] pl-6 border-l border-border-alt space-y-6">
                         <p className="text-fg-dim font-mono text-sm">
-                            Now that you have copied the templates, edit your <code>.env</code> (Backend) and <code>.env.local</code> (Frontend) files. 
-                            <strong>CRITICAL:</strong> Ensure <code>KHELADEKHO_SECRET_KEY</code> is exactly the same in both files.
+                            Now that you have copied the templates, edit your <code>.env.local</code> (Frontend) file.
                         </p>
                         
                         <div className="space-y-6 mt-4">
                             <div className="border border-border-alt bg-card p-4 space-y-2">
-                                <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Backend Specific (.env)</div>
-                                <CodeBlock code={`# ==========================================
-# KhelaDekho Backend Configuration Template
-# ==========================================
-
-# Cryptographic HMAC-SHA256 Signing Key (Required in Production)
-# This key MUST match the one configured on the Next.js frontend.
-# Generate a secure key using: openssl rand -hex 32
-KHELADEKHO_SECRET_KEY=your-hmac-secret-key-here
-
-# Upstream Scraper Target URL
-KHELADEKHO_V1_HOME_URL=your-v1-target-url-here
-KHELADEKHO_V2_HOME_URL=your-v2-target-url-here
-
-# Central Cache Store (Falls back to local memory if omitted)
-KHELADEKHO_REDIS_URL=redis://localhost:6379/0
-
-# General Server Configurations
-KHELADEKHO_DEBUG=false
-KHELADEKHO_LOG_LEVEL=INFO
-
-# Cache TTL Configurations (Seconds)
-KHELADEKHO_MATCH_CACHE_TTL=120
-KHELADEKHO_CHANNEL_CACHE_TTL=120
-
-# Connection & Scraper Request Timeouts/Retries
-KHELADEKHO_REQUEST_TIMEOUT=30.0
-KHELADEKHO_MAX_RETRIES=3
-
-# Rate Limiter Configuration (Requests Per Minute)
-KHELADEKHO_RATE_LIMIT_RPM=30`} />
+                                <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Worker (wrangler.toml / Cloudflare Dashboard)</div>
+                                <CodeBlock code={`# Home URLs are set in wrangler.toml under [vars]:
+V1_HOME_URL=https://example.com
+V2_HOME_URL=https://example.com
+V4_HOME_URL=https://example.com`} />
                             </div>
 
-                            <div className="border border-border-alt bg-card p-4 space-y-2">
-                                <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Frontend Specific (.env.local)</div>
-                                <CodeBlock code={`# ===========================================
-# KhelaDekho Frontend (Next.js) Configuration
-# ===========================================
-
-# --- KhelaDekho Decryption API ---
-# URL pointing to your backend (FastAPI server or Cloudflare Worker)
+                                <div className="border border-border-alt bg-card p-4 space-y-2">
+                                <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Frontend (.env.local)</div>
+                                <CodeBlock code={`# --- Backend API ---
 KHELADEKHO_API_URL=https://your-api.workers.dev
 
-# HMAC-SHA256 Secret Key (Must match backend KHELADEKHO_SECRET_KEY)
-KHELADEKHO_SECRET_KEY=your-hmac-secret-key-here
-
-# --- Client-Side API Override (Optional) ---
-# Override backend API URL inside the browser client (e.g. for localhost debugging)
-NEXT_PUBLIC_API_URL=
-
 # --- Telegram Contact Form ---
-# Get your bot token from @BotFather on Telegram
 TELEGRAM_BOT_TOKEN=your-telegram-bot-token-here
-
-# Get your chat ID (message @userinfobot on Telegram)
 TELEGRAM_CHAT_ID=your-telegram-chat-id-here
 
-# --- GitHub Integration (Optional) ---
-# Personal Access Token (PAT) to fetch repository metadata
-GITHUB_TOKEN=ghp_your-github-token-here
+# --- GitHub (Optional) ---
+GITHUB_TOKEN=
 
 # --- Google Analytics 4 (Optional) ---
-# Measurement ID for GA4 property (e.g. G-XXXXXXXXXX)
-# If empty, analytics scripts and tracking are disabled entirely
-NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX`} />
+NEXT_PUBLIC_GA_MEASUREMENT_ID=`} />
                             </div>
                         </div>
                     </div>
