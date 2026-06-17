@@ -225,7 +225,20 @@ export default function ChannelsPage() {
               ) : showPlayer && selectedVersion === "v2" && v2Url ? (
                 <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} />
               ) : showPlayer && selectedVersion === "v3" && v3Url ? (
-                <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
+                <>
+                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                        <Tv className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div>
+                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{v3Channel?.name}</h2>
+                        <p className="font-mono text-xs text-fg-dim">{v3Channel?.sourceLabel || "V3"} · {v3Channel?.urls?.length || 1} source{(v3Channel?.urls?.length || 1) > 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
+                </>
               ) : showPlayer ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <p className="font-mono text-xs text-fg-dim">Stream unavailable</p>
