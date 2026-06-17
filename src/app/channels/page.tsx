@@ -167,7 +167,7 @@ export default function ChannelsPage() {
     return () => { active = false; controller.abort(); };
   }, [selectedChannel, selectedVersion]);
 
-  const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : apiVersion === "v4" ? "ProxyBDIX Streams" : "Browse Streams";
+  const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : apiVersion === "v4" ? "V4 Streams" : "Browse Streams";
 
   const apiBase = getApiBaseUrl();
 
