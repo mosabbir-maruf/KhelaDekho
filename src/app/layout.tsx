@@ -5,6 +5,7 @@ import { Footer } from "@/components/ui/Footer";
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { Suspense } from "react";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -110,7 +111,9 @@ export default function RootLayout({
             }),
           }}
         />
-        <script
+        <Script
+          id="kheladekho-api-url"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `window.__KHELADEKHO_API_URL = ${JSON.stringify(process.env.KHELADEKHO_API_URL || "")};`,
           }}

@@ -77,11 +77,7 @@ export default function ChannelsPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => {
-    const { v } = getUrlParams();
-    if (v && ["v1", "v2", "v3", "v4"].includes(v)) return v as ApiVersion;
-    return loadAdminConfig().defaultVersion || "v4";
-  });
+  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v4");
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,8 +87,15 @@ export default function ChannelsPage() {
   const [v1Error, setV1Error] = useState<string | null>(null);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isV3 = apiVersion === "v3";
+
+  function handleShare() {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   function selectAndReplaceUrl(ch: any) {
     setSelectedChannel(ch);
@@ -390,11 +393,11 @@ export default function ChannelsPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => navigator.clipboard.writeText(window.location.href)}
+                      onClick={handleShare}
                       className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
                     >
                       <Share2 className="w-3.5 h-3.5" />
-                      Share
+                      {copied ? "Copied!" : "Share"}
                     </button>
                   </div>
                   {selectedVersion === "v1" && v1StreamData?.url ? (

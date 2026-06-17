@@ -17,6 +17,7 @@ export default function V4ChannelPage() {
   const [channel, setChannel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -63,11 +64,11 @@ export default function V4ChannelPage() {
                 </div>
               </div>
               <button
-                onClick={() => navigator.clipboard.writeText(window.location.href)}
+                onClick={() => { navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
                 className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                Share
+                {copied ? "Copied!" : "Share"}
               </button>
             </div>
             <VideoPlayer streamUrl={streamUrl} streamType={channel?.stream_type || "dash"} clearKeys={channel?.drm_kid ? { [channel.drm_kid]: channel.drm_key } : null} />
