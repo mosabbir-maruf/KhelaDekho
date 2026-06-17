@@ -18,6 +18,7 @@ import Link from "next/link";
 interface M3uEntry {
   name: string;
   url: string;
+  originalUrl: string;
   logo: string | null;
   group: string | null;
 }
@@ -496,6 +497,12 @@ function getShortLabel(url: string): string {
   return match ? match[1].slice(0, 12) + "..." : url.slice(0, 20);
 }
 
+const PROXY_BASE = "/api/m3u-proxy?url=";
+
+function proxyUrl(url: string): string {
+  return `${PROXY_BASE}${encodeURIComponent(url)}`;
+}
+
 function parseM3u(text: string): M3uEntry[] {
   const lines = text.split("\n");
   const entries: M3uEntry[] = [];
@@ -512,6 +519,7 @@ function parseM3u(text: string): M3uEntry[] {
       entries.push({
         name: namePart,
         url: line,
+        originalUrl: line,
         logo: logoMatch?.[1] || null,
         group: groupMatch?.[1] || null,
       });
@@ -550,10 +558,10 @@ export default function M3uTestPage() {
     }));
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(proxyUrl(url));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
-      const parsed = parseM3u(text);
+      const parsed = parseM3u(text).map((e) => ({ ...e, url: proxyUrl(e.url) }));
       setEntries(parsed);
       if (parsed.length > 0) setSelectedEntry(parsed[0]);
       setServerStatus((prev) => ({
@@ -716,7 +724,11 @@ export default function M3uTestPage() {
                   </div>
                 </div>
 
-                <VideoPlayer streamUrl={selectedEntry.url} streamType="hls" clearKeys={null} />
+                <VideoPlayer
+                  streamUrl={selectedEntry.url}
+                  streamType={selectedEntry.originalUrl.match(/\.ts($|\?)/) ? "direct" : "hls"}
+                  clearKeys={null}
+                />
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
