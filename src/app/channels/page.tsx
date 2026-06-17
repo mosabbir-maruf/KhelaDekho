@@ -97,7 +97,12 @@ export default function ChannelsPage() {
           });
           const body = res.ok ? await res.json() : { data: { channels: [] } };
           if (!active) return;
-          setChannels(body?.data?.channels || []);
+          const list = body?.data?.channels || [];
+          setChannels(list);
+          if (list.length > 0 && !selectedChannel) {
+            const first = list.find((ch: any) => isAlive(ch, apiVersion)) || list[0];
+            selectChannel(first);
+          }
         }
       } catch {
         if (active) setChannels([]);
