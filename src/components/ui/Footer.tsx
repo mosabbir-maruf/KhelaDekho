@@ -75,12 +75,12 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-24 sm:pb-4 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 24px))" }}>
           <div className="flex items-center gap-4 text-[10px] font-mono text-fg-faint uppercase tracking-widest">
             <span className="flex items-center gap-2">
               <span className="text-fg-dim">VERSION:</span> beta-1.0.1
             </span>
-            <span className="hidden sm:inline-flex items-center gap-2 border-l border-border-alt pl-4">
+            <span className="inline-flex items-center gap-2 border-l border-border-alt pl-4">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span className="text-emerald-500/60">SYS_OPERATIONAL</span>
             </span>
@@ -92,8 +92,8 @@ export function Footer() {
             </Link>
             <span className="border-l border-border-alt h-3" />
             <span>© {new Date().getFullYear()} KhelaDekho</span>
-            <span className="hidden sm:block border-l border-border-alt h-3" />
-            <span className="hidden sm:block">A sideproject by Mosabbir Maruf</span>
+            <span className="border-l border-border-alt h-3" />
+            <span>A sideproject by Mosabbir Maruf</span>
           </div>
         </div>
       </div>
