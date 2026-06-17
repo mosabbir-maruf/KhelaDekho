@@ -48,7 +48,7 @@ function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
     netEngine.registerRequestFilter((type: any, request: any) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
         const apiBase = getApiBaseUrl();
-        request.headers['Referer'] = apiBase ? `${apiBase}/` : 'https://kickbd.org/';
+        if (apiBase) request.headers['Referer'] = `${apiBase}/`;
       }
     });
     netEngine.registerResponseFilter((type: any, response: any) => {

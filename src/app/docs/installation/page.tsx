@@ -138,7 +138,8 @@ cp .env.example .env.local`} />
 KHELADEKHO_SECRET_KEY=your-hmac-secret-key-here
 
 # Upstream Scraper Target URL
-KHELADEKHO_TARGET_URL=your-target-url-here
+KHELADEKHO_V1_HOME_URL=your-v1-target-url-here
+KHELADEKHO_V2_HOME_URL=your-v2-target-url-here
 
 # Central Cache Store (Falls back to local memory if omitted)
 KHELADEKHO_REDIS_URL=redis://localhost:6379/0
