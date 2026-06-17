@@ -314,6 +314,7 @@ function AdminPanel() {
                     <div key={ch.id} className="flex items-center gap-2 text-[10px] font-mono text-fg-dim">
                       {ch.logo && <img src={ch.logo} alt="" className="w-4 h-4 object-cover rounded" />}
                       <span className="truncate">{ch.name}</span>
+                      <span className="shrink-0 text-fg-faint">{ch.urls?.length || 1} src</span>
                     </div>
                   ))}
                   {source.channels.length > 20 && <div className="text-[9px] font-mono text-fg-faint text-center">+{source.channels.length - 20} more</div>}

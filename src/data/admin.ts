@@ -8,6 +8,7 @@ export interface V3Channel {
   name: string;
   urls: V3ChannelUrl[];
   logo?: string;
+  sourceLabel?: string;
 }
 
 export interface V3Source {
@@ -81,6 +82,7 @@ export function parseM3u(text: string, sourceLabel: string): V3Channel[] {
         name: item.name || item.label || item.channel || `Channel ${i + 1}`,
         urls: [{ url: item.url || item.stream_url || item.file || "", label: "Auto" }].filter((u) => u.url),
         logo: item.logo || item.tvg_logo || item.image_url || item.icon || undefined,
+        sourceLabel,
       })).filter((c: V3Channel) => c.urls.length > 0);
     } catch {}
   }
@@ -116,7 +118,7 @@ export function parseM3u(text: string, sourceLabel: string): V3Channel[] {
     g.urls.push({ url: e.url, label: e.qual });
     if (e.logo && !g.logo) g.logo = e.logo;
   }
-  return Array.from(groups.values()).filter((g) => g.urls.length > 0);
+  return Array.from(groups.values()).filter((g) => g.urls.length > 0).map((g) => ({ ...g, sourceLabel }));
 }
 
 export function isGithubUrl(url: string): boolean {
@@ -148,6 +150,7 @@ export async function fetchAndParseSource(source: V3Source): Promise<V3Channel[]
         name: item.name || item.label || item.channel || `Channel ${i + 1}`,
         urls: rawUrls.filter((u: any) => u.url).map((u: any) => ({ url: u.url, label: u.label || "Auto" })),
         logo: item.logo || item.tvg_logo || item.image_url || item.icon || undefined,
+        sourceLabel: source.label,
       };
     }).filter((c: V3Channel) => c.urls.length > 0);
   }
@@ -158,5 +161,6 @@ export async function fetchAndParseSource(source: V3Source): Promise<V3Channel[]
     id: `${source.label}-${i}`,
     name: url.split("/").pop() || `Stream ${i + 1}`,
     urls: [{ url, label: "Auto" }],
+    sourceLabel: source.label,
   }));
 }
