@@ -48,10 +48,8 @@ function getShortLabel(url: string): string {
   return match ? match[1].slice(0, 12) + "..." : url.slice(0, 20);
 }
 
-const PROXY_BASE = "/api/m3u-proxy?url=";
-
 function proxyUrl(url: string): string {
-  return `${PROXY_BASE}${encodeURIComponent(url)}`;
+  return `/api/m3u-proxy?url=${encodeURIComponent(url)}`;
 }
 
 function parseM3u(text: string): M3uEntry[] {
