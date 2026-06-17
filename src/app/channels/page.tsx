@@ -263,9 +263,9 @@ export default function ChannelsPage() {
                 {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
               </div>
               <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
-                {filteredChannels.map((ch: any) => (
+                {filteredChannels.map((ch: any, idx: number) => (
                   <ChannelListItem
-                    key={`${apiVersion}-${getChannelId(ch, apiVersion)}`}
+                    key={`${apiVersion}-${getChannelId(ch, apiVersion) || idx}`}
                     item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={selectedChannel === ch && selectedVersion === apiVersion}
                     onClick={() => selectAndReplaceUrl(ch)}
@@ -314,9 +314,9 @@ export default function ChannelsPage() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-1 p-1 scrollbar-red">
-                      {filteredChannels.map((ch: any) => (
+                        {filteredChannels.map((ch: any, idx: number) => (
                         <button
-                          key={`mobile-${getChannelId(ch, apiVersion)}`}
+                          key={`mobile-${getChannelId(ch, apiVersion) || idx}`}
                           type="button"
                           onClick={() => { selectAndReplaceUrl(ch); setIsMobileDropdownOpen(false); }}
                           className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
