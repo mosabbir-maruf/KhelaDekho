@@ -1,4 +1,5 @@
 "use client";
+export const runtime = "edge";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -19,12 +20,17 @@ export default function V1ChannelPage() {
     (async () => {
       try {
         const res = await fetch(`/api/stream?key=${encodeURIComponent(key)}`, { signal: controller.signal });
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "Unknown error");
+          throw new Error(errText || `HTTP ${res.status}`);
+        }
         const data = await res.json();
         if (!active) return;
-        setStreamData({ url: data.url || "", type: data.type || "hls", clearkey: data.clearkey || null });
+        if (!data.url) throw new Error("Empty stream URL returned from server");
+        setStreamData({ url: data.url, type: data.type || "hls", clearkey: data.clearkey || null });
       } catch (e: any) {
         if (e.name === "AbortError") return;
+        console.error("V1 stream load failed:", e);
         if (active) setError(e.message || "Failed to load stream");
       } finally {
         if (active) setLoading(false);
@@ -32,6 +38,8 @@ export default function V1ChannelPage() {
     })();
     return () => { active = false; controller.abort(); };
   }, [key]);
+
+  const title = key ? `Channel ${key}` : "V1 Stream";
 
   return (
     <div className="min-h-screen">

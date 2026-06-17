@@ -2,7 +2,9 @@ export const runtime = "edge";
 
 import { NextResponse, NextRequest } from "next/server";
 
-const DEFAULT_WORKER_URL = "";
+export const runtime = "edge";
+
+import { NextResponse, NextRequest } from "next/server";
 
 async function signHMACSHA256(secret: string, data: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -28,17 +30,20 @@ export async function GET(request: NextRequest) {
   }
 
   const secretKey = process.env.KHELADEKHO_SECRET_KEY;
-  if (!secretKey) {
-    return NextResponse.json({ success: false, error: "Server secret configuration missing" }, { status: 500 });
+  const rawWorkerUrl = process.env.KHELADEKHO_API_URL || process.env.NEXT_PUBLIC_API_URL || "";
+  const workerUrl = rawWorkerUrl.replace(/\/+$/, "");
+
+  if (!workerUrl) {
+    return NextResponse.json({ success: false, error: "API URL not configured — set KHELADEKHO_API_URL or NEXT_PUBLIC_API_URL" }, { status: 500 });
   }
 
-  const rawWorkerUrl = process.env.KHELADEKHO_API_URL || DEFAULT_WORKER_URL;
-  const workerUrl = rawWorkerUrl.replace(/\/+$/, "");
+  if (!secretKey) {
+    return NextResponse.json({ success: false, error: "HMAC secret not configured — set KHELADEKHO_SECRET_KEY" }, { status: 500 });
+  }
+
   const path = `/api/v1/channels/${key}/stream`;
   const timestamp = Math.floor(Date.now() / 1000).toString();
-  const message = `${timestamp}:${path}`;
-
-  const signature = await signHMACSHA256(secretKey, message);
+  const signature = await signHMACSHA256(secretKey, `${timestamp}:${path}`);
 
   try {
     const res = await fetch(`${workerUrl}${path}`, {
@@ -49,26 +54,29 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    const body = await res.text();
+
     if (!res.ok) {
-      const errorText = await res.text();
       return NextResponse.json(
-        { success: false, error: `Upstream error: ${res.status} - ${errorText}` },
+        { success: false, error: `Upstream error: ${res.status} — ${body.slice(0, 200)}` },
         { status: res.status },
       );
     }
 
-    const data = await res.json();
+    let data;
+    try { data = JSON.parse(body); } catch {
+      return NextResponse.json({ success: false, error: "Invalid JSON from upstream" }, { status: 502 });
+    }
 
-    if (data && data.success) {
+    if (data?.success && data.data?.url) {
       return NextResponse.json(data.data);
     }
 
     return NextResponse.json(
-      { success: false, error: data?.error?.message || "Invalid response from upstream" },
+      { success: false, error: data?.error?.message || "Upstream returned no stream URL" },
       { status: 502 },
     );
   } catch (err: unknown) {
-    console.error("Stream Proxy Route Error:", err);
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
