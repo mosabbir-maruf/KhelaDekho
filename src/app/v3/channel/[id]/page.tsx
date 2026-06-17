@@ -3,11 +3,13 @@ export const runtime = "edge";
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { VideoPlayer } from "@/components/ui/VideoPlayer";
+import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { getV3Channels } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Zap from "lucide-react/dist/esm/icons/zap";
+
+const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
 export default function V3ChannelPage() {
   const { id } = useParams<{ id: string }>();

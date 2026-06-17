@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { getApiBaseUrl } from "@/lib/api";
-import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
@@ -12,6 +12,8 @@ import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Zap from "lucide-react/dist/esm/icons/zap";
+
+const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
 interface V2Channel {
   id: number;
