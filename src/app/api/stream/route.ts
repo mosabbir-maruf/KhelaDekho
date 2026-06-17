@@ -2,21 +2,6 @@ export const runtime = "edge";
 
 import { NextResponse, NextRequest } from "next/server";
 
-async function signHMACSHA256(secret: string, data: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const key = searchParams.get("key");
@@ -25,29 +10,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Missing key parameter" }, { status: 400 });
   }
 
-  const secretKey = process.env.KHELADEKHO_SECRET_KEY;
-  const rawWorkerUrl = process.env.KHELADEKHO_API_URL || process.env.NEXT_PUBLIC_API_URL || "";
-  const workerUrl = rawWorkerUrl.replace(/\/+$/, "");
+  const workerUrl = (process.env.KHELADEKHO_API_URL || process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 
   if (!workerUrl) {
-    return NextResponse.json({ success: false, error: "API URL not configured — set KHELADEKHO_API_URL or NEXT_PUBLIC_API_URL" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "API URL not configured" }, { status: 500 });
   }
-
-  if (!secretKey) {
-    return NextResponse.json({ success: false, error: "HMAC secret not configured — set KHELADEKHO_SECRET_KEY" }, { status: 500 });
-  }
-
-  const path = `/api/v1/channels/${key}/stream`;
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const signature = await signHMACSHA256(secretKey, `${timestamp}:${path}`);
 
   try {
-    const res = await fetch(`${workerUrl}${path}`, {
-      headers: {
-        "X-Signature-Token": signature,
-        "X-Signature-Timestamp": timestamp,
-        Accept: "application/json",
-      },
+    const res = await fetch(`${workerUrl}/api/v1/channels/${encodeURIComponent(key)}/stream`, {
+      headers: { Accept: "application/json" },
     });
 
     const body = await res.text();
