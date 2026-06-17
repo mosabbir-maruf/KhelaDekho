@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, sanitizeBaseUrl } from "@/lib/api";
-import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
+import { LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
@@ -59,27 +59,26 @@ function isAlive(ch: any, v: ApiVersion): boolean {
   return true;
 }
 
+function getChannelId(ch: any, v: ApiVersion): string {
+  if (v === "v1") return (ch as V1Channel).key;
+  if (v === "v2") return String((ch as V2Channel).id);
+  if (v === "v4") return (ch as V4Channel).id;
+  return (ch as V3Channel).id;
+}
+
+function getUrlParams() {
+  if (typeof window === "undefined") return { v: null, ch: null };
+  const params = new URLSearchParams(window.location.search);
+  return { v: params.get("v"), ch: params.get("ch") };
+}
+
 export default function ChannelsPage() {
   const router = useRouter();
   const pathname = usePathname();
-  useMemo(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const v = params.get("v");
-      const ch = params.get("ch");
-      if (v && ["v1", "v2", "v3", "v4"].includes(v)) {
-        localStorage.setItem("kheladekho_url_v", v);
-        localStorage.setItem("kheladekho_url_ch", ch || "");
-      }
-    }
-  }, []);
 
   const [apiVersion, setApiVersion] = useState<ApiVersion>(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const v = params.get("v");
-      if (v && ["v1", "v2", "v3", "v4"].includes(v)) return v as ApiVersion;
-    }
+    const { v } = getUrlParams();
+    if (v && ["v1", "v2", "v3", "v4"].includes(v)) return v as ApiVersion;
     return loadAdminConfig().defaultVersion || "v4";
   });
   const [channels, setChannels] = useState<any[]>([]);
@@ -94,6 +93,15 @@ export default function ChannelsPage() {
 
   const isV3 = apiVersion === "v3";
 
+  function selectAndReplaceUrl(ch: any) {
+    setSelectedChannel(ch);
+    setSelectedVersion(apiVersion);
+    setV1StreamData(null);
+    setV1Error(null);
+    const id = getChannelId(ch, apiVersion);
+    router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
+  }
+
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -106,18 +114,10 @@ export default function ChannelsPage() {
       setV1StreamData(null);
       setV1Error(null);
       try {
+        let list: any[] = [];
         if (apiVersion === "v3") {
           const cfg = loadAdminConfig();
-          const list = cfg.enabled.v3 ? getV3Channels() : [];
-          setChannels(list);
-          if (list.length > 0) {
-            const urlCh = typeof location !== "undefined" ? new URLSearchParams(location.search).get("ch") : null;
-            let target = urlCh ? list.find((ch: any) => ch.id === urlCh) : null;
-            target = target || list[0];
-            setSelectedChannel(target);
-            setSelectedVersion(apiVersion);
-            router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(target.id)}`, { scroll: false });
-          }
+          list = cfg.enabled.v3 ? getV3Channels() : [];
         } else {
           const fetchLimit = apiVersion === "v1" ? "?limit=200" : apiVersion === "v4" ? "?alive=true" : "?limit=200";
           const res = await fetch(`${baseUrl}/api/${apiVersion}/channels${fetchLimit}`, {
@@ -126,20 +126,15 @@ export default function ChannelsPage() {
           });
           const body = res.ok ? await res.json() : { data: { channels: [] } };
           if (!active) return;
-          const list = body?.data?.channels || [];
-          setChannels(list);
-          if (list.length > 0) {
-            const params = new URLSearchParams(location.search);
-            const urlCh = params.get("ch");
-            let target = urlCh ? list.find((ch: any) => String(ch.id || ch.key) === urlCh) : null;
-            target = target || list.find((ch: any) => isAlive(ch, apiVersion)) || list[0];
-            setSelectedChannel(target);
-            setSelectedVersion(apiVersion);
-            setV1StreamData(null);
-            setV1Error(null);
-            const id = apiVersion === "v1" ? (target as V1Channel).key : apiVersion === "v2" ? String((target as V2Channel).id) : isV3 ? (target as V3Channel).id : (target as V4Channel).id;
-            router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
-          }
+          list = body?.data?.channels || [];
+        }
+        setChannels(list);
+        if (list.length > 0) {
+          const { ch: urlCh } = getUrlParams();
+          const matchUrl = (ch: any) => String(getChannelId(ch, apiVersion)) === urlCh;
+          let target = urlCh ? list.find(matchUrl) : null;
+          target = target || list.find((ch: any) => isAlive(ch, apiVersion)) || list[0];
+          selectAndReplaceUrl(target);
         }
       } catch {
         if (active) setChannels([]);
@@ -162,13 +157,8 @@ export default function ChannelsPage() {
   );
 
   const selectChannel = useCallback((ch: any) => {
-    setSelectedChannel(ch);
-    setSelectedVersion(apiVersion);
-    setV1StreamData(null);
-    setV1Error(null);
-    const id = apiVersion === "v1" ? (ch as V1Channel).key : apiVersion === "v2" ? String((ch as V2Channel).id) : isV3 ? (ch as V3Channel).id : (ch as V4Channel).id;
-    router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
-  }, [apiVersion, router, pathname, isV3]);
+    selectAndReplaceUrl(ch);
+  }, [apiVersion, router, pathname]);
 
   useEffect(() => {
     if (!selectedChannel || selectedVersion !== "v1") return;
@@ -197,8 +187,7 @@ export default function ChannelsPage() {
   const apiBase = getApiBaseUrl();
 
   const v3Channel = selectedVersion === "v3" ? (selectedChannel as V3Channel) : null;
-  const v3QualityIdx = 0;
-  const v3RawUrl = v3Channel?.urls?.[v3QualityIdx]?.url;
+  const v3RawUrl = v3Channel?.urls?.[0]?.url;
   const v3IsTs = v3RawUrl?.match(/\.ts($|\?)/);
   const v3Url = v3RawUrl && !v3IsTs && apiBase
     ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(v3RawUrl)}`
@@ -212,11 +201,9 @@ export default function ChannelsPage() {
     : rawUrl;
 
   const v4Ch = selectedVersion === "v4" ? (selectedChannel as V4Channel) : null;
-  const v4RawUrl = v4Ch?.stream_url;
-  const v4Url = v4RawUrl;
+  const v4Url = v4Ch?.stream_url;
 
   const showPlayer = selectedChannel && selectedVersion === apiVersion;
-  const v1Loading = selectedVersion === "v1" && !v1StreamData && !v1Error;
 
   return (
     <div className="min-h-screen">
@@ -283,7 +270,7 @@ export default function ChannelsPage() {
               <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
                 {filteredChannels.map((ch: any) => (
                   <ChannelListItem
-                    key={`${apiVersion}-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : apiVersion === "v4" ? ch.id : ch.id}`}
+                    key={`${apiVersion}-${getChannelId(ch, apiVersion)}`}
                     item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={selectedChannel === ch && selectedVersion === apiVersion}
                     onClick={() => selectChannel(ch)}
@@ -299,7 +286,6 @@ export default function ChannelsPage() {
             </div>
 
             <div className="flex-1 min-w-0 space-y-4 w-full">
-              {/* MOBILE ONLY: Channel selector */}
               <div className="relative lg:hidden w-full shrink-0">
                 <button
                   type="button"
@@ -335,7 +321,7 @@ export default function ChannelsPage() {
                     <div className="flex-1 overflow-y-auto space-y-1 p-1 scrollbar-red">
                       {filteredChannels.map((ch: any) => (
                         <button
-                          key={`mobile-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}`}
+                          key={`mobile-${getChannelId(ch, apiVersion)}`}
                           type="button"
                           onClick={() => { selectChannel(ch); setIsMobileDropdownOpen(false); }}
                           className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
