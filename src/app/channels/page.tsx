@@ -12,6 +12,9 @@ import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Zap from "lucide-react/dist/esm/icons/zap";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Search from "lucide-react/dist/esm/icons/search";
+import X from "lucide-react/dist/esm/icons/x";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
@@ -68,6 +71,7 @@ export default function ChannelsPage() {
   const [selectedVersion, setSelectedVersion] = useState<ApiVersion | null>(null);
   const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: any } | null>(null);
   const [v1Error, setV1Error] = useState<string | null>(null);
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
 
   const isV3 = apiVersion === "v3";
 
@@ -242,6 +246,71 @@ export default function ChannelsPage() {
             </div>
 
             <div className="flex-1 min-w-0 space-y-4 w-full">
+              {/* MOBILE ONLY: Channel selector */}
+              <div className="relative lg:hidden w-full shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileDropdownOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between border border-border-alt bg-card px-4 py-3.5 hover:border-red-500/20 transition-all text-left shadow-md cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Tv className="w-4 h-4 text-red-500 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Active Channel" : "Select Channel"}</span>
+                      <span className="font-mono text-xs font-bold text-fg truncate block">{selectedChannel?.name || "Tap to browse"}</span>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-fg-dim transition-transform duration-200 ${isMobileDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {isMobileDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 max-h-[60vh] flex flex-col">
+                    <div className="flex items-center gap-2 border-b border-border-alt px-3 py-2 bg-card shrink-0">
+                      <Search className="w-3.5 h-3.5 text-fg-dim shrink-0" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search channel..."
+                        className="bg-transparent text-xs font-mono text-fg placeholder:text-fg-faint outline-none w-full"
+                      />
+                      {searchQuery && (
+                        <button type="button" onClick={() => setSearchQuery("")} className="text-fg-dim hover:text-fg">
+                          <X className="w-3" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-1 p-1 scrollbar-red">
+                      {filteredChannels.map((ch: any) => (
+                        <button
+                          key={`mobile-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}`}
+                          type="button"
+                          onClick={() => { selectChannel(ch); setIsMobileDropdownOpen(false); }}
+                          className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
+                            selectedChannel === ch && selectedVersion === apiVersion
+                              ? "border-red-500/30 bg-red-500/[0.03] text-red-400 font-semibold"
+                              : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="min-w-0">
+                              <div className="text-xs font-mono truncate">{ch.name}</div>
+                              <div className="text-[9px] font-mono text-fg-dim mt-0.5">{isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase()}</div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                      {filteredChannels.length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {!showPlayer ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <div className="text-center space-y-3">
