@@ -1,15 +1,17 @@
 "use client";
 export const runtime = "edge";
 
-import { useCallback, useState } from "react";
-import { loadAdminConfig, saveAdminConfig, fetchAndParseSource, isGithubUrl, toRawGithubUrl } from "@/data/admin";
+import { useCallback, useState, useRef } from "react";
+import { loadAdminConfig, saveAdminConfig, fetchAndParseSource, isGithubUrl, toRawGithubUrl, parseM3u } from "@/data/admin";
 import type { AdminConfig, V3Source } from "@/data/admin";
 import { PageHero } from "@/components/ui/PageHero";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Trash from "lucide-react/dist/esm/icons/trash";
 import Plus from "lucide-react/dist/esm/icons/plus";
+import Upload from "lucide-react/dist/esm/icons/upload";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Check from "lucide-react/dist/esm/icons/check";
+import File from "lucide-react/dist/esm/icons/file";
 
 export default function AdminPage() {
   const [config, setConfig] = useState<AdminConfig>(loadAdminConfig);
@@ -143,6 +145,66 @@ export default function AdminPage() {
           </div>
           {fetchError && <p className="text-[10px] font-mono text-red-500">{fetchError}</p>}
           <p className="text-[10px] font-mono text-fg-faint">Supports M3U playlists, GitHub JSON arrays, or raw TXT URLs</p>
+        </div>
+
+        {/* Upload File */}
+        <div className="border border-border-alt bg-card p-6 space-y-3">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-fg-dim">Upload File</h2>
+          <div
+            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-red-500/50"); }}
+            onDragLeave={(e) => { e.currentTarget.classList.remove("border-red-500/50"); }}
+            onDrop={async (e) => {
+              e.preventDefault();
+              e.currentTarget.classList.remove("border-red-500/50");
+              const file = e.dataTransfer.files[0];
+              if (!file) return;
+              setFetchError("");
+              setFetching(true);
+              try {
+                const text = await file.text();
+                const label = file.name.replace(/\.(m3u8?|txt|json)$/i, "");
+                const channels = parseM3u(text, `upload-${Date.now()}`);
+                const type = file.name.match(/\.m3u8?$/i) ? "m3u8" : file.name.match(/\.json$/i) ? "github-json" : "github-txt";
+                const source: V3Source = { label, url: `[upload] ${file.name}`, type, channels, lastFetched: Date.now() };
+                updateConfig({ ...config, sources: [...config.sources, source] });
+              } catch (e: any) {
+                setFetchError(e.message || "Failed to parse file");
+              } finally {
+                setFetching(false);
+              }
+            }}
+            className="border-2 border-dashed border-border-alt p-8 text-center transition-colors cursor-pointer hover:border-red-500/30"
+          >
+            <input
+              type="file"
+              accept=".m3u8,.m3u,.txt,.json"
+              className="hidden"
+              id="file-upload"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setFetchError("");
+                setFetching(true);
+                try {
+                  const text = await file.text();
+                  const label = file.name.replace(/\.(m3u8?|txt|json)$/i, "");
+                  const channels = parseM3u(text, `upload-${Date.now()}`);
+                  const type = file.name.match(/\.m3u8?$/i) ? "m3u8" : file.name.match(/\.json$/i) ? "github-json" : "github-txt";
+                  const source: V3Source = { label, url: `[upload] ${file.name}`, type, channels, lastFetched: Date.now() };
+                  updateConfig({ ...config, sources: [...config.sources, source] });
+                } catch (e: any) {
+                  setFetchError(e.message || "Failed to parse file");
+                } finally {
+                  setFetching(false);
+                }
+                e.target.value = "";
+              }}
+            />
+            <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
+              {fetching ? <Loader2 className="w-6 h-6 text-red-500 animate-spin" /> : <Upload className="w-6 h-6 text-fg-dim" />}
+              <span className="font-mono text-xs text-fg-dim">Drag & drop or click to upload .m3u8 / .m3u / .txt / .json</span>
+            </label>
+          </div>
         </div>
 
         {/* Sources List */}

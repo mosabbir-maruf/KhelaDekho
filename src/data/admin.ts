@@ -57,6 +57,20 @@ export function getV3Channels(): V3Channel[] {
 }
 
 export function parseM3u(text: string, sourceLabel: string): V3Channel[] {
+  // Auto-detect and parse JSON arrays within M3U files
+  const textTrimmed = text.trim();
+  if (textTrimmed.startsWith("[") || textTrimmed.startsWith('{"')) {
+    try {
+      const data = JSON.parse(textTrimmed);
+      const arr = Array.isArray(data) ? data : data.channels || data.data || [];
+      return arr.map((item: any, i: number) => ({
+        id: `${sourceLabel}-${i}`,
+        name: item.name || item.label || item.channel || `Channel ${i + 1}`,
+        url: item.url || item.stream_url || item.file || "",
+        logo: item.logo || item.tvg_logo || item.image_url || item.icon || undefined,
+      })).filter((c: V3Channel) => c.url);
+    } catch {}
+  }
   const lines = text.split("\n");
   const entries: V3Channel[] = [];
   let currentName: string | null = null;
