@@ -222,7 +222,7 @@ export default function ChannelsPage() {
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
               </button>
               {isServerDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
+                <div className="absolute top-full right-0 mt-0.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
                   {(["v1", "v2", "v3", "v4"] as ApiVersion[]).map((v) => (
                     <button
                       key={v}
