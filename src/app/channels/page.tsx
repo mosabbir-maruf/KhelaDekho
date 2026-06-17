@@ -191,7 +191,7 @@ export default function ChannelsPage() {
                 {filteredChannels.map((ch: any) => (
                   <ChannelListItem
                     key={isV1 ? ch.key : ch.id}
-                    item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV1 ? ch.category.toUpperCase() : ch.stream_type?.toUpperCase() }}
+                    item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV1 ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                     selected={isV1 ? selectedChannel?.key === ch.key : selectedChannel?.id === ch.id}
                     onClick={() => {
                       selectChannel(ch);
@@ -219,7 +219,7 @@ export default function ChannelsPage() {
                         <div>
                           <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
                           <p className="font-mono text-xs text-fg-dim">
-                            {isV1 ? (selectedChannel as V1Channel).category : (selectedChannel as V2Channel).stream_type.toUpperCase()}
+                            {isV1 ? (selectedChannel as V1Channel).category || "N/A" : ((selectedChannel as V2Channel).stream_type || "HLS").toUpperCase()}
                           </p>
                         </div>
                       </div>
@@ -280,7 +280,7 @@ export default function ChannelsPage() {
                           {filteredChannels.map((ch: any) => (
                             <ChannelListItem
                               key={isV1 ? ch.key : ch.id}
-                              item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV1 ? ch.category.toUpperCase() : ch.stream_type?.toUpperCase() }}
+                    item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV1 ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
                               selected={isV1 ? selectedChannel?.key === ch.key : selectedChannel?.id === ch.id}
                               onClick={() => selectChannel(ch)}
                               showExtra
@@ -305,7 +305,7 @@ export default function ChannelsPage() {
                             { label: "Viewers", value: String((selectedChannel as V1Channel).live_viewers), icon: "monitor" },
                           ]
                         : [
-                            { label: "Stream Type", value: (selectedChannel as V2Channel).stream_type.toUpperCase(), icon: "zap" },
+                            { label: "Stream Type", value: ((selectedChannel as V2Channel).stream_type || "HLS").toUpperCase(), icon: "zap" },
                             { label: "Drm", value: hasDrm ? "PRESENT" : "NONE", icon: "shield" },
                             { label: "Channel", value: `ID ${(selectedChannel as V2Channel).id}`, icon: "monitor" },
                           ]
