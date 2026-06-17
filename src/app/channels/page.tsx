@@ -10,6 +10,8 @@ import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import X from "lucide-react/dist/esm/icons/x";
 
 interface V2Channel {
   id: number;
@@ -202,7 +204,7 @@ export default function ChannelsPage() {
                   <ChannelListItem
                     key={`${apiVersion}-${isV3 ? ch.id : apiVersion === "v1" ? ch.key : ch.id}`}
                     item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase() }}
-                    selected={false}
+                    selected={selectedChannel === ch && selectedVersion === apiVersion}
                     onClick={() => selectChannel(ch)}
                     showExtra
                   />
@@ -217,13 +219,39 @@ export default function ChannelsPage() {
 
             <div className="flex-1 min-w-0 space-y-4 w-full">
               {showPlayer && selectedVersion === "v1" && v1StreamData?.url ? (
-                <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} />
+                <>
+                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                        <Tv className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div>
+                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{(selectedChannel as V1Channel).name}</h2>
+                        <p className="font-mono text-xs text-fg-dim">{(selectedChannel as V1Channel).category} · LIVE</p>
+                      </div>
+                    </div>
+                  </div>
+                  <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} />
+                </>
               ) : showPlayer && selectedVersion === "v1" && v1Error ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <p className="font-mono text-xs text-red-500">{v1Error}</p>
                 </div>
               ) : showPlayer && selectedVersion === "v2" && v2Url ? (
-                <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} />
+                <>
+                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                        <Tv className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div>
+                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{(selectedChannel as V2Channel).name}</h2>
+                        <p className="font-mono text-xs text-fg-dim">{((selectedChannel as V2Channel).stream_type || "HLS").toUpperCase()} · ACTIVE</p>
+                      </div>
+                    </div>
+                  </div>
+                  <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} />
+                </>
               ) : showPlayer && selectedVersion === "v3" && v3Url ? (
                 <>
                   <div className="flex items-center justify-between border border-border-alt bg-card p-4">
@@ -252,6 +280,43 @@ export default function ChannelsPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Right: Filters */}
+            <div className="hidden lg:flex lg:flex-col lg:w-48 shrink-0 border border-border-alt bg-card overflow-hidden min-h-0">
+              <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-3 py-2 border-b border-border-alt shrink-0">
+                {isV3 ? "Sources" : apiVersion === "v1" ? "Categories" : "Filters"}
+              </div>
+              <div className="flex-1 overflow-y-auto min-h-0 space-y-1 p-2 scrollbar-red">
+                {isV3 ? (
+                  (() => {
+                    const sources = [...new Set(channels.map((ch: any) => ch.sourceLabel || "Unknown"))];
+                    return sources.map((src) => (
+                      <button
+                        key={src}
+                        onClick={() => setSearchQuery(searchQuery === src ? "" : src)}
+                        className={`w-full text-left border p-2 text-[10px] font-mono transition-all cursor-pointer ${
+                          searchQuery === src ? "border-red-500/30 bg-red-500/[0.03] text-red-400" : "border-border-alt bg-card text-fg-dim hover:text-fg"
+                        }`}
+                      >
+                        {src}
+                      </button>
+                    ));
+                  })()
+                ) : apiVersion === "v1" ? (
+                  ["Sports", "Entertainment", "News"].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSearchQuery(searchQuery === cat.toLowerCase() ? "" : cat.toLowerCase())}
+                      className={`w-full text-left border p-2 text-[10px] font-mono transition-all cursor-pointer ${
+                        searchQuery === cat.toLowerCase() ? "border-red-500/30 bg-red-500/[0.03] text-red-400" : "border-border-alt bg-card text-fg-dim hover:text-fg"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))
+                ) : null}
+              </div>
             </div>
           </div>
         )}
