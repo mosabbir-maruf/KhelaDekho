@@ -78,6 +78,13 @@ export function Navbar() {
             {/* Nav Links (desktop only) */}
             <nav className="hidden md:flex items-center h-full">
               <Link
+                href="/live-tv"
+                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                  }`}
+              >
+                Live TV
+              </Link>
+              <Link
                 href="/channels"
                 className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/channels") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
@@ -273,6 +280,13 @@ export function Navbar() {
                   Quick Links
                 </h4>
                 <div className="space-y-1">
+                  <Link
+                    href="/live-tv"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
+                  >
+                    <Tv className="w-4 h-4 text-red-500" />
+                    Live TV
+                  </Link>
                   <Link
                     href="/channels"
                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"

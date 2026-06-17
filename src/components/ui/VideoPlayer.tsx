@@ -30,6 +30,7 @@ interface VideoPlayerProps {
   streamType: string;
   clearKeys?: Record<string, string> | null;
   fallbackSources?: StreamSource[];
+  className?: string;
 }
 
 const WIDEVINE_UUID = "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
@@ -77,7 +78,7 @@ function detectType(url: string, hint: string): string {
   return "hls";
 }
 
-export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources }: VideoPlayerProps) {
+export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources, className }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -441,7 +442,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources 
   }, [resetControlsTimeout]);
 
   return (
-    <div className="relative w-full flex flex-col space-y-6">
+    <div className={"relative w-full flex flex-col space-y-6" + (className ? " " + className : "")}>
       <div ref={containerRef} onMouseMove={handleMouseMove} onMouseLeave={() => videoRef.current && !videoRef.current.paused && setShowControls(false)} className="relative aspect-video w-full bg-[#030303] overflow-hidden border border-border-alt group cursor-default select-none shadow-2xl">
         <video ref={videoRef} onClick={togglePlay} className="w-full h-full object-contain cursor-pointer" playsInline autoPlay muted />
 
