@@ -4,8 +4,9 @@ export function getFallbackSource(
   sources: StreamSource[],
   triedIndex: number,
 ): { url: string; type: string; index: number } | null {
-  for (let i = triedIndex + 1; i < sources.length; i++) {
-    return { url: sources[i].url, type: sources[i].type, index: i };
+  const next = triedIndex + 1;
+  if (next < sources.length) {
+    return { url: sources[next].url, type: sources[next].type, index: next };
   }
   return null;
 }

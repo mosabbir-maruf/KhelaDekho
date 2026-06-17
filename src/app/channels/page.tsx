@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, sanitizeBaseUrl } from "@/lib/api";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
@@ -11,7 +11,6 @@ import { StatsGrid } from "@/components/ui/StatsGrid";
 import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
-import Zap from "lucide-react/dist/esm/icons/zap";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Search from "lucide-react/dist/esm/icons/search";
 import X from "lucide-react/dist/esm/icons/x";
@@ -79,7 +78,7 @@ export default function ChannelsPage() {
     let active = true;
     const controller = new AbortController();
     const rawBaseUrl = getApiBaseUrl();
-    const baseUrl = rawBaseUrl ? rawBaseUrl.replace(/\/+$/, "") : "";
+    const baseUrl = rawBaseUrl ? sanitizeBaseUrl(rawBaseUrl) : "";
     (async () => {
       setLoading(true);
       setSelectedChannel(null);
@@ -155,11 +154,6 @@ export default function ChannelsPage() {
     setApiVersion((prev) => prev === "v1" ? "v2" : prev === "v2" ? "v3" : prev === "v3" ? "v4" : "v1");
   }, []);
 
-  const enabled = useMemo(() => {
-    const cfg = loadAdminConfig();
-    return cfg.enabled;
-  }, []);
-
   const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : apiVersion === "v4" ? "ProxyBDIX Streams" : "Browse Streams";
 
   const apiBase = getApiBaseUrl();
@@ -169,14 +163,14 @@ export default function ChannelsPage() {
   const v3RawUrl = v3Channel?.urls?.[v3QualityIdx]?.url;
   const v3IsTs = v3RawUrl?.match(/\.ts($|\?)/);
   const v3Url = v3RawUrl && !v3IsTs && apiBase
-    ? `${apiBase.replace(/\/+$/, "")}/api/v2/proxy?url=${encodeURIComponent(v3RawUrl)}`
+    ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(v3RawUrl)}`
     : v3RawUrl;
 
   const v2Ch = selectedVersion === "v2" ? (selectedChannel as V2Channel) : null;
   const rawUrl = v2Ch?.stream_url;
   const needsProxy = rawUrl && (rawUrl.includes("storage.googleapis.com") || rawUrl.includes("soccerball.st"));
   const v2Url = needsProxy && apiBase
-    ? `${apiBase.replace(/\/+$/, "")}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
+    ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
     : rawUrl;
 
   const v4Ch = selectedVersion === "v4" ? (selectedChannel as V4Channel) : null;

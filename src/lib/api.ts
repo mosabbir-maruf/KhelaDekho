@@ -75,6 +75,10 @@ const DEFAULT_API_URL = "";
 // Helper to get base API URL from environment variables or default
 const isDebugMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_DEBUG === "true";
 
+export function sanitizeBaseUrl(url: string): string {
+  return url.replace(/\/+$/, "");
+}
+
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     if (isDebugMode) {

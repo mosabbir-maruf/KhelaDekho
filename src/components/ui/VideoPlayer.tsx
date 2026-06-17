@@ -294,8 +294,6 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
             hexKeys[hexKid] = hexKey;
           }
           player.configure({ drm: { clearKeys: hexKeys } });
-        } else {
-          player.configure({ drm: { clearKeys: {} } });
         }
 
         player.removeEventListener("error", player._kdErrorHandler);
@@ -353,10 +351,11 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         video.addEventListener("loadedmetadata", onLoaded);
         const nativeErrorHandler = () => {
           video.removeEventListener("loadedmetadata", onLoaded);
-          if (video) video.removeEventListener("error", nativeErrorHandler);
+          video.removeEventListener("error", nativeErrorHandler);
           if (!tryFallback()) setIsLoading(false);
         };
         video.addEventListener("error", nativeErrorHandler);
+        return cleanup;
       } else {
         try {
           const HlsClass = await getHls();
@@ -387,6 +386,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     const cleanup = () => {
       destroyed = true;
       if (hlsPlayerRef.current) { hlsPlayerRef.current.destroy(); hlsPlayerRef.current = null; }
+      if (shakaPlayerRef.current) { try { shakaPlayerRef.current.destroy(); } catch {} shakaPlayerRef.current = null; }
       attachedTypeRef.current = null;
       if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
     };

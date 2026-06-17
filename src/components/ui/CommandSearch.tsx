@@ -48,12 +48,13 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
   useEffect(() => {
     if (!open) return;
 
+    const controller = new AbortController();
     const fetchSearchData = async () => {
       try {
         const baseUrl = getApiBaseUrl();
         const [resMatches, resChannels] = await Promise.all([
-          fetch(`${baseUrl}/api/v1/matches`),
-          fetch(`${baseUrl}/api/v1/channels`),
+          fetch(`${baseUrl}/api/v1/matches`, { signal: controller.signal }),
+          fetch(`${baseUrl}/api/v1/channels`, { signal: controller.signal }),
         ]);
 
         const itemsList: SearchItem[] = [...defaultItems];
@@ -87,14 +88,17 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
           }
         }
 
+        if (controller.signal.aborted) return;
         setDynamicItems(itemsList);
       } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
         console.error("Failed to load search index components:", err);
         setDynamicItems(defaultItems);
       }
     };
 
     fetchSearchData();
+    return () => controller.abort();
   }, [open]);
 
   // Keyboard shortcut: Escape to close

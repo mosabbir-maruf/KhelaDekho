@@ -18,19 +18,23 @@ export default function SearchPage() {
 
   // Load search databases on mount
   useEffect(() => {
+    const controller = new AbortController();
     const loadData = async () => {
       setLoading(true);
       try {
-        const [mResult, chResult] = await Promise.all([getMatches(), getChannels()]);
+        const [mResult, chResult] = await Promise.all([getMatches({}, { signal: controller.signal }), getChannels({}, { signal: controller.signal })]);
+        if (controller.signal.aborted) return;
         setMatches(mResult?.matches || []);
         setChannels(chResult?.channels || []);
       } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
         console.error("Failed to load search directory databases:", err);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     loadData();
+    return () => controller.abort();
   }, []);
 
   // Filter channels based on query
