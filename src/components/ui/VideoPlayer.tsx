@@ -14,9 +14,8 @@ import Minimize from "lucide-react/dist/esm/icons/minimize";
 import type Hls from "hls.js";
 import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { getFallbackSource } from "@/lib/streamSelector";
+import { getApiBaseUrl } from "@/lib/api";
 import type { StreamSource } from "@/lib/api";
-
-const V2_HOME_URL = process.env.NEXT_PUBLIC_V2_HOME_URL || 'https://kickbd.org';
 
 let shakaModule: any = null;
 async function getShaka() {
@@ -48,7 +47,8 @@ function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
   if (netEngine) {
     netEngine.registerRequestFilter((type: any, request: any) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
-        request.headers['Referer'] = V2_HOME_URL;
+        const apiBase = getApiBaseUrl();
+        request.headers['Referer'] = apiBase ? `${apiBase}/` : 'https://kickbd.org/';
       }
     });
     netEngine.registerResponseFilter((type: any, response: any) => {
