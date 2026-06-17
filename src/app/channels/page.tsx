@@ -12,6 +12,7 @@ import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Server from "lucide-react/dist/esm/icons/server";
 import Search from "lucide-react/dist/esm/icons/search";
 import X from "lucide-react/dist/esm/icons/x";
 
@@ -71,6 +72,7 @@ export default function ChannelsPage() {
   const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: any } | null>(null);
   const [v1Error, setV1Error] = useState<string | null>(null);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
+  const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
 
   const isV3 = apiVersion === "v3";
 
@@ -166,10 +168,6 @@ export default function ChannelsPage() {
     return () => { active = false; controller.abort(); };
   }, [selectedChannel, selectedVersion]);
 
-  const cycleVersion = useCallback(() => {
-    setApiVersion((prev) => prev === "v1" ? "v2" : prev === "v2" ? "v3" : prev === "v3" ? "v4" : "v1");
-  }, []);
-
   const label = isV3 ? "Admin Streams" : apiVersion === "v1" ? "Legacy Streams" : apiVersion === "v4" ? "ProxyBDIX Streams" : "Browse Streams";
 
   const apiBase = getApiBaseUrl();
@@ -215,13 +213,34 @@ export default function ChannelsPage() {
                 {aliveCount} active &middot; {channels.length.toLocaleString()} indexed
               </p>
             </div>
-            <button
-              onClick={cycleVersion}
-              className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
-            >
-              <span className={`w-2 h-2 rounded-full ${isV3 ? "bg-blue-500" : apiVersion === "v1" ? "bg-yellow-500" : apiVersion === "v2" ? "bg-green-500" : "bg-purple-500"}`} />
-              API v{apiVersion.toUpperCase()}
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setIsServerDropdownOpen((prev) => !prev)}
+                className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
+              >
+                <Server className="w-3.5 h-3.5" />
+                Switch Server
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isServerDropdownOpen && (
+                <div className="absolute top-full right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
+                  {(["v1", "v2", "v3", "v4"] as ApiVersion[]).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => { setApiVersion(v); setIsServerDropdownOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs font-mono transition-all cursor-pointer flex items-center gap-2 ${
+                        apiVersion === v
+                          ? "text-red-400 bg-red-500/[0.03] font-semibold"
+                          : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${v === "v3" ? "bg-blue-500" : v === "v1" ? "bg-yellow-500" : v === "v2" ? "bg-green-500" : "bg-purple-500"}`} />
+                      V{v.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-6">
             Stream buffering? Switch channel or server.
