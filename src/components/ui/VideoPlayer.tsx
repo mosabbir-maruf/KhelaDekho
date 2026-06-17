@@ -16,6 +16,8 @@ import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { getFallbackSource } from "@/lib/streamSelector";
 import type { StreamSource } from "@/lib/api";
 
+const KICKBD_REFERER = process.env.NEXT_PUBLIC_KICKBD_REFERER || 'https://kickbd.org';
+
 let shakaModule: any = null;
 async function getShaka() {
   if (!shakaModule) {
@@ -46,7 +48,7 @@ function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
   if (netEngine) {
     netEngine.registerRequestFilter((type: any, request: any) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
-        request.headers['Referer'] = 'https://kickbd.org/';
+        request.headers['Referer'] = KICKBD_REFERER;
       }
     });
     netEngine.registerResponseFilter((type: any, response: any) => {
