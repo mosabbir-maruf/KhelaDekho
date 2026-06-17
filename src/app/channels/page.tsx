@@ -88,7 +88,13 @@ export default function ChannelsPage() {
       try {
         if (apiVersion === "v3") {
           const cfg = loadAdminConfig();
-          setChannels(cfg.enabled.v3 ? getV3Channels() : []);
+          const list = cfg.enabled.v3 ? getV3Channels() : [];
+          setChannels(list);
+          if (list.length > 0) {
+            setSelectedChannel(list[0]);
+            setSelectedVersion(apiVersion);
+            router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(list[0].id)}`, { scroll: false });
+          }
         } else {
           const fetchLimit = apiVersion === "v1" ? "?limit=200" : apiVersion === "v4" ? "?alive=true" : "?limit=200";
           const res = await fetch(`${baseUrl}/api/${apiVersion}/channels${fetchLimit}`, {
@@ -99,9 +105,14 @@ export default function ChannelsPage() {
           if (!active) return;
           const list = body?.data?.channels || [];
           setChannels(list);
-          if (list.length > 0 && !selectedChannel) {
+          if (list.length > 0) {
             const first = list.find((ch: any) => isAlive(ch, apiVersion)) || list[0];
-            selectChannel(first);
+            setSelectedChannel(first);
+            setSelectedVersion(apiVersion);
+            setV1StreamData(null);
+            setV1Error(null);
+            const id = apiVersion === "v1" ? (first as V1Channel).key : apiVersion === "v2" ? String((first as V2Channel).id) : isV3 ? (first as V3Channel).id : (first as V4Channel).id;
+            router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
           }
         }
       } catch {
