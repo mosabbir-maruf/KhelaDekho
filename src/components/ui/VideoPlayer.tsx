@@ -216,7 +216,9 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     return () => { clearTimeout(debounce); video.removeEventListener("ratechange", enforce); video.removeEventListener("waiting", enforce); };
   }, [isApple]);
 
-  const clearKeysStr = clearKeys ? JSON.stringify(clearKeys) : "";
+  const clearKeysRef = useRef(clearKeys);
+  clearKeysRef.current = clearKeys;
+  const clearKeysStr = useMemo(() => clearKeys ? JSON.stringify(clearKeys) : "", [clearKeys]);
 
   // ---- Stream initialization ----
   useEffect(() => {
@@ -231,10 +233,11 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     setPlayerError(null);
 
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-    loadingTimeoutRef.current = setTimeout(() => {
-      if (!playerError) setPlayerError("Stream is taking too long to load — the feed may be unavailable.");
+    const timeoutId = setTimeout(() => {
+      setPlayerError("Stream is taking too long to load — the feed may be unavailable.");
       setIsLoading(false);
     }, 30000);
+    loadingTimeoutRef.current = timeoutId;
 
     let destroyed = false;
     const tryFallback = () => {

@@ -2,288 +2,25 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
+import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
+import { ChannelListItem } from "@/components/ui/ChannelListItem";
+import { StatsGrid } from "@/components/ui/StatsGrid";
+import { CATEGORIES, CATEGORY_KEYWORDS, LOGO_BASE, LOGO_MAP, getCategory } from "@/data/liveTv";
+import type { Category } from "@/data/liveTv";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Image from "next/image";
 import Tv from "lucide-react/dist/esm/icons/tv";
-import Search from "lucide-react/dist/esm/icons/search";
-import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
-import X from "lucide-react/dist/esm/icons/x";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
-import Monitor from "lucide-react/dist/esm/icons/monitor";
 import Zap from "lucide-react/dist/esm/icons/zap";
 import Shield from "lucide-react/dist/esm/icons/shield";
-import Link from "next/link";
-import Image from "next/image";
+import Monitor from "lucide-react/dist/esm/icons/monitor";
+import X from "lucide-react/dist/esm/icons/x";
+import Search from "lucide-react/dist/esm/icons/search";
 
 interface M3u8Channel {
   name: string;
   url: string;
 }
-
-type Category =
-  | "All"
-  | "Sports"
-  | "News"
-  | "Entertainment"
-  | "Movies"
-  | "Music"
-  | "Kids"
-  | "Religious"
-  | "Documentary"
-  | "International";
-
-const CATEGORIES: { label: Category; icon: string }[] = [
-  { label: "All", icon: "Tv" },
-  { label: "Sports", icon: "Zap" },
-  { label: "News", icon: "Monitor" },
-  { label: "Entertainment", icon: "Tv" },
-  { label: "Movies", icon: "Monitor" },
-  { label: "Music", icon: "Tv" },
-  { label: "Kids", icon: "Tv" },
-  { label: "Religious", icon: "Shield" },
-  { label: "Documentary", icon: "Monitor" },
-  { label: "International", icon: "Tv" },
-];
-
-const CATEGORY_KEYWORDS: Record<Exclude<Category, "All">, string[]> = {
-  Sports: [
-    "sports", "cricket", "football", "tennis", "espn", "nfl", "nba", "golf",
-    "tnt", "sky sports", "ptv sports", "willow", "bein", "eurospot",
-    "sony ten", "sony sports", "star sports", "a sports", "t sports",
-    "fox cricket", "astro cricket", "dd sports", "nbc sports",
-    "premier league", "laliga", "premier sports", "speed sports",
-    "marquee sports", "sports grid", "sports first", "sports fishing",
-    "bleav", "tsn", "ten sports", "sports range", "sports legends",
-    "cricket gold",
-  ],
-  News: [
-    "news", "cnn", "bbc", "al jazeera", "dw news", "trt world",
-    "sky news", "republic", "india today", "abc news", "bloomberg",
-    "cnbc", "fox business", "msnbc", "wion", "nhk world", "cgtn",
-    "france", "euronews", "ntv", "atn news", "somoy", "jamuna",
-    "independent", "ekattor", "channel 24", "dbc news", "news 24",
-    "anb news", "news 1", "tv9", "sadhna", "hindi khabar", "news nation",
-    "bek tv", "btv news", "time tv", "abc 7", "o an", "iran press",
-    "sky news", "pix 11", "cp 24", "cbs tv",
-  ],
-  Entertainment: [
-    "channel i", "maasranga", "bangla vision", "rtv", "atv",
-    "deepto", "ekushey", "channel 9", "n tv", "boishakhi",
-    "green tv", "sa tv", "ananda", "bangla tv", "global tv",
-    "bijoy", "nexus", "mohona", "desh tv", "asian tv", "channel s",
-    "etv", "gazi tv", "my tv", "drama 24", "duronto",
-    "dangal", "shemaroo", "manoranjan", "taaza", "assam talks",
-    "khushboo", "dhinchaak", "9x jalwa", "9x tashan",
-    "rongeen", "network 10", "awaaz",
-    "star plus", "star jalsha", "zee tv", "zee bangla", "&tv",
-    "sony sab", "sony ent", "hum tv", "sony aath", "zee anmol",
-    "b4u music", "zing", "toffee drama", "colors",
-    "discovery family", "hgtv", "food network", "lifetime",
-    "laff", "syfy", "usa tv", "mtv", "bravo", "comedy central",
-    "amc", "axs", "tbs", "hbo", "epix", "fx",
-    "cooking", "travel channel", "tlc", "nat geo",
-    "wild tv", "4k travel", "intravel", "persiana", "travel xp",
-    "cowboy movie", "world war tv", "rakuten movies",
-    "movie sphere", "cmac tv", "rds social",
-    "action hollywood", "goldmines bollywood", "hindi movie",
-    "movie bangla", "toffee movies", "zee cinema", "zee action",
-    "zee bollywood", "sony max", "sony pix", "star movies",
-    "jalsha movies", "b4u movies", "& pictures",
-    "sony max 2", "zee cafe",
-  ],
-  Movies: [
-    "movie", "cinema", "hbo", "sony max", "sony pix", "zee cafe",
-    "zee cinema", "star movies", "toffee movie", "b4u movies",
-    "& pictures", "zee action", "zee bollywood", "sony max 2",
-    "goldmines", "hindi movie", "movie sphere", "rakuten movies",
-    "cowboy movie", "world war tv", "action hollywood",
-  ],
-  Music: [
-    "music", "sangeet", "mtv",
-  ],
-  Kids: [
-    "kids", "cartoon", "pogo", "sony yay", "discovery kids",
-    "duronto", "hungama", "pbs", "nick",
-  ],
-  Religious: [
-    "islamic", "islam", "quran", "peace tv", "god tv", "ewtn",
-    "al quran",
-  ],
-  Documentary: [
-    "discovery", "animal planet", "nat geo", "tlc", "love nature",
-    "wildlife",
-  ],
-  International: [
-    "bbc", "cnn", "al jazeera", "dw news", "trt world", "sky news",
-    "wion", "nhk world", "cgtn", "france 24", "abc news",
-    "bloomberg", "cnbc", "fox", "msnbc", "travel xp",
-    "persiana", "4k travel", "intravel", "cowboy movie",
-    "world war tv", "rakuten movies", "movie sphere",
-    "action hollywood", "cmac tv", "cooking", "hgtv",
-    "food network", "lifetime", "tbs", "amc", "axs",
-    "bravo", "comedy central", "fx", "epix", "laff",
-    "syfy", "usa tv", "mtv",
-  ],
-};
-
-function getCategory(name: string): Category {
-  const lower = name.toLowerCase();
-  for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    for (const kw of keywords) {
-      if (lower.includes(kw)) return cat as Category;
-    }
-  }
-  return "Entertainment";
-}
-
-const LOGO_BASE = "https://raw.githubusercontent.com/boy653859/m3u8/main/Logo/";
-
-const LOGO_MAP: Record<string, string> = {
-  "somoy tv": "imgi_3_somoyTV.png",
-  "somoy news tv": "imgi_3_somoyTV.png",
-  "btv": "imgi_2_BTV Logo Gallery.png",
-  "btv national hd": "imgi_23_BTV.HD.png",
-  "channel 24": "imgi_14_CHANNEL 24.png",
-  "channel 24 hd": "imgi_14_CHANNEL 24.png",
-  "channel 9 hd": "imgi_19_Channel 9.png",
-  "channel 9": "imgi_19_Channel 9.png",
-  "independent tv": "imgi_6_independent.jpg",
-  "jamuna tv": "imgi_17_JAMUNA TV.png",
-  "ntv": "imgi_17_NTV.png",
-  "atn news": "imgi_15_ATN NEWS.png",
-  "atn bangla": "imgi_18_ATN BANGLA.png",
-  "channel i": "imgi_20_CHANNEL I.png",
-  "channel i hd": "imgi_20_CHANNEL I.png",
-  "maasranga tv": "imgi_16_Maasranga TV.png",
-  "maasranga hd": "imgi_16_Maasranga TV.png",
-  "ekattor hd": "imgi_16_EKATTOR_TV.png",
-  "ekattor tv": "imgi_16_EKATTOR_TV.png",
-  "bangla vision": "imgi_19_BANGLA_VISION.png",
-  "islamic tv": "imgi_33_IslamicTV.jpg",
-  "deepto tv": "imgi_22_DEEPTO.png",
-  "deepto tv hd": "imgi_22_DEEPTO.png",
-  "sa tv": "imgi_18_SATV.png",
-  "green tv hd": "imgi_20_Green TV.png",
-  "sangeet bangla": "imgi_29_SANGEET BANGLA.png",
-  "star sports 1": "imgi_2_STAR SPORTS1 HD.png",
-  "star sports 2": "imgi_3_STAR SPORTS2 HD.png",
-  "star sports 3": "imgi_4_STAR SPORTS3.png",
-  "star sports 1 hindi": "imgi_2_STAR SPORTS1 HD.png",
-  "ptv sports": "imgi_11_PTV SPORTS HD.png",
-  "[bd] sony ten sports 1 hd": "imgi_10_SONY SPORTS5 HD.png",
-  "[bd] sony ten sports 2 hd": "imgi_10_SONY SPORTS5 HD.png",
-  "[bd] sony ten sports 5 hd": "imgi_10_SONY SPORTS5 HD.png",
-  "[bd] sony ten cricket": "imgi_10_SONY SPORTS5 HD.png",
-  "[bd] eurosport hd": "imgi_12_EUROSPORTS HD.png",
-  "[bd] ntv": "imgi_17_NTV.png",
-  "[bd] somoy tv": "imgi_3_somoyTV.png",
-  "[bd] jamuna tv": "imgi_17_JAMUNA TV.png",
-  "[bd] channel i": "imgi_20_CHANNEL I.png",
-  "[bd] ekattor tv": "imgi_16_EKATTOR_TV.png",
-  "[bd] independent tv": "imgi_6_independent.jpg",
-  "duronto tv": "imgi_38_Duronto_TV_Logo.png",
-  "btv world": "imgi_2_BTV Logo Gallery.png",
-  "animal planet hd": "imgi_22_1280px-Animal_Planet_logo.svg.png",
-  "[bd] sony max hd": "imgi_30_SONY MAX HD.png",
-  "[bd] sony max": "imgi_30_SONY MAX HD.png",
-  "[bd] sony pix hd": "imgi_30_SONY MAX HD.png",
-  "[bd] sony entertainment television hd": "imgi_31_SONY ENTERTAINMENT HD.png",
-  "[bd] sony entertainment television": "imgi_31_SONY ENTERTAINMENT HD.png",
-  "[bd] sony sab hd": "imgi_31_SONY ENTERTAINMENT HD.png",
-  "[bd] zee tv hd": "imgi_26_ZEE BANGLA HD.png",
-  "[bd] zee bangla": "imgi_26_ZEE BANGLA HD.png",
-  "[bd] zee bangla cinema": "imgi_26_ZEE BANGLA HD.png",
-  "[bd] zee cinema hd": "imgi_26_ZEE BANGLA HD.png",
-  "[bd] colors cineplex hd": "imgi_35_COLORS CINEPLEX HD.png",
-  "[bd] colors hd": "imgi_34_COLORS HD.png",
-  "[bd] star plus hd": "imgi_32_STAR PLUS HD.png",
-  "[bd] star movies hd": "imgi_33_STAR MOVIES HD.png",
-  "[bd] star jalsha hd": "imgi_24_STAR JALSHA HD.png",
-  "[bd] jalsha movies hd": "imgi_25_JALSHA MOVIES HD.png",
-  "[bd] discovery hd": "imgi_37_DISCOVERY HD.png",
-  "[bd] discovery": "imgi_37_DISCOVERY HD.png",
-  "[bd] cartoon network hd +": "imgi_38_CARTOON NETWORK.png",
-  "[bd] cartoon network": "imgi_38_CARTOON NETWORK.png",
-  "[bd] discovery kids": "imgi_39_DISCOVERY KIDS.png",
-  "[bd] animal planet hd": "imgi_22_1280px-Animal_Planet_logo.svg.png",
-  "[bd] animal planet": "imgi_22_1280px-Animal_Planet_logo.svg.png",
-  "news 24 hd": "imgi_15_ATN NEWS.png",
-  "news 24 bd": "imgi_15_ATN NEWS.png",
-  "al jazeera": "imgi_6_independent.jpg",
-  "aljazeera": "imgi_6_independent.jpg",
-  "ekhon tv": "imgi_6_independent.jpg",
-  "ananda tv": "imgi_18_ATN BANGLA.png",
-  "bangla tv": "imgi_18_ATN BANGLA.png",
-  "global tv": "imgi_18_ATN BANGLA.png",
-  "bijoy tv": "imgi_18_ATN BANGLA.png",
-  "nexus tv": "imgi_18_ATN BANGLA.png",
-  "mohona tv": "imgi_18_ATN BANGLA.png",
-  "asian tv": "imgi_18_ATN BANGLA.png",
-  "desh tv": "imgi_18_ATN BANGLA.png",
-  "channel s": "imgi_13_channel-i-bangla.png",
-  "boishakhi tv": "imgi_13_channel-i-bangla.png",
-  "etv": "imgi_13_channel-i-bangla.png",
-  "rtv": "imgi_13_channel-i-bangla.png",
-  "star news": "imgi_3_somoyTV.png",
-  "dangal": "imgi_3_somoyTV.png",
-  "zee 24 ghanta": "imgi_63_24-Ghanta.jpg",
-  "kolkata tv": "imgi_66_KolkataTV.png",
-  "republic bangla": "imgi_3_somoyTV.png",
-  "news time bangla": "imgi_4_imagea02f4314e761661d.png",
-  "drama 24": "imgi_67_Gseries.png",
-  "sony sports3": "imgi_10_SONY SPORTS5 HD.png",
-  "music bangla": "imgi_29_SANGEET BANGLA.png",
-  "deshe bideshe": "imgi_3_somoyTV.png",
-  "ekushey tv": "imgi_3_somoyTV.png",
-  "bbc news": "imgi_3_somoyTV.png",
-  "my tv": "imgi_3_somoyTV.png",
-  "abc news": "imgi_3_somoyTV.png",
-  "dw news": "imgi_3_somoyTV.png",
-  "trt world": "imgi_3_somoyTV.png",
-  "wion": "imgi_3_somoyTV.png",
-  "sky news": "imgi_3_somoyTV.png",
-  "cgtn docu": "imgi_3_somoyTV.png",
-  "bloomberg tv": "imgi_3_somoyTV.png",
-  "cnbc tv": "imgi_3_somoyTV.png",
-  "cnn": "imgi_6_independent.jpg",
-  "fox business": "imgi_6_independent.jpg",
-  "discovery family": "imgi_22_1280px-Animal_Planet_logo.svg.png",
-  "nat geo tv": "imgi_22_1280px-Animal_Planet_logo.svg.png",
-  "tlc hd": "imgi_22_1280px-Animal_Planet_logo.svg.png",
-  "travel channel": "imgi_22_1280px-Animal_Planet_logo.svg.png",
-  "hbo": "imgi_6_independent.jpg",
-  "t sports hd": "imgi_3_somoyTV.png",
-  "sports legends": "imgi_4_STAR SPORTS3.png",
-  "a sports": "imgi_11_PTV SPORTS HD.png",
-  "a sports hd": "imgi_11_PTV SPORTS HD.png",
-  "willow hd": "imgi_11_PTV SPORTS HD.png",
-  "willow hd 2": "imgi_11_PTV SPORTS HD.png",
-  "willow tv": "imgi_11_PTV SPORTS HD.png",
-  "ten sports": "imgi_10_SONY SPORTS5 HD.png",
-  "sky sports cricket": "imgi_10_SONY SPORTS5 HD.png",
-  "fox cricket 501 hd": "imgi_10_SONY SPORTS5 HD.png",
-  "astro cricket": "imgi_10_SONY SPORTS5 HD.png",
-  "[bd] movie bangla": "imgi_18_ATN BANGLA.png",
-  "boishakhi": "imgi_13_channel-i-bangla.png",
-  "gazi tv": "imgi_22_DEEPTO.png",
-  "btv ctg": "imgi_2_BTV Logo Gallery.png",
-  "peace tv bangla hd": "imgi_33_IslamicTV.jpg",
-  "time tv usa": "imgi_3_somoyTV.png",
-  "abc 7 bay": "imgi_3_somoyTV.png",
-  "btv news": "imgi_2_BTV Logo Gallery.png",
-  "bek tv news": "imgi_3_somoyTV.png",
-  "dbc news": "imgi_15_ATN NEWS.png",
-  "dbc news hd": "imgi_15_ATN NEWS.png",
-  "anb news": "imgi_3_somoyTV.png",
-  "news 1 india": "imgi_3_somoyTV.png",
-  "tv9 bangla": "imgi_3_somoyTV.png",
-  "india today": "imgi_3_somoyTV.png",
-  "cricket gold": "imgi_4_STAR SPORTS3.png",
-  "golf channel": "imgi_3_somoyTV.png",
-  "bein sports": "imgi_10_SONY SPORTS5 HD.png",
-  "dd sports": "imgi_4_STAR SPORTS3.png",
-  "nfl network": "imgi_3_somoyTV.png",
-  "nbc sports": "imgi_3_somoyTV.png",
-};
 
 function getLogoUrl(name: string): string | null {
   const key = name.toLowerCase().trim().replace(/\s+/g, " ");
@@ -388,42 +125,15 @@ export default function LiveTvPage() {
   return (
     <div className="h-dvh flex flex-col overflow-hidden">
       <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 flex-1 min-h-0">
-        {/* ── Hero ── */}
-        <div className="relative border border-border-alt bg-card overflow-hidden p-8 md:p-12">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        <PageHero
+          icon={<Tv className="w-3 h-3 text-red-500" />}
+          badge="Browse Streams"
+          title="Live TV"
+          description="Streaming live TV channels"
+          hint="Stream buffering? Switch channel or server."
+        />
 
-          <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
-                <Tv className="w-3 h-3 text-red-500" />
-                Browse Streams
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-fg font-mono leading-tight">
-                Live TV<span className="text-red-500">.</span>
-              </h1>
-              <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
-                Streaming live TV channels
-              </p>
-            </div>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-border-alt transition-all shrink-0"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Lobby
-            </Link>
-          </div>
-          <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-6">
-            Stream buffering? Switch channel or server.
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-            <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Indexing streams...</span>
-          </div>
-        ) : (
+        {loading ? <LoadingSpinner label="Indexing streams..." /> : (
           <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_240px] gap-6 items-stretch flex-1 min-h-0 overflow-hidden grid-rows-[1fr]">
             {/* ── Left: Channel List ── */}
             <div className="hidden lg:flex lg:flex-col border border-border-alt bg-card overflow-hidden min-h-0">
