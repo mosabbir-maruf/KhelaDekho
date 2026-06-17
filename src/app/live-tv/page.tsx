@@ -484,7 +484,7 @@ export default function LiveTvPage() {
               {selectedChannel ? (
                 <>
                   {/* Channel details header */}
-                  <div className="flex items-center justify-between border border-border-alt bg-card p-4 shrink-0">
+                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden">
                         {(() => {
@@ -509,10 +509,10 @@ export default function LiveTvPage() {
                     </div>
                   </div>
 
-                  <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} className="flex-1 [&>div]:h-full [&>div]:aspect-auto" />
+                  <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} />
 
                   {/* Fixed bottom: stats grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />

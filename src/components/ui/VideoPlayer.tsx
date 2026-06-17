@@ -46,7 +46,7 @@ function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
   if (netEngine) {
     netEngine.registerRequestFilter((type: any, request: any) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
-        request.headers['Referer'] = 'https://kickbd.com/';
+        request.headers['Referer'] = 'https://kickbd.org/';
       }
     });
     netEngine.registerResponseFilter((type: any, response: any) => {
@@ -75,6 +75,7 @@ async function getHls(): Promise<typeof Hls> {
 
 function detectType(url: string, hint: string): string {
   if (hint === "dash" || url.includes(".mpd")) return "dash";
+  if (hint === "direct" || url.match(/\.ts($|\?)/)) return "direct";
   return "hls";
 }
 
@@ -313,6 +314,19 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
           console.error("Shaka load failed:", err);
           if (!destroyed && !tryFallback()) setIsLoading(false);
         }
+        return;
+      }
+
+      if (newType === "direct") {
+        video.src = effectiveUrl;
+        video.addEventListener("loadedmetadata", () => {
+          setIsLoading(false);
+          autoPlayVideo(video);
+        }, { once: true });
+        video.addEventListener("error", () => {
+          setIsLoading(false);
+          if (!tryFallback()) setPlayerError("Failed to load direct stream.");
+        }, { once: true });
         return;
       }
 
