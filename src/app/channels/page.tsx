@@ -78,11 +78,7 @@ export default function ChannelsPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => {
-    const { v } = getUrlParams();
-    if (v && ["v1", "v2", "v3", "v4"].includes(v)) return v as ApiVersion;
-    return loadAdminConfig().defaultVersion || "v4";
-  });
+  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v4");
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,6 +100,11 @@ export default function ChannelsPage() {
     const id = getChannelId(ch, apiVersion);
     router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
   }
+
+  useEffect(() => {
+    const { v } = getUrlParams();
+    if (v && ["v1", "v2", "v3", "v4"].includes(v)) setApiVersion(v as ApiVersion);
+  }, []);
 
   useEffect(() => {
     let active = true;
