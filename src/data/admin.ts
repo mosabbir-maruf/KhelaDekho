@@ -21,6 +21,7 @@ export interface V3Source {
 
 export interface AdminConfig {
   enabled: { v1: boolean; v2: boolean; v3: boolean };
+  defaultVersion: "v1" | "v2" | "v3";
   sources: V3Source[];
 }
 
@@ -43,14 +44,16 @@ const DEFAULT_FIFA_CHANNELS: V3Channel[] = [
 ];
 
 function defaultConfig(): AdminConfig {
-  return { enabled: { v1: true, v2: true, v3: true }, sources: [{ label: "FIFA 2026", type: "github-json", url: "hardcoded", channels: DEFAULT_FIFA_CHANNELS, lastFetched: Date.now() }] };
+  return { enabled: { v1: true, v2: true, v3: true }, defaultVersion: "v3", sources: [{ label: "FIFA 2026", type: "github-json", url: "hardcoded", channels: DEFAULT_FIFA_CHANNELS, lastFetched: Date.now() }] };
 }
 
 export function loadAdminConfig(): AdminConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultConfig();
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!parsed.defaultVersion) parsed.defaultVersion = "v3";
+    return parsed;
   } catch {
     return defaultConfig();
   }

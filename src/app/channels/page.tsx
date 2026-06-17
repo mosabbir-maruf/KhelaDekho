@@ -7,11 +7,11 @@ import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
+import { StatsGrid } from "@/components/ui/StatsGrid";
 import { loadAdminConfig, getV3Channels } from "@/data/admin";
 import type { V3Channel } from "@/data/admin";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Zap from "lucide-react/dist/esm/icons/zap";
-import X from "lucide-react/dist/esm/icons/x";
 
 interface V2Channel {
   id: number;
@@ -46,7 +46,7 @@ function isAlive(ch: any, v: ApiVersion): boolean {
 export default function ChannelsPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const [apiVersion, setApiVersion] = useState<ApiVersion>("v2");
+  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v3");
   const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -270,6 +270,13 @@ export default function ChannelsPage() {
                     </div>
                   </div>
                   <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
+                  <StatsGrid
+                    items={[
+                      { label: "Source", value: v3Channel?.sourceLabel || "V3", icon: "zap" },
+                      { label: "URLs", value: `${v3Channel?.urls?.length || 1}`, icon: "shield" },
+                      { label: "Status", value: "ONLINE", highlight: true, icon: "monitor" },
+                    ]}
+                  />
                 </>
               ) : showPlayer ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">

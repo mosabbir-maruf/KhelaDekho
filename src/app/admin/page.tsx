@@ -213,6 +213,26 @@ function AdminPanel() {
         </div>
 
         <div className="border border-border-alt bg-card p-6 space-y-3">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-fg-dim">Default Landing</h2>
+          <div className="flex flex-wrap gap-3">
+            {(["v1", "v2", "v3"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => updateConfig({ ...config, defaultVersion: v })}
+                className={`inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer ${
+                  config.defaultVersion === v
+                    ? "border-red-500/30 bg-red-500/[0.03] text-red-400"
+                    : "border-border-alt bg-input text-fg-dim hover:text-fg"
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${config.defaultVersion === v ? "bg-red-500" : "bg-fg-faint"}`} />
+                {v.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="border border-border-alt bg-card p-6 space-y-3">
           <h2 className="font-mono text-xs uppercase tracking-widest text-fg-dim">Add V3 Source</h2>
           <div className="flex flex-col sm:flex-row gap-3">
             <input

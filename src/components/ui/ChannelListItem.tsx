@@ -33,7 +33,7 @@ export function ChannelListItem({ item, selected, onClick, showGroup, showExtra 
             : "border-border-alt bg-hover group-hover:border-red-500/20 group-hover:bg-red-500/10"
         }`}>
           {item.logo ? (
-            <img src={item.logo} alt="" className="w-full h-full object-cover" />
+            <img src={item.logo} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
           ) : (
             <Tv className={`w-3.5 h-3.5 transition-colors ${
               selected ? "text-red-400" : "text-fg-dim group-hover:text-red-400"
