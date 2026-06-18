@@ -180,7 +180,7 @@ export function Navbar() {
           <div className="absolute inset-0 bg-overlay backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
 
           {/* Drawer */}
-          <nav className="relative z-10 bg-page border-b border-border-alt overflow-y-auto max-h-[calc(100vh-3.5rem)] shadow-2xl">
+          <nav className="relative z-10 bg-page border-b border-border-alt overflow-y-auto max-h-[calc(100dvh-3.5rem)] shadow-2xl">
             <div className="p-6 space-y-6">
               {/* Main Nav */}
               <div className="space-y-1">

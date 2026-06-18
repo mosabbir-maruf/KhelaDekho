@@ -296,7 +296,7 @@ export default function LiveMatchesPage() {
   }, [selectedChannel, selectedVersion, apiVersion, v1StreamData, apiBase]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
         <div className="relative border border-border-alt bg-card p-8 md:p-12">
           <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
@@ -351,7 +351,7 @@ export default function LiveMatchesPage() {
           <LoadingSpinner label="Indexing streams..." />
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
-            <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0 max-h-[calc(100vh-20rem)]">
+            <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0 max-h-[calc(100dvh-20rem)]">
               <SearchInput value={searchQuery} onChange={setSearchQuery} />
               <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1 mt-3 mb-1 shrink-0">
                 {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
@@ -396,7 +396,7 @@ export default function LiveMatchesPage() {
                 </button>
 
                 {isMobileDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 max-h-[60vh] flex flex-col">
+                  <div className="absolute top-full left-0 right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 max-h-[60dvh] flex flex-col">
                     <div className="flex items-center gap-2 border-b border-border-alt px-3 py-2 bg-card shrink-0">
                       <Search className="w-3.5 h-3.5 text-fg-dim shrink-0" />
                       <input

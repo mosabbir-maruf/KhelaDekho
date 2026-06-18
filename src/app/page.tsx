@@ -31,7 +31,7 @@ export default async function Home() {
   const featuredMatch = liveMatchesData?.matches?.[0] || null;
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-input text-fg selection:bg-white/20">
+    <div className="relative flex min-h-dvh flex-col bg-input text-fg selection:bg-white/20">
       {/* Ultra-subtle, clean background grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
 

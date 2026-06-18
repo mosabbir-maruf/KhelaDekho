@@ -26,7 +26,7 @@ export function Sidebar() {
   const inactiveLinkClass = "text-fg-dim hover:text-fg hover:bg-hover border-transparent";
 
   return (
-    <nav className="border-r border-border md:w-72 flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 bg-transparent py-6 pr-6 pl-0 overflow-y-auto z-40 hidden md:flex flex-col">
+    <nav className="border-r border-border md:w-72 flex-shrink-0 h-[calc(100dvh-4rem)] sticky top-16 bg-transparent py-6 pr-6 pl-0 overflow-y-auto z-40 hidden md:flex flex-col">
       <div className="space-y-8">
         {/* Navigation Section */}
         <div>

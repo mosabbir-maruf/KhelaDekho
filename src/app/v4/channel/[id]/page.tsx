@@ -57,7 +57,7 @@ export default function V4ChannelPage() {
   const streamUrl = rawUrl;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
         <PageHero icon={<Tv className="w-3 h-3 text-red-500" />} badge="V4 Stream" title={channel?.name || `Channel ${id}`} description={channel ? `${(channel.stream_type || "DASH").toUpperCase()} stream` : "Loading..."} hint="Stream buffering? Try another channel." />
         {loading ? <LoadingSpinner label="Loading stream..." /> : error ? <div className="text-center py-20 font-mono text-red-500">{error}</div> : streamUrl ? (

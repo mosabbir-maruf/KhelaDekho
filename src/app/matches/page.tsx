@@ -282,7 +282,7 @@ function MatchesContent() {
 export default function MatchesPage() {
   return (
     <Suspense fallback={
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60dvh]">
         <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-4" />
         <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">
           Loading events...

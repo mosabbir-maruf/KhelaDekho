@@ -137,7 +137,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-page text-fg min-h-screen flex flex-col selection:bg-fg/10`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-page text-fg min-h-dvh flex flex-col selection:bg-fg/10`}
       >
         <Suspense fallback={null}>
           <GoogleAnalytics />

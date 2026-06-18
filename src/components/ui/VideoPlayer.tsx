@@ -546,7 +546,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
                 <button onClick={toggleMute} className="text-fg-dim hover:text-fg transition-colors cursor-pointer">
                   {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </button>
-                <input type="range" min="0" max="1" step="0.05" value={isMuted ? 0 : volume} onChange={handleVolumeChange} className="w-16 sm:w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white" />
+                  <input type="range" min="0" max="1" step="0.05" value={isMuted ? 0 : volume} onChange={handleVolumeChange} className="w-16 sm:w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white" style={{ WebkitAppearance: "none" }} />
               </div>
             </div>
 

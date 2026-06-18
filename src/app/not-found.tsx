@@ -3,7 +3,7 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 
 export default function NotFound() {
     return (
-        <div className="flex-1 flex flex-col items-center justify-center min-h-[70vh] px-6">
+        <div className="flex-1 flex flex-col items-center justify-center min-h-[70dvh] px-6">
             <div className="max-w-md w-full space-y-8 text-center">
                 <div className="space-y-2">
                     <p className="text-[10px] font-mono text-fg-faint uppercase tracking-widest">

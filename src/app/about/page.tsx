@@ -63,7 +63,7 @@ export default async function AboutPage() {
 ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12 sm:space-y-16 lg:space-y-20">
         {/* Hero */}
         <div className="relative border border-border-alt bg-card overflow-hidden p-8 md:p-12">
