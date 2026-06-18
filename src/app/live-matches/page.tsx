@@ -192,21 +192,26 @@ export default function LiveMatchesPage() {
   useEffect(() => {
     if (!selectedChannel || selectedVersion !== "v1") return;
     const key = selectedChannel.key;
-    if (!key) return;
+    if (!key) { setV1Error("No key for this channel"); return; }
     let active = true;
     const controller = new AbortController();
+    const fallbackTimer = setTimeout(() => {
+      if (active) setV1Error("Stream request timed out — the server may be unavailable.");
+    }, 10000);
     (async () => {
       try {
         const res = await fetch(`/api/v1/stream?key=${encodeURIComponent(key)}`, {
           signal: controller.signal,
           headers: { Accept: "application/json" },
         });
+        clearTimeout(fallbackTimer);
         if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
         const data = await res.json();
         if (!active) return;
         if (!data.stream_url) throw new Error(data.error || "No stream URL");
         setV1StreamData({ url: data.stream_url, type: data.stream_type || "hls", clearkey: data.drm_kid && data.drm_key ? { [data.drm_kid]: data.drm_key } : null });
       } catch (e: unknown) {
+        clearTimeout(fallbackTimer);
         if (e instanceof DOMException && e.name === "AbortError") {
           if (active) setV1Error("Stream request timed out — the server may be unavailable.");
           return;
@@ -214,7 +219,7 @@ export default function LiveMatchesPage() {
         if (active) setV1Error(e instanceof Error ? e.message : "Failed to load stream");
       }
     })();
-    return () => { active = false; controller.abort(); };
+    return () => { active = false; controller.abort(); clearTimeout(fallbackTimer); };
   }, [selectedChannel, selectedVersion]);
 
   const playerConfig = useMemo(() => {
