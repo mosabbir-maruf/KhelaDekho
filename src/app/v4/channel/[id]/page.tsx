@@ -80,7 +80,7 @@ export default function V4ChannelPage() {
                 {copied ? "Copied!" : "Share"}
               </button>
             </div>
-            <VideoPlayer streamUrl={streamUrl} streamType={channel?.stream_type || "dash"} clearKeys={channel?.drm_kid ? { [channel.drm_kid]: channel.drm_key } : null} />
+            <VideoPlayer streamUrl={streamUrl} streamType={channel?.stream_type || "dash"} clearKeys={channel?.drm_kid && channel?.drm_key ? { [channel.drm_kid]: channel.drm_key } : null} />
             <StatsGrid items={[
               { label: "Server", value: "V4", icon: "zap" },
               { label: "Type", value: (channel?.stream_type || "DASH").toUpperCase(), icon: "shield" },

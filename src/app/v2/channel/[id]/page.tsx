@@ -84,7 +84,7 @@ export default function V2ChannelPage() {
                 {copied ? "Copied!" : "Share"}
               </button>
             </div>
-            <VideoPlayer streamUrl={streamUrl} streamType={channel?.stream_type || "hls"} clearKeys={channel?.drm_kid ? { [channel.drm_kid]: channel.drm_key } : null} />
+            <VideoPlayer streamUrl={streamUrl} streamType={channel?.stream_type || "hls"} clearKeys={channel?.drm_kid && channel?.drm_key ? { [channel.drm_kid]: channel.drm_key } : null} />
             <StatsGrid items={[
               { label: "Server", value: "V2", icon: "zap" },
               { label: "Type", value: (channel?.stream_type || "HLS").toUpperCase(), icon: "shield" },
