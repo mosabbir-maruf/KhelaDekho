@@ -12,9 +12,17 @@ import Share2 from "lucide-react/dist/esm/icons/share-2";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
+interface ChannelDetail {
+  name?: string;
+  stream_url?: string;
+  stream_type?: string;
+  drm_kid?: string;
+  drm_key?: string;
+}
+
 export default function V1ChannelPage() {
   const { key } = useParams<{ key: string }>();
-  const [streamData, setStreamData] = useState<{ url: string; type: string; clearkey: Record<string, string> | null } | null>(null);
+  const [channel, setChannel] = useState<ChannelDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
@@ -25,18 +33,17 @@ export default function V1ChannelPage() {
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await fetch(`/api/stream?key=${encodeURIComponent(key)}`, { signal: controller.signal });
-        if (!res.ok) {
-          const errText = await res.text().catch(() => "Unknown error");
-          throw new Error(errText || `HTTP ${res.status}`);
-        }
-        const data = await res.json();
+        const res = await fetch(`/api/v1/channel?key=${encodeURIComponent(key)}`, {
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error("Channel not found");
+        const body = await res.json();
         if (!active) return;
-        if (!data.url) throw new Error("Empty stream URL returned from server");
-        setStreamData({ url: data.url, type: data.type || "hls", clearkey: data.clearkey || null });
+        setChannel(body?.data || null);
       } catch (e: unknown) {
         if (e instanceof DOMException && e.name === "AbortError") return;
-        if (active) setError(e instanceof Error ? e.message : "Failed to load stream");
+        if (active) setError(e instanceof Error ? e.message : "Failed to load channel");
       } finally {
         if (active) setLoading(false);
       }
@@ -44,11 +51,13 @@ export default function V1ChannelPage() {
     return () => { active = false; controller.abort(); };
   }, [key]);
 
+  const streamUrl = channel?.stream_url;
+
   return (
     <div className="min-h-dvh">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
-        <PageHero icon={<Tv className="w-3 h-3 text-red-500" />} badge="V1 Stream" title={`Channel ${key}`} description="Legacy stream" hint="Stream buffering? Try another channel." />
-        {loading ? <LoadingSpinner label="Decrypting stream..." /> : error ? <div className="text-center py-20 font-mono text-red-500">{error}</div> : streamData?.url ? (
+        <PageHero icon={<Tv className="w-3 h-3 text-red-500" />} badge="V1 Stream" title={channel?.name || `Channel ${key}`} description={channel ? `${(channel.stream_type || "HLS").toUpperCase()} stream` : "Loading..."} hint="Stream buffering? Try another channel." />
+        {loading ? <LoadingSpinner label="Loading stream..." /> : error ? <div className="text-center py-20 font-mono text-red-500">{error}</div> : streamUrl ? (
           <>
             <div className="flex items-center justify-between border border-border-alt bg-card p-4">
               <div className="flex items-center gap-3">
@@ -56,7 +65,7 @@ export default function V1ChannelPage() {
                   <Tv className="w-5 h-5 text-red-400" />
                 </div>
                 <div>
-                  <h2 className="font-mono text-lg font-bold text-fg tracking-tight">Channel {key}</h2>
+                  <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{channel?.name}</h2>
                 </div>
               </div>
               <button
@@ -67,10 +76,10 @@ export default function V1ChannelPage() {
                 {copied ? "Copied!" : "Share"}
               </button>
             </div>
-            <VideoPlayer streamUrl={streamData.url} streamType={streamData.type} clearKeys={streamData.clearkey} />
+            <VideoPlayer streamUrl={streamUrl} streamType={channel?.stream_type || "hls"} clearKeys={channel?.drm_kid && channel?.drm_key ? { [channel.drm_kid]: channel.drm_key } : null} />
             <StatsGrid items={[
               { label: "Server", value: "V1", icon: "zap" },
-              { label: "Type", value: (streamData.type || "HLS").toUpperCase(), icon: "shield" },
+              { label: "Type", value: (channel?.stream_type || "HLS").toUpperCase(), icon: "shield" },
               { label: "Status", value: "LIVE", highlight: true, icon: "monitor" },
             ]} />
           </>

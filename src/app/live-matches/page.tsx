@@ -30,16 +30,6 @@ interface StreamingChannel {
   cached_at: string;
 }
 
-interface V1Channel {
-  key: string;
-  name: string;
-  image_url: string | null;
-  category: string;
-  quality: string;
-  status: string;
-  live_viewers: number;
-}
-
 interface V3Channel {
   name: string;
   logo?: string;
@@ -202,20 +192,22 @@ export default function LiveMatchesPage() {
 
   useEffect(() => {
     if (!selectedChannel || selectedVersion !== "v1") return;
-    const key = (selectedChannel as V1Channel).key;
+    const key = selectedChannel.key;
     if (!key) return;
     let active = true;
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await fetch(`/api/stream?key=${encodeURIComponent(key)}`, { signal: controller.signal });
-        if (!res.ok) throw new Error(await res.text());
+        const res = await fetch(`/api/v1/channel?key=${encodeURIComponent(key)}`, {
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
         const data = await res.json();
         if (!active) return;
-        if (!data.url) throw new Error("Empty stream URL");
-        const ck = data.clearkey;
-        const clearkey = ck?.kid && ck?.key ? { [ck.kid]: ck.key } : null;
-        setV1StreamData({ url: data.url, type: data.type || "hls", clearkey });
+        const ch = data?.data;
+        if (!ch?.stream_url) throw new Error("Empty stream URL");
+        setV1StreamData({ url: ch.stream_url, type: ch.stream_type || "hls", clearkey: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null });
       } catch (e: unknown) {
         if (e instanceof DOMException && e.name === "AbortError") return;
         if (active) setV1Error(e instanceof Error ? e.message : "Failed to load stream");

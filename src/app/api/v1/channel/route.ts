@@ -25,26 +25,35 @@ export async function GET(request: NextRequest) {
 
     if (!res.ok) {
       return NextResponse.json(
-        { success: false, error: `Upstream error: ${res.status} — ${body.slice(0, 200)}` },
+        { data: null, error: `Upstream error: ${res.status}` },
         { status: res.status },
       );
     }
 
-    let data;
-    try { data = JSON.parse(body); } catch {
-      return NextResponse.json({ success: false, error: "Invalid JSON from upstream" }, { status: 502 });
+    let parsed;
+    try { parsed = JSON.parse(body); } catch {
+      return NextResponse.json({ data: null, error: "Invalid upstream response" }, { status: 502 });
     }
 
-    if (data?.success && data.data?.url) {
-      return NextResponse.json(data.data);
+    const stream = parsed?.data;
+    if (!stream?.url) {
+      return NextResponse.json({ data: null, error: "No stream URL" }, { status: 502 });
     }
 
-    return NextResponse.json(
-      { success: false, error: data?.error?.message || "Upstream returned no stream URL" },
-      { status: 502 },
-    );
+    const clearkey = stream.clearkey;
+    return NextResponse.json({
+      data: {
+        name: `Channel ${key}`,
+        stream_url: stream.url,
+        stream_type: stream.type || "hls",
+        drm_kid: clearkey?.kid || null,
+        drm_key: clearkey?.key || null,
+      },
+    });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { data: null, error: err instanceof Error ? err.message : "Unknown error" },
+      { status: 500 },
+    );
   }
 }
