@@ -339,7 +339,7 @@ export default function LiveMatchesPage() {
           <LoadingSpinner label="Indexing streams..." />
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
-            <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0 max-h-[calc(100dvh-16rem)]">
+            <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0 max-h-[calc(100dvh-12rem)]">
               <SearchInput value={searchQuery} onChange={setSearchQuery} />
               <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1 mt-3 mb-1 shrink-0">
                 {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
