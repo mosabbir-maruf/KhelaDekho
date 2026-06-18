@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { StatsGrid } from "@/components/ui/StatsGrid";
-import { getApiBaseUrl, sanitizeBaseUrl } from "@/lib/api";
+import { getApiBaseUrl } from "@/lib/api";
 import { useCopyButton } from "@/hooks/useCopyButton";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
@@ -32,7 +32,7 @@ export default function V2ChannelPage() {
     if (!id) return;
     let active = true;
     const controller = new AbortController();
-    const baseUrl = sanitizeBaseUrl(getApiBaseUrl() || "");
+    const baseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
     (async () => {
       try {
         const res = await fetch(`${baseUrl}/api/v2/channels/${encodeURIComponent(id)}`, {
@@ -53,12 +53,7 @@ export default function V2ChannelPage() {
     return () => { active = false; controller.abort(); };
   }, [id]);
 
-  const rawUrl = channel?.stream_url;
-  const apiBase = getApiBaseUrl();
-  const needsProxy = rawUrl && (rawUrl.includes("storage.googleapis.com") || rawUrl.includes("soccerball.st"));
-  const streamUrl = needsProxy && apiBase
-    ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
-    : rawUrl;
+  const streamUrl = channel?.stream_url;
 
   return (
     <div className="min-h-dvh">

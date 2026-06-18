@@ -120,7 +120,6 @@ export default function LiveMatchesPage() {
   const channelsCache = useRef<Map<string, ChannelData[]>>(new Map());
 
   const cfg = VERSION_CONFIG[apiVersion];
-  const apiBase = useMemo(() => getApiBaseUrl(), []);
 
   const selectAndReplaceUrl = useCallback((ch: ChannelData) => {
     setSelectedChannel(ch);
@@ -238,10 +237,8 @@ export default function LiveMatchesPage() {
     if (selectedVersion === "v2") {
       const ch = selectedChannel as StreamingChannel;
       if (!ch.stream_url) return null;
-      const needsProxy = ch.stream_url.includes("storage.googleapis.com") || ch.stream_url.includes("soccerball.st");
-      const url = needsProxy && apiBase ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(ch.stream_url)}` : ch.stream_url;
       return {
-        streamUrl: url,
+        streamUrl: ch.stream_url,
         streamType: ch.stream_type || "hls",
         clearKeys: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null,
         stats: [
@@ -289,7 +286,7 @@ export default function LiveMatchesPage() {
       };
     }
     return null;
-  }, [selectedChannel, selectedVersion, apiVersion, v1StreamData, apiBase]);
+  }, [selectedChannel, selectedVersion, apiVersion, v1StreamData]);
 
   return (
     <div className="min-h-dvh">
