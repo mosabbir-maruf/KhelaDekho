@@ -458,11 +458,19 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     const doc = document as any;
     const isFS = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
     if (!isFS) {
-      if (container.requestFullscreen) container.requestFullscreen();
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        try { (screen.orientation as any)?.lock("landscape")?.catch(() => {}); } catch {}
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       else (container as any).webkitRequestFullscreen?.();
     } else {
-      if (doc.exitFullscreen) doc.exitFullscreen();
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        try { (screen.orientation as any)?.unlock(); } catch {}
+      }
       else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
       else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen();
       else if (doc.msExitFullscreen) doc.msExitFullscreen();
