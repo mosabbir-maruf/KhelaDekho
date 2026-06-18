@@ -76,7 +76,7 @@ export function Navbar() {
             </Link>
 
             {/* Nav Links (desktop only) */}
-            <nav className="hidden md:flex items-center h-full">
+            <nav className="hidden md:flex items-center h-full ml-12">
               <Link
                 href="/live-tv"
                 className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
@@ -85,11 +85,11 @@ export function Navbar() {
                 Live TV
               </Link>
               <Link
-                href="/channels"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/channels") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                href="/live-matches"
+                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
-                Channels
+                Live Matches
               </Link>
               <Link
                 href="/matches"
@@ -125,9 +125,7 @@ export function Navbar() {
 
           {/* Right Side: Search & Social & Mobile Toggle */}
           <div className="flex items-center h-full">
-            <div className="hidden sm:flex items-center gap-2 mr-4 border border-border px-2.5 py-1 text-[10px] font-mono text-fg-dim uppercase tracking-widest">
-              A sideproject by <span className="text-fg ml-1">Mosabbir Maruf</span>
-            </div>
+
 
             {/* Search Trigger (desktop only) */}
             <button
@@ -275,11 +273,11 @@ export function Navbar() {
                     Live TV
                   </Link>
                   <Link
-                    href="/channels"
+                    href="/live-matches"
                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
                   >
                     <Tv className="w-4 h-4 text-red-500" />
-                    All Channels
+                    Live Matches
                   </Link>
                   <Link
                     href="/matches"
@@ -289,19 +287,13 @@ export function Navbar() {
                     Matches
                   </Link>
                   <Link
-                    href="/channels"
+                    href="/live-matches"
                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
                   >
                     <Trophy className="w-4 h-4 text-yellow-400" />
                     FIFA World Cup
                   </Link>
-                  <Link
-                    href="/admin"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
-                  >
-                    <Tv className="w-4 h-4 text-red-400" />
-                    Admin
-                  </Link>
+
                 </div>
               </div>
 

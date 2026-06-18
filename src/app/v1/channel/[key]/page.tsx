@@ -14,7 +14,7 @@ const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mo
 
 export default function V1ChannelPage() {
   const { key } = useParams<{ key: string }>();
-  const [streamData, setStreamData] = useState<{ url: string; type: string; clearkey: any } | null>(null);
+  const [streamData, setStreamData] = useState<{ url: string; type: string; clearkey: Record<string, string> | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
@@ -34,10 +34,9 @@ export default function V1ChannelPage() {
         if (!active) return;
         if (!data.url) throw new Error("Empty stream URL returned from server");
         setStreamData({ url: data.url, type: data.type || "hls", clearkey: data.clearkey || null });
-      } catch (e: any) {
-        if (e.name === "AbortError") return;
-        console.error("V1 stream load failed:", e);
-        if (active) setError(e.message || "Failed to load stream");
+      } catch (e: unknown) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (active) setError(e instanceof Error ? e.message : "Failed to load stream");
       } finally {
         if (active) setLoading(false);
       }

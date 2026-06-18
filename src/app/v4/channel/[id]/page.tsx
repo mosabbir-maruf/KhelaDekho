@@ -15,7 +15,7 @@ const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mo
 
 export default function V4ChannelPage() {
   const { id } = useParams<{ id: string }>();
-  const [channel, setChannel] = useState<any>(null);
+  const [channel, setChannel] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
@@ -35,9 +35,9 @@ export default function V4ChannelPage() {
         const body = await res.json();
         if (!active) return;
         setChannel(body?.data || null);
-      } catch (e: any) {
-        if (e.name === "AbortError") return;
-        if (active) setError(e.message || "Failed to load channel");
+      } catch (e: unknown) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (active) setError(e instanceof Error ? e.message : "Failed to load channel");
       } finally {
         if (active) setLoading(false);
       }

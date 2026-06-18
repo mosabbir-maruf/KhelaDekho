@@ -33,12 +33,6 @@ interface V2Event {
   priority: number;
 }
 
-interface V2Response {
-  events: V2Event[];
-  total: number;
-  cached_at: string;
-}
-
 async function fetchV2Events(signal: AbortSignal, status?: string): Promise<V2Event[]> {
   const rawBaseUrl = getApiBaseUrl();
   if (!rawBaseUrl) return [];
@@ -74,6 +68,7 @@ function MatchesContent() {
   useEffect(() => {
     const statusParam = searchParams.get("status");
     if (statusParam === "live" || statusParam === "upcoming" || statusParam === "finished") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(statusParam);
     }
     const searchParam = searchParams.get("search");
@@ -88,7 +83,7 @@ function MatchesContent() {
       try {
         const data = await fetchV2Events(controller.signal, activeTab !== "all" ? activeTab : undefined);
         if (active) { setEvents(data); setLoading(false); }
-      } catch (e) {
+      } catch {
         if (active) setLoading(false);
       }
     })();
@@ -264,7 +259,7 @@ function MatchesContent() {
                     </span>
                     {isLive ? (
                       <Link
-                        href="/channels"
+                        href="/live-matches"
                         onClick={() => event("match_view", { match_id: ev.id, team1: ev.team_a.name, team2: ev.team_b.name })}
                         className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500 text-fg font-bold hover:bg-red-600 transition-colors uppercase tracking-widest text-[9px]"
                       >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, sanitizeBaseUrl } from "@/lib/api";
@@ -8,9 +8,8 @@ import { LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
-import { loadAdminConfig, getV3Channels } from "@/data/admin";
-import type { V3Channel } from "@/data/admin";
 import { useCopyButton } from "@/hooks/useCopyButton";
+import { Virtuoso } from "react-virtuoso";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -19,24 +18,12 @@ import Share2 from "lucide-react/dist/esm/icons/share-2";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
-interface V2Channel {
-  id: number;
+interface StreamingChannel {
+  id: number | string;
   name: string;
   logo: string | null;
   stream_type: string;
   stream_url: string | null;
-  drm_kid: string | null;
-  drm_key: string | null;
-  is_alive: boolean;
-  cached_at: string;
-}
-
-interface V4Channel {
-  id: string;
-  name: string;
-  logo: string | null;
-  stream_url: string | null;
-  stream_type: string;
   drm_kid: string | null;
   drm_key: string | null;
   is_alive: boolean;
@@ -53,20 +40,76 @@ interface V1Channel {
   live_viewers: number;
 }
 
+interface V3Channel {
+  name: string;
+  logo?: string;
+  group?: string;
+  url: string;
+  type?: string;
+  kid?: string;
+  key?: string;
+  status?: string;
+  verified_at?: string;
+  status_code?: number;
+  content_type?: string;
+  id?: string;
+}
+
 type ApiVersion = "v1" | "v2" | "v3" | "v4";
 
-function isAlive(ch: any, v: ApiVersion): boolean {
-  if (v === "v1") return ch.status === "live";
-  if (v === "v2" || v === "v4") return !!ch.stream_url;
-  return true;
+interface ChannelData {
+  name: string;
+  logo?: string | null;
+  image_url?: string | null;
+  group?: string;
+  stream_url?: string | null;
+  stream_type?: string;
+  url?: string;
+  category?: string;
+  key?: string;
+  id?: string | number;
+  status?: string;
 }
 
-function getChannelId(ch: any, v: ApiVersion): string {
-  if (v === "v1") return (ch as V1Channel).key;
-  if (v === "v2") return String((ch as V2Channel).id);
-  if (v === "v4") return (ch as V4Channel).id;
-  return (ch as V3Channel).id;
+interface VersionMeta {
+  color: string;
+  label: string;
+  alive: (ch: ChannelData) => boolean;
+  id: (ch: ChannelData) => string;
+  extra: (ch: ChannelData) => string;
+  subtitle: (ch: ChannelData, streamType: string) => string;
 }
+
+const VERSION_CONFIG: Record<ApiVersion, VersionMeta> = {
+  v1: {
+    color: "bg-yellow-500", label: "V1 Streams",
+    alive: (ch) => ch.status === "live",
+    id: (ch) => String(ch.key),
+    extra: (ch) => (ch.category || "").toUpperCase(),
+    subtitle: (ch) => `${ch.category || ""} · LIVE`,
+  },
+  v2: {
+    color: "bg-green-500", label: "V2 Streams",
+    alive: (ch) => !!ch.stream_url,
+    id: (ch) => String(ch.id),
+    extra: (ch) => (ch.stream_type || "").toUpperCase(),
+    subtitle: (ch) => `${ch.stream_type?.toUpperCase() || "HLS"} · ACTIVE`,
+  },
+  v3: {
+    color: "bg-cyan-500", label: "V3 Streams",
+    alive: (ch) => !!ch.url,
+    id: (ch) => String(ch.id || ch.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")),
+    extra: (ch) => (ch.group || "").toUpperCase(),
+    subtitle: (ch, st) => `${(ch.group || "General").toUpperCase()} · ${st.toUpperCase()}`,
+  },
+  v4: {
+    color: "bg-purple-500", label: "V4 Streams",
+    alive: (ch) => !!ch.stream_url,
+    id: (ch) => String(ch.id),
+    extra: (ch) => (ch.stream_type || "").toUpperCase(),
+    subtitle: (ch) => `${ch.stream_type?.toUpperCase() || "DASH"} · ACTIVE`,
+  },
+};
 
 function getUrlParams() {
   if (typeof window === "undefined") return { v: null, ch: null };
@@ -74,32 +117,34 @@ function getUrlParams() {
   return { v: params.get("v"), ch: params.get("ch") };
 }
 
-export default function ChannelsPage() {
+export default function LiveMatchesPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [apiVersion, setApiVersion] = useState<ApiVersion>(() => loadAdminConfig().defaultVersion || "v4");
-  const [channels, setChannels] = useState<any[]>([]);
+  const [apiVersion, setApiVersion] = useState<ApiVersion>("v4");
+  const [channels, setChannels] = useState<ChannelData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedChannel, setSelectedChannel] = useState<any | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<ChannelData | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<ApiVersion | null>(null);
-  const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: any } | null>(null);
+  const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: Record<string, string> | null } | null>(null);
   const [v1Error, setV1Error] = useState<string | null>(null);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
   const { copied, copy: handleShare } = useCopyButton();
+  const channelsCache = useRef<Map<string, ChannelData[]>>(new Map());
 
-  const isV3 = apiVersion === "v3";
+  const cfg = VERSION_CONFIG[apiVersion];
+  const apiBase = useMemo(() => getApiBaseUrl(), []);
 
-  function selectAndReplaceUrl(ch: any) {
+  const selectAndReplaceUrl = useCallback((ch: ChannelData) => {
     setSelectedChannel(ch);
     setSelectedVersion(apiVersion);
     setV1StreamData(null);
     setV1Error(null);
-    const id = getChannelId(ch, apiVersion);
+    const id = cfg.id(ch);
     router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
-  }
+  }, [apiVersion, pathname, router, cfg]);
 
   useEffect(() => {
     const { v } = getUrlParams();
@@ -118,26 +163,26 @@ export default function ChannelsPage() {
       setV1StreamData(null);
       setV1Error(null);
       try {
-        let list: any[] = [];
-        if (apiVersion === "v3") {
-          const cfg = loadAdminConfig();
-          list = cfg.enabled.v3 ? getV3Channels() : [];
+        const cached = channelsCache.current.get(apiVersion);
+        let fetched: ChannelData[];
+        if (cached) {
+          fetched = cached;
         } else {
-          const fetchLimit = apiVersion === "v1" ? "?limit=200" : apiVersion === "v4" ? "?alive=true" : "?limit=200";
-          const res = await fetch(`${baseUrl}/api/${apiVersion}/channels${fetchLimit}`, {
-            signal: controller.signal,
-            headers: { Accept: "application/json" },
-          });
-          const body = res.ok ? await res.json() : { data: { channels: [] } };
+          const url = apiVersion === "v3"
+            ? "/api/playlist?source=live-matches"
+            : `${baseUrl}/api/${apiVersion}/channels${apiVersion === "v1" || apiVersion === "v2" ? "?limit=200" : "?alive=true"}`;
+          const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
           if (!active) return;
-          list = body?.data?.channels || [];
+          const body = res.ok ? await res.json() : {};
+          fetched = apiVersion === "v3" ? (body?.channels || []) : (body?.data?.channels || []);
+          channelsCache.current.set(apiVersion, fetched);
         }
-        setChannels(list);
-        if (list.length > 0) {
+        setChannels(fetched);
+        if (fetched.length > 0) {
           const { ch: urlCh } = getUrlParams();
-          const matchUrl = (ch: any) => String(getChannelId(ch, apiVersion)) === urlCh;
-          let target = urlCh ? list.find(matchUrl) : null;
-          target = target || list.find((ch: any) => isAlive(ch, apiVersion)) || list[0];
+          const matchUrl = (ch: ChannelData) => String(cfg.id(ch)) === urlCh;
+          let target = urlCh ? fetched.find(matchUrl) : null;
+          target = target || fetched.find((ch: ChannelData) => cfg.alive(ch)) || fetched[0];
           selectAndReplaceUrl(target);
         }
       } catch {
@@ -147,17 +192,17 @@ export default function ChannelsPage() {
       }
     })();
     return () => { active = false; controller.abort(); };
-  }, [apiVersion]);
+  }, [apiVersion, cfg, selectAndReplaceUrl]);
 
   const filteredChannels = useMemo(() => {
     if (!searchQuery.trim()) return channels;
     const q = searchQuery.toLowerCase();
-    return channels.filter((ch: any) => ch.name.toLowerCase().includes(q));
+    return channels.filter((ch: ChannelData) => ch.name.toLowerCase().includes(q));
   }, [channels, searchQuery]);
 
   const aliveCount = useMemo(
-    () => channels.filter((ch) => isAlive(ch, apiVersion)).length,
-    [channels, apiVersion],
+    () => channels.filter((ch: ChannelData) => cfg.alive(ch)).length,
+    [channels, cfg],
   );
 
   useEffect(() => {
@@ -176,36 +221,84 @@ export default function ChannelsPage() {
         const ck = data.clearkey;
         const clearkey = ck?.kid && ck?.key ? { [ck.kid]: ck.key } : null;
         setV1StreamData({ url: data.url, type: data.type || "hls", clearkey });
-      } catch (e: any) {
-        if (e.name === "AbortError") return;
-        if (active) setV1Error(e.message || "Failed to load stream");
+      } catch (e: unknown) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (active) setV1Error(e instanceof Error ? e.message : "Failed to load stream");
       }
     })();
     return () => { active = false; controller.abort(); };
   }, [selectedChannel, selectedVersion]);
 
-  const label = isV3 ? "V2 Streams" : apiVersion === "v1" ? "V1 Streams" : apiVersion === "v4" ? "V4 Streams" : "Browse Streams";
-
-  const apiBase = getApiBaseUrl();
-
-  const v3Channel = selectedVersion === "v3" ? (selectedChannel as V3Channel) : null;
-  const v3RawUrl = v3Channel?.urls?.[0]?.url;
-  const v3IsTs = v3RawUrl?.match(/\.ts($|\?)/);
-  const v3Url = v3RawUrl && !v3IsTs && apiBase
-    ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(v3RawUrl)}`
-    : v3RawUrl;
-
-  const v2Ch = selectedVersion === "v2" ? (selectedChannel as V2Channel) : null;
-  const rawUrl = v2Ch?.stream_url;
-  const needsProxy = rawUrl && (rawUrl.includes("storage.googleapis.com") || rawUrl.includes("soccerball.st"));
-  const v2Url = needsProxy && apiBase
-    ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
-    : rawUrl;
-
-  const v4Ch = selectedVersion === "v4" ? (selectedChannel as V4Channel) : null;
-  const v4Url = v4Ch?.stream_url;
-
-  const showPlayer = selectedChannel && selectedVersion === apiVersion;
+  const playerConfig = useMemo(() => {
+    if (!selectedChannel || selectedVersion !== apiVersion) return null;
+    if (selectedVersion === "v1") {
+      if (!v1StreamData?.url) return null;
+      return {
+        streamUrl: v1StreamData.url,
+        streamType: v1StreamData.type,
+        clearKeys: v1StreamData.clearkey,
+        stats: [
+          { label: "Server", value: "V1", icon: "zap" as const },
+          { label: "Type", value: (v1StreamData.type || "HLS").toUpperCase(), icon: "shield" as const },
+          { label: "Status", value: "LIVE", highlight: true as const, icon: "monitor" as const },
+        ],
+      };
+    }
+    if (selectedVersion === "v2") {
+      const ch = selectedChannel as StreamingChannel;
+      if (!ch.stream_url) return null;
+      const needsProxy = ch.stream_url.includes("storage.googleapis.com") || ch.stream_url.includes("soccerball.st");
+      const url = needsProxy && apiBase ? `${sanitizeBaseUrl(apiBase)}/api/v2/proxy?url=${encodeURIComponent(ch.stream_url)}` : ch.stream_url;
+      return {
+        streamUrl: url,
+        streamType: ch.stream_type || "hls",
+        clearKeys: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null,
+        stats: [
+          { label: "Server", value: "V2", icon: "zap" as const },
+          { label: "Type", value: (ch.stream_type || "HLS").toUpperCase(), icon: "shield" as const },
+          { label: "Status", value: "ACTIVE", highlight: true as const, icon: "monitor" as const },
+        ],
+      };
+    }
+    if (selectedVersion === "v4") {
+      const ch = selectedChannel as StreamingChannel;
+      if (!ch.stream_url) return null;
+      return {
+        streamUrl: ch.stream_url,
+        streamType: ch.stream_type || "dash",
+        clearKeys: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null,
+        stats: [
+          { label: "Server", value: "V4", icon: "zap" as const },
+          { label: "Type", value: (ch.stream_type || "DASH").toUpperCase(), icon: "shield" as const },
+          { label: "Status", value: "ACTIVE", highlight: true as const, icon: "monitor" as const },
+        ],
+      };
+    }
+    if (selectedVersion === "v3") {
+      const ch = selectedChannel as V3Channel;
+      if (!ch.url) return null;
+      const rawUrl = ch.url;
+      const streamType = ch.type === "dash" || rawUrl.includes(".mpd") ? "dash"
+        : ch.type === "hls" ? "hls"
+        : rawUrl.match(/\.ts($|\?)/) ? "direct"
+        : ch.content_type === "video/mp2t" ? "direct"
+        : "hls";
+      const useProxy = streamType === "hls";
+      const url = useProxy ? `/api/iptv/proxy?url=${encodeURIComponent(rawUrl)}` : rawUrl;
+      const clearKeys = ch.kid && ch.key ? { [ch.kid]: ch.key } : null;
+      return {
+        streamUrl: url,
+        streamType,
+        clearKeys,
+        stats: [
+          { label: "Source", value: "Local", icon: "zap" as const },
+          { label: "Type", value: streamType.toUpperCase(), icon: "shield" as const },
+          { label: "Group", value: ch.group || "General", highlight: true as const, icon: "monitor" as const },
+        ],
+      };
+    }
+    return null;
+  }, [selectedChannel, selectedVersion, apiVersion, v1StreamData, apiBase]);
 
   return (
     <div className="min-h-screen">
@@ -217,10 +310,10 @@ export default function ChannelsPage() {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
                 <Tv className="w-3 h-3 text-red-500" />
-                {label}
+                {cfg.label}
               </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-fg font-mono leading-tight">
-                Channels<span className="text-red-500">.</span>
+                Live Matches<span className="text-red-500">.</span>
               </h1>
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
                 {aliveCount} active &middot; {channels.length.toLocaleString()} indexed
@@ -231,7 +324,7 @@ export default function ChannelsPage() {
                 onClick={() => setIsServerDropdownOpen((prev) => !prev)}
                 className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
               >
-                <span className={`w-2 h-2 rounded-full ${isV3 ? "bg-blue-500" : apiVersion === "v1" ? "bg-yellow-500" : apiVersion === "v2" ? "bg-green-500" : "bg-purple-500"}`} />
+                <span className={`w-2 h-2 rounded-full ${cfg.color}`} />
                 Switch Server
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
               </button>
@@ -241,13 +334,12 @@ export default function ChannelsPage() {
                     <button
                       key={v}
                       onClick={() => { setApiVersion(v); setIsServerDropdownOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-xs font-mono transition-all cursor-pointer flex items-center gap-2 ${
-                        apiVersion === v
+                      className={`w-full text-left px-4 py-2 text-xs font-mono transition-all cursor-pointer flex items-center gap-2 ${apiVersion === v
                           ? "text-red-400 bg-red-500/[0.03] font-semibold"
                           : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
+                        }`}
                     >
-                      <span className={`w-2 h-2 rounded-full ${v === "v3" ? "bg-blue-500" : v === "v1" ? "bg-yellow-500" : v === "v2" ? "bg-green-500" : "bg-purple-500"}`} />
+                      <span className={`w-2 h-2 rounded-full ${VERSION_CONFIG[v].color}`} />
                       {v.toUpperCase()}
                     </button>
                   ))}
@@ -264,27 +356,32 @@ export default function ChannelsPage() {
           <LoadingSpinner label="Indexing streams..." />
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
-            <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0">
+            <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0 max-h-[calc(100vh-20rem)]">
               <SearchInput value={searchQuery} onChange={setSearchQuery} />
               <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1 mt-3 mb-1 shrink-0">
                 {filteredChannels.length} channel{filteredChannels.length !== 1 ? "s" : ""}
               </div>
-              <div className="flex-1 overflow-y-auto space-y-1 scrollbar-red">
-                {filteredChannels.map((ch: any, idx: number) => (
-                  <ChannelListItem
-                    key={`${apiVersion}-${getChannelId(ch, apiVersion) || idx}`}
-                    item={{ name: ch.name, logo: isV3 ? null : ch.image_url || ch.logo, extra: isV3 ? "V2 Streams" : apiVersion === "v1" ? "V1 Streams" : apiVersion === "v4" ? "V4 Streams" : "V2 Streams" }}
-                    selected={selectedChannel === ch && selectedVersion === apiVersion}
-                    onClick={() => selectAndReplaceUrl(ch)}
-                    showExtra
-                  />
-                ))}
-                {filteredChannels.length === 0 && (
-                  <div className="text-center py-10">
-                    <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
-                  </div>
-                )}
-              </div>
+              {filteredChannels.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
+                </div>
+              ) : (
+                <Virtuoso
+                  className="scrollbar-red"
+                  style={{ height: '100%', flex: 1 }}
+                  data={filteredChannels}
+                  itemContent={(idx, ch) => (
+                    <div className="pb-1">
+                      <ChannelListItem
+                        item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: cfg.label }}
+                        selected={selectedChannel === ch && selectedVersion === apiVersion}
+                        onClick={() => selectAndReplaceUrl(ch)}
+                        showExtra
+                      />
+                    </div>
+                  )}
+                />
+              )}
             </div>
 
             <div className="flex-1 min-w-0 space-y-4 w-full">
@@ -320,37 +417,43 @@ export default function ChannelsPage() {
                       )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-1 p-1 scrollbar-red">
-                        {filteredChannels.map((ch: any, idx: number) => (
-                        <button
-                          key={`mobile-${getChannelId(ch, apiVersion) || idx}`}
-                          type="button"
-                          onClick={() => { selectAndReplaceUrl(ch); setIsMobileDropdownOpen(false); }}
-                          className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${
-                            selectedChannel === ch && selectedVersion === apiVersion
-                              ? "border-red-500/30 bg-red-500/[0.03] text-red-400 font-semibold"
-                              : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="min-w-0">
-                              <div className="text-xs font-mono truncate">{ch.name}</div>
-                              <div className="text-[9px] font-mono text-fg-dim mt-0.5">{isV3 ? `${ch.urls?.length || 1} sources` : apiVersion === "v1" ? (ch.category || "").toUpperCase() : (ch.stream_type || "").toUpperCase()}</div>
+                    {filteredChannels.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
+                      </div>
+                    ) : (
+                      <div className="flex-1 overflow-hidden">
+                        <Virtuoso
+                          className="scrollbar-red"
+                          style={{ height: '100%' }}
+                          data={filteredChannels}
+                          itemContent={(idx, ch) => (
+                            <div className="px-1 pb-1">
+                              <button
+                                type="button"
+                                onClick={() => { selectAndReplaceUrl(ch); setIsMobileDropdownOpen(false); }}
+                                className={`w-full text-left border p-3 transition-all cursor-pointer group flex items-center justify-between ${selectedChannel === ch && selectedVersion === apiVersion
+                                    ? "border-red-500/30 bg-red-500/[0.03] text-red-400 font-semibold"
+                                    : "border-border-alt bg-card hover:border-red-500/10 hover:bg-red-500/[0.02]"
+                                  }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-mono truncate">{ch.name}</div>
+                                    <div className="text-[9px] font-mono text-fg-dim mt-0.5">{cfg.extra(ch)}</div>
+                                  </div>
+                                </div>
+                              </button>
                             </div>
-                          </div>
-                        </button>
-                      ))}
-                      {filteredChannels.length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
-                        </div>
-                      )}
-                    </div>
+                          )}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {!showPlayer ? (
+              {!selectedChannel || selectedVersion !== apiVersion ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <div className="text-center space-y-3">
                     <Tv className="w-8 h-8 text-fg-dim mx-auto" />
@@ -372,7 +475,7 @@ export default function ChannelsPage() {
                     <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Decrypting stream...</span>
                   </div>
                 </div>
-              ) : !v1StreamData?.url && !v2Url && !v3Url && !v4Url ? (
+              ) : !playerConfig ? (
                 <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
                   <p className="font-mono text-xs text-fg-dim">Stream unavailable</p>
                 </div>
@@ -386,7 +489,7 @@ export default function ChannelsPage() {
                       <div>
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel?.name}</h2>
                         <p className="font-mono text-xs text-fg-dim">
-                          {selectedVersion === "v1" ? `${(selectedChannel as V1Channel)?.category || ""} · LIVE` : selectedVersion === "v2" ? `${((selectedChannel as V2Channel)?.stream_type || "HLS").toUpperCase()} · ACTIVE` : selectedVersion === "v4" ? `${((selectedChannel as V4Channel)?.stream_type || "DASH").toUpperCase()} · ACTIVE` : `${v3Channel?.sourceLabel || "V3"} · ${v3Channel?.urls?.length || 1} source${(v3Channel?.urls?.length || 1) > 1 ? "s" : ""}`}
+                          {cfg.subtitle(selectedChannel, playerConfig.streamType)}
                         </p>
                       </div>
                     </div>
@@ -398,46 +501,8 @@ export default function ChannelsPage() {
                       {copied ? "Copied!" : "Share"}
                     </button>
                   </div>
-                  {selectedVersion === "v1" && v1StreamData?.url ? (
-                    <>
-                      <VideoPlayer streamUrl={v1StreamData.url} streamType={v1StreamData.type} clearKeys={v1StreamData.clearkey} />
-                      <StatsGrid items={[
-                        { label: "Server", value: "V1", icon: "zap" },
-                        { label: "Type", value: (v1StreamData.type || "HLS").toUpperCase(), icon: "shield" },
-                        { label: "Status", value: "LIVE", highlight: true, icon: "monitor" },
-                      ]} />
-                    </>
-                  ) : selectedVersion === "v1" && v1StreamData ? <p className="font-mono text-xs text-fg-dim text-center py-12">Stream unavailable</p> : null}
-                  {selectedVersion === "v2" && v2Url ? (
-                    <>
-                      <VideoPlayer streamUrl={v2Url} streamType={v2Ch?.stream_type || "hls"} clearKeys={v2Ch?.drm_kid && v2Ch?.drm_key ? { [v2Ch.drm_kid]: v2Ch.drm_key } : null} />
-                      <StatsGrid items={[
-                        { label: "Server", value: "V2", icon: "zap" },
-                        { label: "Type", value: (v2Ch?.stream_type || "HLS").toUpperCase(), icon: "shield" },
-                        { label: "Status", value: "ACTIVE", highlight: true, icon: "monitor" },
-                      ]} />
-                    </>
-                  ) : null}
-                  {selectedVersion === "v4" && v4Url ? (
-                    <>
-                      <VideoPlayer streamUrl={v4Url} streamType={v4Ch?.stream_type || "dash"} clearKeys={v4Ch?.drm_kid && v4Ch?.drm_key ? { [v4Ch.drm_kid]: v4Ch.drm_key } : null} />
-                      <StatsGrid items={[
-                        { label: "Server", value: "V4", icon: "zap" },
-                        { label: "Type", value: (v4Ch?.stream_type || "DASH").toUpperCase(), icon: "shield" },
-                        { label: "Status", value: "ACTIVE", highlight: true, icon: "monitor" },
-                      ]} />
-                    </>
-                  ) : null}
-                  {selectedVersion === "v3" && v3Url ? (
-                    <>
-                      <VideoPlayer streamUrl={v3Url} streamType={v3IsTs ? "direct" : "hls"} clearKeys={null} />
-                      <StatsGrid items={[
-                        { label: "Source", value: v3Channel?.sourceLabel || "V3", icon: "zap" },
-                        { label: "URLs", value: `${v3Channel?.urls?.length || 1}`, icon: "shield" },
-                        { label: "Status", value: "ONLINE", highlight: true, icon: "monitor" },
-                      ]} />
-                    </>
-                  ) : null}
+                  <VideoPlayer streamUrl={playerConfig.streamUrl} streamType={playerConfig.streamType} clearKeys={playerConfig.clearKeys} />
+                  <StatsGrid items={playerConfig.stats} />
                 </>
               )}
             </div>

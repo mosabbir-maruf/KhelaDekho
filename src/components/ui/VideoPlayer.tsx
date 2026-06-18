@@ -17,6 +17,7 @@ import { getFallbackSource } from "@/lib/streamSelector";
 import { getApiBaseUrl } from "@/lib/api";
 import type { StreamSource } from "@/lib/api";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let shakaModule: any = null;
 async function getShaka() {
   if (!shakaModule) {
@@ -46,17 +47,17 @@ const PSSH_REGEX = new RegExp(
   "g"
 );
 
-function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
+async function makeShakaPlayer(video: HTMLVideoElement, shaka: typeof shakaModule) {
   const player = new shaka.Player();
   const netEngine = player.getNetworkingEngine();
   if (netEngine) {
-    netEngine.registerRequestFilter((type: any, request: any) => {
+    netEngine.registerRequestFilter((type: unknown, request: { headers: Record<string, string> }) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
         const apiBase = getApiBaseUrl();
         if (apiBase) request.headers['Referer'] = `${apiBase}/`;
       }
     });
-    netEngine.registerResponseFilter((type: any, response: any) => {
+    netEngine.registerResponseFilter((type: unknown, response: { data: ArrayBuffer }) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST && response.data) {
         const text = new TextDecoder().decode(response.data);
         const stripped = text.replace(PSSH_REGEX, "");
@@ -66,7 +67,7 @@ function makeShakaPlayer(video: HTMLVideoElement, shaka: any) {
       }
     });
   }
-  player.attach(video);
+  await player.attach(video);
   player.configure({
     streaming: { bufferingGoal: 15, rebufferingGoal: 3, bufferBehind: 10 },
     abr: { enabled: true, restrictToElementSize: false },
@@ -101,6 +102,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shakaPlayerRef = useRef<any>(null);
   const hlsPlayerRef = useRef<Hls | null>(null);
   const attachedTypeRef = useRef<string | null>(null);
@@ -109,7 +111,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   const [fallbackType, setFallbackType] = useState<string | null>(null);
   const failedSourceIndex = useRef(0);
   const fallbackSourcesRef = useRef(fallbackSources);
-  fallbackSourcesRef.current = fallbackSources;
+  useEffect(() => { fallbackSourcesRef.current = fallbackSources; }, [fallbackSources]);
 
   const devicePlatform = useDevicePlatform();
   const isApple = devicePlatform === "ios" || devicePlatform === "ipados" || devicePlatform === "macos";
@@ -133,8 +135,10 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   }, [isApple, sortedSources]);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setFallbackUrl(null);
     setFallbackType(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
     failedSourceIndex.current = 0;
   }, [streamUrl]);
 
@@ -161,6 +165,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   }, [isPiP, resetControlsTimeout]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     resetControlsTimeout();
     return () => { if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current); };
   }, [resetControlsTimeout]);
@@ -170,8 +175,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     if (!video) return;
     const handlePlay = () => { setIsPlaying(true); resetControlsTimeout(); };
     const handlePause = () => { setIsPlaying(false); resetControlsTimeout(); };
-    const handleWaiting = () => { setIsLoading(true); if (playerError) setPlayerError(null); };
-    const handlePlaying = () => { setIsLoading(false); if (playerError) setPlayerError(null); if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; } };
+    const handleWaiting = () => { setIsLoading(true); setPlayerError(null); };
+    const handlePlaying = () => { setIsLoading(false); setPlayerError(null); if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; } };
     const handleLoadedMetadata = () => setIsLoading(false);
     video.addEventListener("play", handlePlay);
     video.addEventListener("pause", handlePause);
@@ -192,9 +197,9 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   }, [resetControlsTimeout]);
 
   const volumeRef = useRef(volume);
-  volumeRef.current = volume;
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
   const isMutedRef = useRef(isMuted);
-  isMutedRef.current = isMuted;
+  useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
 
   async function autoPlayVideo(video: HTMLVideoElement) {
     video.muted = true;
@@ -222,7 +227,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   }, [isApple]);
 
   const clearKeysRef = useRef(clearKeys);
-  clearKeysRef.current = clearKeys;
+  useEffect(() => { clearKeysRef.current = clearKeys; }, [clearKeys]);
   const clearKeysStr = useMemo(() => clearKeys ? JSON.stringify(clearKeys) : "", [clearKeys]);
 
   // ---- Stream initialization ----
@@ -231,17 +236,19 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     if (!video || !effectiveUrl) return;
 
     const newType = detectType(effectiveUrl, effectiveType);
+    /* eslint-disable react-hooks/set-state-in-effect */
     setIsLoading(true);
     setIsPlaying(false);
     setLevels([]);
     setCurrentLevel(-1);
     setPlayerError(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     const timeoutId = setTimeout(() => {
       setPlayerError("Stream is taking too long to load — the feed may be unavailable.");
       setIsLoading(false);
-    }, 30000);
+    }, 20000);
     loadingTimeoutRef.current = timeoutId;
 
     let destroyed = false;
@@ -277,7 +284,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         // Reuse existing Shaka player or create one
         if (!shakaPlayerRef.current && video) {
           const shaka = await getShaka();
-          shakaPlayerRef.current = makeShakaPlayer(video, shaka);
+          shakaPlayerRef.current = await makeShakaPlayer(video, shaka);
         }
         attachedTypeRef.current = "dash";
 
@@ -303,17 +310,26 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
         player.removeEventListener("error", player._kdErrorHandler);
         const handler = (event: Event) => {
+          if (destroyed) return;
           const customEvent = event as CustomEvent;
-          const err = customEvent.detail as { code?: number };
-          console.error("Shaka Player Error:", err || event);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const err = customEvent.detail as any;
+          const code = err?.code;
+          const hasDetail = err && typeof err === "object" && Object.keys(err).length > 0;
+          if (hasDetail) {
+            const category = err?.category;
+            console.error("Shaka Player Error:", { code, category, message: err.message, data: err.data }, "URL:", effectiveUrl);
+          } else {
+            console.warn("Shaka Player Error (empty detail) URL:", effectiveUrl);
+          }
           setIsLoading(false);
           if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
-          const isFatal = !err || !err.code || err.code === 4032 || err.code !== 4010;
+          const isFatal = !err || !code || code === 4032 || code !== 4010;
           if (isFatal && tryFallback()) return;
-          if (!err || !err.code) setPlayerError("Stream failed to load — the feed may be unavailable.");
-          else if (err.code === 4032) setPlayerError("Stream manifest not found — the feed may have expired.");
-          else if (err.code === 4010) setPlayerError("Failed to decrypt stream — invalid DRM keys.");
-          else setPlayerError(`Stream error (code ${err.code}).`);
+          if (!err || !code) setPlayerError("Stream failed to load — the feed may be unavailable.");
+          else if (code === 4032) setPlayerError("Stream manifest not found — the feed may have expired.");
+          else if (code === 4010) setPlayerError("Failed to decrypt stream — invalid DRM keys.");
+          else setPlayerError(`Stream error (code ${code}).`);
         };
         player._kdErrorHandler = handler;
         player.addEventListener("error", handler);
@@ -326,7 +342,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
           const tracks = player.getVariantTracks();
           const uniqueQualities = new Map<number, string>();
-          tracks.forEach((track: any) => {
+          tracks.forEach((track: { height?: number }) => {
             if (track.height) uniqueQualities.set(track.height, `${track.height}p`);
           });
           setLevels(Array.from(uniqueQualities.entries()).map(([h, n]) => ({ id: h, name: n })).sort((a, b) => b.id - a.id));
@@ -339,20 +355,17 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
       if (newType === "direct") {
         video.src = effectiveUrl;
-        video.addEventListener("loadedmetadata", () => {
-          setIsLoading(false);
-          autoPlayVideo(video);
-        }, { once: true });
-        video.addEventListener("error", () => {
-          setIsLoading(false);
-          if (!tryFallback()) setPlayerError("Failed to load direct stream.");
-        }, { once: true });
+        const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
+        const onError = () => { if (destroyed) return; setIsLoading(false); if (!tryFallback()) setPlayerError("Failed to load direct stream."); };
+        video.addEventListener("loadedmetadata", onLoaded, { once: true });
+        video.addEventListener("error", onError, { once: true });
+        cleanupNativeListeners = () => { video.removeEventListener("loadedmetadata", onLoaded); video.removeEventListener("error", onError); };
         return;
       }
 
       if (typeof video.canPlayType === "function" && video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = effectiveUrl;
-        const onLoaded = () => { setIsLoading(false); autoPlayVideo(video); };
+        const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
         video.addEventListener("loadedmetadata", onLoaded);
         const nativeErrorHandler = () => {
           video.removeEventListener("loadedmetadata", onLoaded);
@@ -360,7 +373,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
           if (!tryFallback()) setIsLoading(false);
         };
         video.addEventListener("error", nativeErrorHandler);
-        return cleanup;
+        cleanupNativeListeners = () => { video.removeEventListener("loadedmetadata", onLoaded); video.removeEventListener("error", nativeErrorHandler); };
+        return;
       } else {
         try {
           const HlsClass = await getHls();
@@ -388,12 +402,15 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       }
     };
 
+    let cleanupNativeListeners: (() => void) | null = null;
+
     const cleanup = () => {
       destroyed = true;
       if (hlsPlayerRef.current) { hlsPlayerRef.current.destroy(); hlsPlayerRef.current = null; }
       if (shakaPlayerRef.current) { try { shakaPlayerRef.current.destroy(); } catch {} shakaPlayerRef.current = null; }
       attachedTypeRef.current = null;
       if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
+      if (cleanupNativeListeners) { cleanupNativeListeners(); cleanupNativeListeners = null; }
     };
 
     loadStream();
@@ -436,12 +453,13 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
   const handleFullscreen = useCallback(() => {
     const container = containerRef.current;
-    const video = videoRef.current;
     if (!container) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doc = document as any;
     const isFS = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
     if (!isFS) {
       if (container.requestFullscreen) container.requestFullscreen();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       else (container as any).webkitRequestFullscreen?.();
     } else {
       if (doc.exitFullscreen) doc.exitFullscreen();
@@ -470,7 +488,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       else {
         shakaPlayerRef.current.configure({ abr: { enabled: false } });
         const tracks = shakaPlayerRef.current.getVariantTracks();
-        const target = tracks.find((t: any) => t.height === id);
+        const target = tracks.find((t: { height?: number }) => t.height === id);
         if (target) shakaPlayerRef.current.selectVariantTrack(target, true);
       }
     } else if (hlsPlayerRef.current) hlsPlayerRef.current.currentLevel = id;

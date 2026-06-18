@@ -19,7 +19,7 @@ interface SearchItem {
 
 const defaultItems: SearchItem[] = [
   { title: "Home", description: "Return to the featured media lobby", href: "/", category: "Navigation" },
-  { title: "All Channels", description: "Browse all channels and start watching live", href: "/channels", category: "Navigation" },
+  { title: "Live Matches", description: "Browse all channels and start watching live", href: "/live-matches", category: "Navigation" },
   { title: "Match Schedule", description: "View all live, upcoming, and finished matches", href: "/matches", category: "Navigation" },
   { title: "Live Channels", description: "Watch currently live broadcasts", href: "/matches?status=live", category: "Navigation" },
   { title: "Search Finder", description: "Search matches and channels across the platform", href: "/search", category: "Navigation" },

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { CATEGORIES, LOGO_BASE, LOGO_MAP, getCategory } from "@/data/liveTv";
 import type { Category } from "@/data/liveTv";
-import Loader2 from "lucide-react/dist/esm/icons/loader-2";
-import Image from "next/image";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Zap from "lucide-react/dist/esm/icons/zap";
@@ -29,102 +28,93 @@ function getLogoUrl(name: string): string | null {
   return null;
 }
 
-const JSON_URL = "https://raw.githubusercontent.com/boy653859/m3u8/main/live_channel.json";
-const CACHE_KEY = "khela_live_tv_channels";
-const CACHE_TTL = 60 * 60 * 1000;
 
-function loadCachedChannels(): M3u8Channel[] | null {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const { data, ts } = JSON.parse(raw);
-    if (Date.now() - ts > CACHE_TTL) return null;
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-function saveCachedChannels(chs: M3u8Channel[]) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ data: chs, ts: Date.now() }));
-  } catch {}
-}
 
 export default function LiveTvPage() {
+  const router = useRouter();
   const [channels, setChannels] = useState<M3u8Channel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<M3u8Channel | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
 
+  function getUrlCh(): string | null {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("ch");
+  }
+
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
-    let cachedSelection: M3u8Channel | null = null;
 
     (async () => {
-      const cached = loadCachedChannels();
-      if (cached && cached.length > 0) {
-        setChannels(cached);
-        cachedSelection = cached[0];
-        setSelectedChannel(cached[0]);
-        setLoading(false);
-      }
-
       try {
-        const res = await fetch(JSON_URL, { signal: controller.signal });
+        const res = await fetch(`/api/playlist?source=live-tv`, { signal: controller.signal });
         if (!res.ok) throw new Error("Failed to fetch channels");
-        const data = await res.json();
+        const body = await res.json();
         if (!active) return;
-        const chs: M3u8Channel[] = data.channels || [];
+        const chs: M3u8Channel[] = (body?.channels || []).map((ch: Record<string, unknown>) => ({ name: ch.name as string, url: ch.url as string }));
         setChannels(chs);
-        saveCachedChannels(chs);
         if (chs.length > 0) {
-          const stillSelected = cachedSelection && chs.some((c) => c.name === cachedSelection!.name && c.url === cachedSelection!.url);
-          if (!stillSelected) setSelectedChannel(chs[0]);
+          const urlCh = getUrlCh();
+          const match = urlCh ? chs.find((c) => c.name === urlCh) : null;
+          setSelectedChannel(match || chs[0]);
         }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        if (!cachedSelection) console.error("Failed to load channels:", err);
+        if (active) setFetchError("Failed to load channels. Check your connection.");
       } finally {
-        if (active && !cachedSelection) setLoading(false);
+        if (active) setLoading(false);
       }
     })();
 
     return () => { active = false; controller.abort(); };
   }, []);
 
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const ch of channels) map.set(ch.name, getCategory(ch.name));
+    return map;
+  }, [channels]);
+
+  const logoUrlMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const ch of channels) map.set(ch.name, getLogoUrl(ch.name));
+    return map;
+  }, [channels]);
+
   const filteredChannels = useMemo(() => {
     let result = channels;
     if (activeCategory !== "All") {
-      result = result.filter((ch) => getCategory(ch.name) === activeCategory);
+      result = result.filter((ch) => categoryMap.get(ch.name) === activeCategory);
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((ch) => ch.name.toLowerCase().includes(q));
     }
     return result;
-  }, [channels, activeCategory, searchQuery]);
+  }, [channels, activeCategory, searchQuery, categoryMap]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { All: channels.length };
     for (const ch of channels) {
-      const cat = getCategory(ch.name);
+      const cat = categoryMap.get(ch.name) || "General";
       counts[cat] = (counts[cat] || 0) + 1;
     }
     return counts;
-  }, [channels]);
+  }, [channels, categoryMap]);
 
   const selectChannel = useCallback((ch: M3u8Channel) => {
     setSelectedChannel(ch);
     setIsMobileDropdownOpen(false);
-  }, []);
+    router.replace(`?ch=${encodeURIComponent(ch.name)}`, { scroll: false });
+  }, [router]);
 
   return (
     <div className="h-dvh flex flex-col overflow-hidden">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 flex-1 min-h-0">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 flex-1 min-h-0">
         <PageHero
           icon={<Tv className="w-3 h-3 text-red-500" />}
           badge="Browse Streams"
@@ -133,7 +123,16 @@ export default function LiveTvPage() {
           hint="Stream buffering? Switch channel or server."
         />
 
-        {loading ? <LoadingSpinner label="Indexing streams..." /> : (
+        {fetchError ? (
+          <div className="flex-1 flex items-center justify-center border border-border-alt bg-card">
+            <div className="text-center space-y-3 py-16 px-6">
+              <div className="border border-red-500/20 bg-red-500/5 px-6 py-4">
+                <p className="font-mono text-xs text-red-500 uppercase tracking-widest">[ LOAD_ERROR ]</p>
+                <p className="font-mono text-[10px] text-fg-dim mt-2">{fetchError}</p>
+              </div>
+            </div>
+          </div>
+        ) : loading ? <LoadingSpinner label="Indexing streams..." /> : (
           <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_240px] gap-6 items-stretch flex-1 min-h-0 overflow-hidden grid-rows-[1fr]">
             {/* ── Left: Channel List ── */}
             <div className="hidden lg:flex lg:flex-col border border-border-alt bg-card overflow-hidden min-h-0">
@@ -158,9 +157,9 @@ export default function LiveTvPage() {
                           : "border-border-alt bg-hover group-hover:border-red-500/20 group-hover:bg-red-500/10"
                       }`}>
                         {(() => {
-                          const logoUrl = getLogoUrl(ch.name);
+                          const logoUrl = logoUrlMap.get(ch.name) || null;
                           return logoUrl ? (
-                            <Image src={logoUrl} alt="" fill className="object-cover" unoptimized />
+                            <img src={logoUrl} alt="" className="object-cover w-full h-full" />
                           ) : (
                             <Tv className={`w-3.5 h-3.5 transition-colors ${
                               selectedChannel?.name === ch.name ? "text-red-400" : "text-fg-dim group-hover:text-red-400"
@@ -175,7 +174,7 @@ export default function LiveTvPage() {
                           {ch.name}
                         </div>
                         <div className="text-[9px] font-mono text-fg-dim mt-0.5">
-                          {getCategory(ch.name).toUpperCase()}
+                          {(categoryMap.get(ch.name) || "").toUpperCase()}
                         </div>
                       </div>
                     </div>
@@ -198,9 +197,9 @@ export default function LiveTvPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden">
                         {(() => {
-                          const logoUrl = getLogoUrl(selectedChannel.name);
+                          const logoUrl = logoUrlMap.get(selectedChannel.name) || null;
                           return logoUrl ? (
-                            <Image src={logoUrl} alt="" width={40} height={40} className="object-cover w-full h-full" unoptimized />
+                            <img src={logoUrl} alt="" width={40} height={40} className="object-cover w-full h-full" />
                           ) : (
                             <Tv className="w-5 h-5 text-red-400" />
                           );
@@ -208,7 +207,7 @@ export default function LiveTvPage() {
                       </div>
                       <div>
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
-                        <p className="font-mono text-xs text-fg-dim">{getCategory(selectedChannel.name)}</p>
+                        <p className="font-mono text-xs text-fg-dim">{categoryMap.get(selectedChannel.name) || ""}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs font-mono text-fg-dim">
@@ -312,7 +311,7 @@ export default function LiveTvPage() {
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="min-w-0">
                               <div className="text-xs font-mono truncate">{ch.name}</div>
-                              <div className="text-[9px] font-mono text-fg-dim mt-0.5">{getCategory(ch.name).toUpperCase()}</div>
+                              <div className="text-[9px] font-mono text-fg-dim mt-0.5">{(categoryMap.get(ch.name) || "").toUpperCase()}</div>
                             </div>
                           </div>
                         </button>
