@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { CATEGORIES, LOGO_BASE, LOGO_MAP, getCategory } from "@/data/liveTv";
+import { useCopyButton } from "@/hooks/useCopyButton";
 import type { Category } from "@/data/liveTv";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
@@ -13,6 +14,7 @@ import Shield from "lucide-react/dist/esm/icons/shield";
 import Monitor from "lucide-react/dist/esm/icons/monitor";
 import X from "lucide-react/dist/esm/icons/x";
 import Search from "lucide-react/dist/esm/icons/search";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
@@ -39,6 +41,7 @@ export default function LiveTvPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
+  const { copied, copy: handleShare } = useCopyButton();
 
   function getUrlCh(): string | null {
     if (typeof window === "undefined") return null;
@@ -209,12 +212,13 @@ export default function LiveTvPage() {
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-xs font-mono text-fg-dim">
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
-                        <span className="text-fg font-bold">STREAM</span>
-                      </span>
-                    </div>
+                    <button
+                      onClick={() => handleShare(window.location.href)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      {copied ? "Copied!" : "Share"}
+                    </button>
                   </div>
 
                   <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} />
