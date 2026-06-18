@@ -204,7 +204,7 @@ export default function LiveMatchesPage() {
         if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
         const data = await res.json();
         if (!active) return;
-        if (!data.stream_url) throw new Error("Empty stream URL");
+        if (!data.stream_url) throw new Error(data.error || "No stream URL");
         setV1StreamData({ url: data.stream_url, type: data.stream_type || "hls", clearkey: data.drm_kid && data.drm_key ? { [data.drm_kid]: data.drm_key } : null });
       } catch (e: unknown) {
         if (e instanceof DOMException && e.name === "AbortError") return;

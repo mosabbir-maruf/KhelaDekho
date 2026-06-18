@@ -10,9 +10,13 @@ export async function GET(request: NextRequest) {
   if (!workerUrl) return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(`${workerUrl}/api/v1/channels/${encodeURIComponent(key)}/stream`, {
       headers: { Accept: "application/json" },
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     const body = await res.text();
     if (!res.ok) return NextResponse.json({ error: `Upstream ${res.status}` }, { status: res.status });
 
