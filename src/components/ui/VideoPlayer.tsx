@@ -452,15 +452,15 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   }, [resetControlsTimeout]);
 
   const handleFullscreen = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const container = containerRef.current;
+    if (!container) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doc = document as any;
     const isFS = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
     if (!isFS) {
-      if (video.requestFullscreen) video.requestFullscreen();
+      if (container.requestFullscreen) container.requestFullscreen();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      else (video as any).webkitRequestFullscreen?.();
+      else (container as any).webkitRequestFullscreen?.();
     } else {
       if (doc.exitFullscreen) doc.exitFullscreen();
       else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
