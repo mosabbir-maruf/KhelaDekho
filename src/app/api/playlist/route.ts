@@ -2,15 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-import banglaLiveTv from "../../../../playlist/live-tv/json/bangla.json" with { type: "json" };
-import fifaLiveMatches from "../../../../playlist/live-matches/json/fifa.json" with { type: "json" };
-import sportsLiveMatches from "../../../../playlist/live-matches/json/sports.json" with { type: "json" };
+// Import all JSON playlist files below.
+// To add a new JSON file: just add another import line here and merge into DATA.
+import liveTvBangla from "@/../playlist/live-tv/json/bangla.json" with { type: "json" };
+import liveMatchesFifa from "@/../playlist/live-matches/json/fifa.json" with { type: "json" };
+import liveMatchesSports from "@/../playlist/live-matches/json/sports.json" with { type: "json" };
 
 const DATA: Record<string, unknown[]> = {
-  "live-tv": (Array.isArray(banglaLiveTv) ? banglaLiveTv : (banglaLiveTv as Record<string, unknown>).channels || []) as unknown[],
+  "live-tv": [
+    ...(Array.isArray(liveTvBangla) ? liveTvBangla : []),
+  ],
   "live-matches": [
-    ...(Array.isArray(fifaLiveMatches) ? fifaLiveMatches : []),
-    ...(Array.isArray(sportsLiveMatches) ? sportsLiveMatches : []),
+    ...(Array.isArray(liveMatchesFifa) ? liveMatchesFifa : []),
+    ...(Array.isArray(liveMatchesSports) ? liveMatchesSports : []),
   ],
 };
 
