@@ -237,30 +237,18 @@ export default function LiveMatchesPage() {
         ],
       };
     }
-    if (selectedVersion === "v2") {
+    if (selectedVersion === "v2" || selectedVersion === "v4") {
       const ch = selectedChannel as StreamingChannel;
       if (!ch.stream_url) return null;
+      const serverLabel = selectedVersion === "v2" ? "V2" : "V4";
+      const defaultType = selectedVersion === "v2" ? "hls" : "dash";
       return {
         streamUrl: ch.stream_url,
-        streamType: ch.stream_type || "hls",
+        streamType: ch.stream_type || defaultType,
         clearKeys: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null,
         stats: [
-          { label: "Server", value: "V2", icon: "zap" as const },
-          { label: "Type", value: (ch.stream_type || "HLS").toUpperCase(), icon: "shield" as const },
-          { label: "Status", value: "ACTIVE", highlight: true as const, icon: "monitor" as const },
-        ],
-      };
-    }
-    if (selectedVersion === "v4") {
-      const ch = selectedChannel as StreamingChannel;
-      if (!ch.stream_url) return null;
-      return {
-        streamUrl: ch.stream_url,
-        streamType: ch.stream_type || "dash",
-        clearKeys: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null,
-        stats: [
-          { label: "Server", value: "V4", icon: "zap" as const },
-          { label: "Type", value: (ch.stream_type || "DASH").toUpperCase(), icon: "shield" as const },
+          { label: "Server", value: serverLabel, icon: "zap" as const },
+          { label: "Type", value: (ch.stream_type || defaultType).toUpperCase(), icon: "shield" as const },
           { label: "Status", value: "ACTIVE", highlight: true as const, icon: "monitor" as const },
         ],
       };
