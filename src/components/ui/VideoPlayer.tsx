@@ -451,32 +451,29 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     resetControlsTimeout();
   }, [resetControlsTimeout]);
 
+  const isMobile = devicePlatform === "android" || devicePlatform === "ios" || devicePlatform === "ipados";
+
   const handleFullscreen = useCallback(() => {
     const container = containerRef.current;
+    const video = videoRef.current;
     if (!container) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const doc = document as any;
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element; mozFullScreenElement?: Element; msFullscreenElement?: Element;
+      webkitExitFullscreen?: () => Promise<void>; mozCancelFullScreen?: () => Promise<void>; msExitFullscreen?: () => Promise<void>;
+    };
     const isFS = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
     if (!isFS) {
-      if (container.requestFullscreen) {
-        container.requestFullscreen();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        try { (screen.orientation as any)?.lock("landscape")?.catch(() => {}); } catch {}
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      else (container as any).webkitRequestFullscreen?.();
+      const target: HTMLElement & { webkitRequestFullscreen?: () => Promise<void> } = isMobile && video ? video : container;
+      if (target.requestFullscreen) target.requestFullscreen();
+      else target.webkitRequestFullscreen?.();
     } else {
-      if (doc.exitFullscreen) {
-        doc.exitFullscreen();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        try { (screen.orientation as any)?.unlock(); } catch {}
-      }
+      if (doc.exitFullscreen) doc.exitFullscreen();
       else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
       else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen();
       else if (doc.msExitFullscreen) doc.msExitFullscreen();
     }
     resetControlsTimeout();
-  }, [resetControlsTimeout]);
+  }, [isMobile, resetControlsTimeout]);
 
   const handlePiP = useCallback(async () => {
     const video = videoRef.current;
