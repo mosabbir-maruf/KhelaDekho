@@ -207,7 +207,10 @@ export default function LiveMatchesPage() {
         if (!data.stream_url) throw new Error(data.error || "No stream URL");
         setV1StreamData({ url: data.stream_url, type: data.stream_type || "hls", clearkey: data.drm_kid && data.drm_key ? { [data.drm_kid]: data.drm_key } : null });
       } catch (e: unknown) {
-        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (e instanceof DOMException && e.name === "AbortError") {
+          if (active) setV1Error("Stream request timed out — the server may be unavailable.");
+          return;
+        }
         if (active) setV1Error(e instanceof Error ? e.message : "Failed to load stream");
       }
     })();
