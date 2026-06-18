@@ -195,22 +195,17 @@ export default function LiveMatchesPage() {
     if (!key) return;
     let active = true;
     const controller = new AbortController();
-    const rawBaseUrl = getApiBaseUrl();
-    const baseUrl = rawBaseUrl && rawBaseUrl.replace(/\/+$/, "");
-    if (!baseUrl) return;
     (async () => {
       try {
-        const res = await fetch(`${baseUrl}/api/v1/channels/${encodeURIComponent(key)}/stream`, {
+        const res = await fetch(`/api/v1/stream?key=${encodeURIComponent(key)}`, {
           signal: controller.signal,
           headers: { Accept: "application/json" },
         });
         if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
         const data = await res.json();
         if (!active) return;
-        const stream = data?.data;
-        if (!stream?.url) throw new Error("Empty stream URL");
-        const ck = stream.clearkey;
-        setV1StreamData({ url: stream.url, type: stream.type || "hls", clearkey: ck?.kid && ck?.key ? { [ck.kid]: ck.key } : null });
+        if (!data.stream_url) throw new Error("Empty stream URL");
+        setV1StreamData({ url: data.stream_url, type: data.stream_type || "hls", clearkey: data.drm_kid && data.drm_key ? { [data.drm_kid]: data.drm_key } : null });
       } catch (e: unknown) {
         if (e instanceof DOMException && e.name === "AbortError") return;
         if (active) setV1Error(e instanceof Error ? e.message : "Failed to load stream");
