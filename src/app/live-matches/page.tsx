@@ -361,13 +361,13 @@ export default function LiveMatchesPage() {
                   <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
                 </div>
               ) : (
-                <Virtuoso
-                  className="scrollbar-red"
-                  style={{ height: '100%', flex: 1 }}
-                  data={filteredChannels}
-                  itemContent={(idx, ch) => (
-                    <div className="pb-1">
-                      <ChannelListItem
+                <div className="flex-1 min-h-0 relative">
+                  <Virtuoso
+                    className="!absolute inset-0 scrollbar-red"
+                    data={filteredChannels}
+                    itemContent={(idx, ch) => (
+                      <div className="pb-1">
+                        <ChannelListItem
                         item={{ name: ch.name, logo: ch.image_url || ch.logo, extra: cfg.label }}
                         selected={selectedChannel === ch && selectedVersion === apiVersion}
                         onClick={() => selectAndReplaceUrl(ch)}
@@ -376,6 +376,7 @@ export default function LiveMatchesPage() {
                     </div>
                   )}
                 />
+                </div>
               )}
             </div>
 
@@ -417,13 +418,12 @@ export default function LiveMatchesPage() {
                         <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
                       </div>
                     ) : (
-                      <div className="flex-1 min-h-0">
-                        <Virtuoso
-                          className="scrollbar-red"
-                          style={{ height: '100%' }}
-                          data={filteredChannels}
-                          itemContent={(idx, ch) => (
-                            <div className="px-1 pb-1">
+                    <div className="flex-1 min-h-0 relative">
+                      <Virtuoso
+                        className="!absolute inset-0 scrollbar-red"
+                        data={filteredChannels}
+                        itemContent={(idx, ch) => (
+                          <div className="px-1 pb-1">
                               <button
                                 type="button"
                                 onClick={() => { selectAndReplaceUrl(ch); setIsMobileDropdownOpen(false); }}
