@@ -13,9 +13,17 @@ import Share2 from "lucide-react/dist/esm/icons/share-2";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
+interface ChannelDetail {
+  name?: string;
+  stream_url?: string;
+  stream_type?: string;
+  drm_kid?: string;
+  drm_key?: string;
+}
+
 export default function V2ChannelPage() {
   const { id } = useParams<{ id: string }>();
-  const [channel, setChannel] = useState<Record<string, unknown> | null>(null);
+  const [channel, setChannel] = useState<ChannelDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
