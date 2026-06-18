@@ -57,7 +57,6 @@ export default function V1ChannelPage() {
                 </div>
                 <div>
                   <h2 className="font-mono text-lg font-bold text-fg tracking-tight">Channel {key}</h2>
-                  <p className="font-mono text-xs text-fg-dim">{(streamData.type || "HLS").toUpperCase()} · LIVE</p>
                 </div>
               </div>
               <button

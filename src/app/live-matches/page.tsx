@@ -77,7 +77,6 @@ interface VersionMeta {
   alive: (ch: ChannelData) => boolean;
   id: (ch: ChannelData) => string;
   extra: (ch: ChannelData) => string;
-  subtitle: (ch: ChannelData, streamType: string) => string;
 }
 
 const VERSION_CONFIG: Record<ApiVersion, VersionMeta> = {
@@ -86,28 +85,24 @@ const VERSION_CONFIG: Record<ApiVersion, VersionMeta> = {
     alive: (ch) => ch.status === "live",
     id: (ch) => String(ch.key),
     extra: (ch) => (ch.category || "").toUpperCase(),
-    subtitle: (ch) => `${ch.category || ""} · LIVE`,
   },
   v2: {
     color: "bg-green-500", label: "V2 Streams",
     alive: (ch) => !!ch.stream_url,
     id: (ch) => String(ch.id),
     extra: (ch) => (ch.stream_type || "").toUpperCase(),
-    subtitle: (ch) => `${ch.stream_type?.toUpperCase() || "HLS"} · ACTIVE`,
   },
   v3: {
     color: "bg-cyan-500", label: "V3 Streams",
     alive: (ch) => !!ch.url,
     id: (ch) => String(ch.id || ch.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")),
     extra: (ch) => (ch.group || "").toUpperCase(),
-    subtitle: (ch, st) => `${(ch.group || "General").toUpperCase()} · ${st.toUpperCase()}`,
   },
   v4: {
     color: "bg-purple-500", label: "V4 Streams",
     alive: (ch) => !!ch.stream_url,
     id: (ch) => String(ch.id),
     extra: (ch) => (ch.stream_type || "").toUpperCase(),
-    subtitle: (ch) => `${ch.stream_type?.toUpperCase() || "DASH"} · ACTIVE`,
   },
 };
 
@@ -488,9 +483,6 @@ export default function LiveMatchesPage() {
                       </div>
                       <div>
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel?.name}</h2>
-                        <p className="font-mono text-xs text-fg-dim">
-                          {cfg.subtitle(selectedChannel, playerConfig.streamType)}
-                        </p>
                       </div>
                     </div>
                     <button

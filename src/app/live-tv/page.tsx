@@ -207,7 +207,6 @@ export default function LiveTvPage() {
                       </div>
                       <div>
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
-                        <p className="font-mono text-xs text-fg-dim">{categoryMap.get(selectedChannel.name) || ""}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs font-mono text-fg-dim">

@@ -69,7 +69,6 @@ export default function V4ChannelPage() {
                 </div>
                 <div>
                   <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{channel?.name}</h2>
-                  <p className="font-mono text-xs text-fg-dim">{(channel?.stream_type || "DASH").toUpperCase()} · ACTIVE</p>
                 </div>
               </div>
               <button
