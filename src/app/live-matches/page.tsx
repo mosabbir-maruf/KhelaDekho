@@ -422,7 +422,7 @@ export default function LiveMatchesPage() {
                         <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
                       </div>
                     ) : (
-                      <div className="flex-1 overflow-hidden">
+                      <div className="flex-1 min-h-0">
                         <Virtuoso
                           className="scrollbar-red"
                           style={{ height: '100%' }}
