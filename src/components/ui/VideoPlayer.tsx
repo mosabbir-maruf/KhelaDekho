@@ -519,8 +519,10 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
           </div>
         )}
 
-        <div className={`absolute inset-0 flex flex-col justify-between p-4 bg-gradient-to-t from-overlay via-transparent to-bg-page z-10 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-          <div className="flex items-center justify-between">
+        <div
+          className={`absolute inset-0 flex flex-col justify-between p-4 bg-gradient-to-t from-overlay via-transparent to-bg-page z-10 transition-opacity duration-300 pointer-events-none ${showControls ? "opacity-100" : "opacity-0"}`}
+        >
+          <div className="flex items-center justify-between pointer-events-auto">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2.5 py-1 text-[10px] font-bold text-red-500 tracking-widest uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
@@ -535,7 +537,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
             )}
           </div>
 
-          <div className="flex items-center justify-between mt-auto pt-4">
+          <div className="flex items-center justify-between mt-auto pt-4 pointer-events-auto">
             <div className="flex items-center gap-4">
               <button onClick={togglePlay} className="p-1.5 rounded bg-hover-alt hover:bg-hover-alt text-fg transition-colors cursor-pointer" aria-label={isPlaying ? "Pause" : "Play"}>
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
