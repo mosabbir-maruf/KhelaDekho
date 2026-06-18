@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 function resolve(relative: string, base: string): string {
   try {
     return new URL(relative, base).href;

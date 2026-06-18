@@ -1,54 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
-const DIRS: Record<string, string> = {
-  "live-tv": path.join(process.cwd(), "playlist", "live-tv", "json"),
-  "live-matches": path.join(process.cwd(), "playlist", "live-matches", "json"),
+export const runtime = "edge";
+
+import banglaLiveTv from "../../../../playlist/live-tv/json/bangla.json" with { type: "json" };
+import fifaLiveMatches from "../../../../playlist/live-matches/json/fifa.json" with { type: "json" };
+import sportsLiveMatches from "../../../../playlist/live-matches/json/sports.json" with { type: "json" };
+
+const DATA: Record<string, unknown[]> = {
+  "live-tv": (Array.isArray(banglaLiveTv) ? banglaLiveTv : (banglaLiveTv as Record<string, unknown>).channels || []) as unknown[],
+  "live-matches": [
+    ...(Array.isArray(fifaLiveMatches) ? fifaLiveMatches : []),
+    ...(Array.isArray(sportsLiveMatches) ? sportsLiveMatches : []),
+  ],
 };
 
 export async function GET(request: NextRequest) {
   const source = request.nextUrl.searchParams.get("source") || "live-tv";
-  const jsonDir = DIRS[source];
+  const channels = DATA[source] || [];
 
-  if (!jsonDir) {
-    return NextResponse.json({ error: "Invalid source" }, { status: 400, headers: { "Access-Control-Allow-Origin": "*" } });
-  }
-
-  try {
-    if (!fs.existsSync(jsonDir)) {
-      return NextResponse.json({ channels: [] }, {
-        headers: { "Access-Control-Allow-Origin": "*" },
-      });
-    }
-
-    const files = fs.readdirSync(jsonDir).filter((f) => f.endsWith(".json"));
-
-    if (files.length === 0) {
-      return NextResponse.json({ channels: [] }, {
-        headers: { "Access-Control-Allow-Origin": "*" },
-      });
-    }
-
-    const all: unknown[] = [];
-
-    for (const file of files) {
-      const filePath = path.join(jsonDir, file);
-      const content = fs.readFileSync(filePath, "utf-8");
-      try {
-        const data = JSON.parse(content);
-        if (Array.isArray(data)) {
-          all.push(...data);
-        }
-      } catch {
-        // skip invalid JSON
-      }
-    }
-
-    return NextResponse.json({ channels: all }, {
-      headers: { "Access-Control-Allow-Origin": "*" },
-    });
-  } catch {
-    return NextResponse.json({ channels: [] }, { status: 500, headers: { "Access-Control-Allow-Origin": "*" } });
-  }
+  return NextResponse.json({ channels }, {
+    headers: { "Access-Control-Allow-Origin": "*" },
+  });
 }
