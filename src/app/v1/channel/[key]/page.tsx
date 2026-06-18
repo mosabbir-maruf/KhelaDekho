@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { StatsGrid } from "@/components/ui/StatsGrid";
+import { getApiBaseUrl } from "@/lib/api";
 import { useCopyButton } from "@/hooks/useCopyButton";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
@@ -31,16 +32,26 @@ export default function V1ChannelPage() {
     if (!key) return;
     let active = true;
     const controller = new AbortController();
+    const baseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
     (async () => {
       try {
-        const res = await fetch(`/api/v1/channel?key=${encodeURIComponent(key)}`, {
+        const res = await fetch(`${baseUrl}/api/v1/channels/${encodeURIComponent(key)}/stream`, {
           signal: controller.signal,
           headers: { Accept: "application/json" },
         });
         if (!res.ok) throw new Error("Channel not found");
         const body = await res.json();
         if (!active) return;
-        setChannel(body?.data || null);
+        const stream = body?.data;
+        if (!stream?.url) throw new Error("No stream URL");
+        const ck = stream.clearkey;
+        setChannel({
+          name: `Channel ${key}`,
+          stream_url: stream.url,
+          stream_type: stream.type || "hls",
+          drm_kid: ck?.kid || undefined,
+          drm_key: ck?.key || undefined,
+        });
       } catch (e: unknown) {
         if (e instanceof DOMException && e.name === "AbortError") return;
         if (active) setError(e instanceof Error ? e.message : "Failed to load channel");
