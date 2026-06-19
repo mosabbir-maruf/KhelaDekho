@@ -775,10 +775,10 @@ export default function FootballPage() {
       </div>
 
       <div className="-mx-4 sm:mx-0 overflow-x-auto pb-1">
-        <div className="inline-flex bg-card border border-border-alt p-1 font-mono text-xs min-w-max ml-4 sm:ml-0 mr-4 sm:mr-0">
+        <div className="inline-flex md:flex bg-card border border-border-alt p-1 font-mono text-xs min-w-max md:min-w-full ml-4 sm:ml-0 mr-4 sm:mr-0">
           {TABS.map((t) => (
             <button key={t.key} onClick={() => { setTab(t.key); setData([]); setSearchQ(""); }}
-              className={`px-3 sm:px-4 py-2 uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 cursor-pointer ${tab === t.key ? "bg-white text-black font-bold" : "text-fg-dim hover:text-fg"}`}>{t.label}</button>
+              className={`px-3 sm:px-4 py-2 md:flex-1 text-center uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 cursor-pointer ${tab === t.key ? "bg-white text-black font-bold" : "text-fg-dim hover:text-fg"}`}>{t.label}</button>
           ))}
         </div>
       </div>
