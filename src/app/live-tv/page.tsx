@@ -9,8 +9,6 @@ import { useCopyButton } from "@/hooks/useCopyButton";
 import type { Category } from "@/data/liveTv";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
-import Zap from "lucide-react/dist/esm/icons/zap";
-import Shield from "lucide-react/dist/esm/icons/shield";
 import Monitor from "lucide-react/dist/esm/icons/monitor";
 import X from "lucide-react/dist/esm/icons/x";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -192,78 +190,7 @@ export default function LiveTvPage() {
             </div>
 
             {/* ── Middle: Player ── */}
-            <div className="min-w-0 w-full min-h-0 flex flex-col gap-3 overflow-y-auto">
-              {selectedChannel ? (
-                <>
-                  {/* Channel details header */}
-                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden">
-                        {(() => {
-                          const logoUrl = logoUrlMap.get(selectedChannel.name) || null;
-                          return logoUrl ? (
-                            <img src={logoUrl} alt="" width={40} height={40} className="object-cover w-full h-full" />
-                          ) : (
-                            <Tv className="w-5 h-5 text-red-400" />
-                          );
-                        })()}
-                      </div>
-                      <div>
-                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleShare(window.location.href)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      {copied ? "Copied!" : "Share"}
-                    </button>
-                  </div>
-
-                  <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} />
-
-                  {/* Fixed bottom: stats grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Signal</span>
-                      </div>
-                      <p className="font-mono text-sm font-bold text-green-500">ACTIVE</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Status</p>
-                    </div>
-                    <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
-                      <Zap className="w-4 h-4 text-fg-faint group-hover:text-red-500/60 mx-auto mb-2 transition-colors" />
-                      <p className="font-mono text-sm font-bold text-fg">HLS</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Stream Type</p>
-                    </div>
-                    <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
-                      <Shield className="w-4 h-4 text-fg-faint group-hover:text-red-500/60 mx-auto mb-2 transition-colors" />
-                      <p className="font-mono text-sm font-bold text-fg">NONE</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Drm</p>
-                    </div>
-                    <div className="border border-border-alt bg-card p-4 text-center hover:border-red-500/20 transition-all group">
-                      <Monitor className="w-4 h-4 text-fg-faint group-hover:text-red-500/60 mx-auto mb-2 transition-colors" />
-                      <p className="font-mono text-sm font-bold text-fg">{channels.length}</p>
-                      <p className="text-[10px] font-mono uppercase tracking-wider text-fg-dim mt-1">Channels</p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center border border-border-alt bg-card">
-                  <div className="text-center space-y-3 py-16">
-                    <div className="w-12 h-12 rounded-xl border border-border-alt bg-hover flex items-center justify-center mx-auto">
-                      <Monitor className="w-6 h-6 text-fg-dim" />
-                    </div>
-                    <p className="font-mono text-sm text-fg-dim font-semibold">Select a channel</p>
-                    <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">
-                      Select a channel from the list to start watching
-                    </p>
-                  </div>
-                </div>
-              )}
-
+            <div className="min-w-0 w-full min-h-0 flex flex-col gap-3">
               {/* MOBILE ONLY: Channel selector */}
               <div className="relative lg:hidden w-full shrink-0">
                 <button
@@ -271,12 +198,10 @@ export default function LiveTvPage() {
                   onClick={() => setIsMobileDropdownOpen((prev) => !prev)}
                   className="w-full flex items-center justify-between border border-border-alt bg-card px-4 py-3.5 hover:border-red-500/20 transition-all text-left shadow-md cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Tv className="w-4 h-4 text-red-500 shrink-0" />
-                    <div className="min-w-0">
-                      <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Active Channel" : "Select Channel"}</span>
-                      <span className="font-mono text-xs font-bold text-fg truncate block">{selectedChannel?.name || "Tap to browse"}</span>
-                    </div>
+                  <Tv className="w-4 h-4 text-red-500 shrink-0" />
+                  <div className="min-w-0 text-center flex-1">
+                    <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">{selectedChannel ? "Switch Channel" : "Select Channel"}</span>
+                    <span className="font-mono text-xs font-bold text-fg truncate block">{selectedChannel?.name || "Tap to browse"}</span>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-fg-dim transition-transform duration-200 ${isMobileDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -328,6 +253,52 @@ export default function LiveTvPage() {
                   </div>
                 )}
               </div>
+
+              {selectedChannel ? (
+                <>
+                  {/* Channel details header */}
+                  <div className="flex items-center justify-between border border-border-alt bg-card p-4 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden">
+                        {(() => {
+                          const logoUrl = logoUrlMap.get(selectedChannel.name) || null;
+                          return logoUrl ? (
+                            <img src={logoUrl} alt="" width={40} height={40} className="object-cover w-full h-full" />
+                          ) : (
+                            <Tv className="w-5 h-5 text-red-400" />
+                          );
+                        })()}
+                      </div>
+                      <div>
+                        <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleShare(window.location.href)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      {copied ? "Copied!" : "Share"}
+                    </button>
+                  </div>
+
+                  <div className="flex-1 min-h-0">
+                    <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} />
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center border border-border-alt bg-card">
+                  <div className="text-center space-y-3 py-16">
+                    <div className="w-12 h-12 rounded-xl border border-border-alt bg-hover flex items-center justify-center mx-auto">
+                      <Monitor className="w-6 h-6 text-fg-dim" />
+                    </div>
+                    <p className="font-mono text-sm text-fg-dim font-semibold">Select a channel</p>
+                    <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">
+                      Select a channel from the list to start watching
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── Right: Filter List ── */}
