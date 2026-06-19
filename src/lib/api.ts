@@ -129,6 +129,7 @@ async function fetchAPI<T>(path: string, options: RequestInit = {}): Promise<T |
     clearTimeout(timeoutId);
     if (!res.ok) {
       console.error(`API Fetch Error: Status ${res.status} for path ${path}`);
+      await res.text().catch(() => {}); // Consume body to release socket
       return null;
     }
     const body: Envelope<T> = await res.json();
@@ -238,15 +239,22 @@ async function fetchFootballMatches(date: string, options?: RequestInit): Promis
   if (!apiKey) return null;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(
       `https://www.thesportsdb.com/api/v1/json/${apiKey}/eventsday.php?d=${date}&s=Soccer`,
       {
+        signal: controller.signal,
         ...options,
         headers: { Accept: "application/json" },
         next: { revalidate: 60 },
       }
     );
-    if (!res.ok) return null;
+    clearTimeout(timeoutId);
+    if (!res.ok) {
+      await res.text().catch(() => {}); // Consume body to release socket
+      return null;
+    }
     const data = await res.json();
     if (!data?.events) return { matches: [], total: 0, cached_at: new Date().toISOString() };
 
