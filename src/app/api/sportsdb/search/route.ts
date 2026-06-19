@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import { NextResponse } from "next/server";
 
 const API_KEY = process.env.NEXT_PUBLIC_SPORTSDB_API_KEY;
