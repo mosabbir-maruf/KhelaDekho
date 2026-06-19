@@ -152,18 +152,49 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
         if (cached) {
           fetched = cached;
         } else {
-          const url = apiVersion === "v3"
-            ? "/api/playlist?source=live-matches"
-            : `${baseUrl}/api/${apiVersion}/channels${apiVersion === "v1" || apiVersion === "v2" ? "?limit=200" : "?alive=true"}`;
-          const hdrs: Record<string, string> = { Accept: "application/json" };
-          if (apiVersion !== "v3") {
+          if (apiVersion === "v3") {
+            const res = await fetch("/api/playlist?source=live-matches", { signal: controller.signal, headers: { Accept: "application/json" } });
+            const body = res.ok ? await res.json() : {};
+            fetched = body?.channels || [];
+            
+            try {
+              const xkey = getXKey();
+              const v4Hdrs: Record<string, string> = { Accept: "application/json" };
+              if (xkey) v4Hdrs["xkey"] = xkey;
+              const v4Res = await fetch(`${baseUrl}/api/v4/channels?alive=true`, { signal: controller.signal, headers: v4Hdrs });
+              if (v4Res.ok) {
+                const v4Body = await v4Res.json();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const v4Channels: any[] = v4Body?.data?.channels || [];
+                const toInject = v4Channels.filter(ch => ch.name === "🏆 Iphone-2" || ch.name === "🏆 Android-windows-TV-1");
+                
+                const existingNames = new Set(fetched.map(c => c.name));
+                const uniqueInjects = toInject
+                  .filter(ch => !existingNames.has(ch.name))
+                  .map(ch => ({
+                    name: ch.name,
+                    url: ch.stream_url,
+                    type: ch.stream_type,
+                    group: "Featured",
+                    kid: ch.drm_kid,
+                    key: ch.drm_key,
+                    id: `v4-inject-${ch.id}`
+                  }));
+                
+                fetched = [...uniqueInjects, ...fetched];
+              }
+            } catch {}
+          } else {
+            const url = `${baseUrl}/api/${apiVersion}/channels${apiVersion === "v1" || apiVersion === "v2" ? "?limit=200" : "?alive=true"}`;
+            const hdrs: Record<string, string> = { Accept: "application/json" };
             const xkey = getXKey();
             if (xkey) hdrs["xkey"] = xkey;
+            
+            const res = await fetch(url, { signal: controller.signal, headers: hdrs });
+            if (!active) return;
+            const body = res.ok ? await res.json() : {};
+            fetched = body?.data?.channels || [];
           }
-          const res = await fetch(url, { signal: controller.signal, headers: hdrs });
-          if (!active) return;
-          const body = res.ok ? await res.json() : {};
-          fetched = apiVersion === "v3" ? (body?.channels || []) : (body?.data?.channels || []);
           channelsCache.current.set(apiVersion, fetched);
         }
         setChannels(fetched);
