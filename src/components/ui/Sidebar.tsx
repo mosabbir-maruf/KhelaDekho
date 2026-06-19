@@ -46,24 +46,20 @@ export function Sidebar() {
             </li>
             <li>
               <Link
-                href="/matches"
-                className={`${baseLinkClass} ${isActive("/matches") ? activeLinkClass : inactiveLinkClass}`}
+                href="/football"
+                className={`${baseLinkClass} ${isActive("/football") ? activeLinkClass : inactiveLinkClass}`}
               >
                 <Calendar className="w-4 h-4" />
-                Matches
+                Football
               </Link>
             </li>
             <li>
               <Link
-                href="/matches?status=live"
-                className={`${baseLinkClass} ${
-                  pathname === "/matches" && typeof window !== "undefined" && window.location.search.includes("status=live")
-                    ? activeLinkClass
-                    : inactiveLinkClass
-                }`}
+                href="/football"
+                className={`${baseLinkClass} ${isActive("/football") ? activeLinkClass : inactiveLinkClass}`}
               >
                 <Tv className="w-4 h-4 text-red-500 animate-pulse" />
-                Live Channels
+                Matches
               </Link>
             </li>
           </ul>

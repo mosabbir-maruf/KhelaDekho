@@ -168,7 +168,7 @@ export default function SearchPage() {
                 {filteredMatches.map((m) => (
                   <Link
                     key={m.match_id}
-                    href={`/matches?search=${encodeURIComponent(m.team1.name)}`}
+                    href={`/football?search=${encodeURIComponent(m.team1.name)}`}
                     className="border border-border-alt bg-card p-4 flex flex-col justify-between hover:border-white/20 transition-all"
                   >
                     <div className="flex justify-between items-center text-[9px] font-mono text-fg-dim uppercase mb-2">

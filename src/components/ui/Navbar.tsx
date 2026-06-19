@@ -92,11 +92,11 @@ export function Navbar() {
                 Live Matches
               </Link>
               <Link
-                href="/matches"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                href="/football"
+                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/football") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
-                Matches
+                Football
               </Link>
               <Link
                 href="/about"
@@ -193,12 +193,12 @@ export function Navbar() {
                   Home
                 </Link>
                 <Link
-                  href="/matches"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/matches") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                  href="/football"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/football") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                     }`}
                 >
                   <Calendar className="w-4 h-4" />
-                  Schedule & Matches
+                  Matches
                 </Link>
 
                 <Link
@@ -280,7 +280,7 @@ export function Navbar() {
                     Live Matches
                   </Link>
                   <Link
-                    href="/matches"
+                    href="/football"
                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
                   >
                     <Calendar className="w-4 h-4 text-red-500 animate-pulse" />

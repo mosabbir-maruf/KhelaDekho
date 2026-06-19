@@ -346,9 +346,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
             if (track.height) uniqueQualities.set(track.height, `${track.height}p`);
           });
           setLevels(Array.from(uniqueQualities.entries()).map(([h, n]) => ({ id: h, name: n })).sort((a, b) => b.id - a.id));
-        } catch (err) {
-          console.error("Shaka load failed:", err);
-          if (!destroyed && !tryFallback()) setIsLoading(false);
+        } catch {
+          if (!destroyed && !tryFallback()) setPlayerError("Stream failed to load — the feed may be unavailable.");
         }
         return;
       }

@@ -177,6 +177,36 @@ export interface V4Channel {
   cached_at: string;
 }
 
+export interface FootballMatch {
+  idEvent: string;
+  strEvent: string;
+  strHomeTeam: string;
+  strAwayTeam: string;
+  intHomeScore: string | null;
+  intAwayScore: string | null;
+  strStatus: string;
+  strLeague: string;
+  strSeason: string;
+  strVenue: string | null;
+  strCity: string | null;
+  strCountry: string | null;
+  dateEvent: string;
+  strTime: string;
+  strTimestamp: string;
+  strHomeTeamBadge: string | null;
+  strAwayTeamBadge: string | null;
+  strThumb: string | null;
+  strBanner: string | null;
+  strPoster: string | null;
+  strVideo: string | null;
+  strGroup: string | null;
+  intRound: string | null;
+  strFilename: string | null;
+  idLeague: string | null;
+  idHomeTeam: string | null;
+  idAwayTeam: string | null;
+}
+
 // Fetch v4 channels
 export async function getV4Channels(params: {
   q?: string;
@@ -187,6 +217,45 @@ export async function getV4Channels(params: {
     `/api/v4/channels${query ? `?${query}` : ""}`,
     options
   );
+}
+
+async function fetchFootballMatches(date: string, options?: RequestInit): Promise<{ matches: FootballMatch[]; total: number; cached_at: string } | null> {
+  const apiKey = process.env.NEXT_PUBLIC_SPORTSDB_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch(
+      `https://www.thesportsdb.com/api/v1/json/${apiKey}/eventsday.php?d=${date}&s=Soccer`,
+      {
+        ...options,
+        headers: { Accept: "application/json" },
+        next: { revalidate: 60 },
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.events) return { matches: [], total: 0, cached_at: new Date().toISOString() };
+
+    const seen = new Set<string>();
+    const deduped = data.events.filter((e: FootballMatch) => {
+      const uid = e.idEvent;
+      if (!uid || seen.has(uid)) return false;
+      seen.add(uid);
+      return true;
+    });
+
+    return { matches: deduped, total: deduped.length, cached_at: new Date().toISOString() };
+  } catch {
+    return null;
+  }
+}
+
+export async function getFootballLiveMatches(options?: RequestInit) {
+  return fetchFootballMatches(new Date().toISOString().split('T')[0], options);
+}
+
+export async function getFootballMatchesByDate(date: string, options?: RequestInit) {
+  return fetchFootballMatches(date, options);
 }
 
 

@@ -20,16 +20,12 @@ interface SearchItem {
 const defaultItems: SearchItem[] = [
   { title: "Home", description: "Return to the featured media lobby", href: "/", category: "Navigation" },
   { title: "Live Matches", description: "Browse all channels and start watching live", href: "/live-matches", category: "Navigation" },
-  { title: "Match Schedule", description: "View all live, upcoming, and finished matches", href: "/matches", category: "Navigation" },
-  { title: "Live Channels", description: "Watch currently live broadcasts", href: "/matches?status=live", category: "Navigation" },
+  { title: "Football Hub", description: "Live matches, standings, top scorers, teams and players", href: "/football", category: "Navigation" },
   { title: "Search Finder", description: "Search matches and channels across the platform", href: "/search", category: "Navigation" },
   { title: "About Us", description: "Learn about KhelaDekho and our mission", href: "/about", category: "Navigation" },
   { title: "Contact Us", description: "Get in touch with the team", href: "/contact", category: "Navigation" },
   { title: "Terms & Conditions", description: "View legal policies for the platform", href: "/terms", category: "Navigation" },
   { title: "Privacy Policy", description: "How we collect, use, and protect your data", href: "/privacy", category: "Navigation" },
-  { title: "FIFA World Cup", description: "Browse FIFA World Cup matches and channels", href: "/leagues/fifa-world-cup", category: "Navigation" },
-  { title: "Premier League", description: "Browse Premier League matches and channels", href: "/leagues/premier-league", category: "Navigation" },
-  { title: "La Liga", description: "Browse La Liga matches and channels", href: "/leagues/la-liga", category: "Navigation" },
 ];
 
 interface CommandSearchProps {
@@ -81,7 +77,7 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
                 title: `${m.team1.name} vs ${m.team2.name}`,
                 description: `Stage: ${m.stage} • Status: ${m.status.toUpperCase()} ${m.group ? `(${m.group})` : ""
                   }`,
-                href: `/matches?search=${encodeURIComponent(m.team1.name)}`,
+                href: `/football?search=${encodeURIComponent(m.team1.name)}`,
                 category: "Matches",
               });
             });

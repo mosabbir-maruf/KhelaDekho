@@ -27,13 +27,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/matches" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link href="/football" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Matches Schedule
                 </Link>
               </li>
               <li>
-                <Link href="/matches?status=live" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
-                  Live Channels
+                <Link href="/football" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                  Football Hub
                 </Link>
               </li>
               <li>

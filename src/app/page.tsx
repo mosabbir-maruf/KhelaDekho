@@ -9,26 +9,33 @@ import Tablet from "lucide-react/dist/esm/icons/tablet";
 import HelpCircle from "lucide-react/dist/esm/icons/help-circle";
 import Image from "next/image";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { getMatches, getPlatformStats } from "@/lib/api";
+import { getPlatformStats, getFootballLiveMatches, type FootballMatch } from "@/lib/api";
 
 export const revalidate = 10;
 
+function formatMatchTimeBD(ts: string): string {
+  const d = new Date(ts);
+  d.setHours(d.getHours() + 6);
+  let h = d.getUTCHours();
+  const m = d.getUTCMinutes().toString().padStart(2, '0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+
 export default async function Home() {
-  const [upcomingMatchesData, platformStatsData, liveMatchesData] = await Promise.all([
-    getMatches({ status: "upcoming", limit: 4 }),
+  const [platformStatsData, footballLiveData] = await Promise.all([
     getPlatformStats(),
-    getMatches({ status: "live", limit: 1 }),
+    getFootballLiveMatches(),
   ]);
 
-  const upcomingMatches = upcomingMatchesData?.matches || [];
   const stats = platformStatsData?.stats || {
     live_viewers: 0,
     all_views: 0,
     active_channels: 0,
     total_channels: 0,
   };
-
-  const featuredMatch = liveMatchesData?.matches?.[0] || null;
+  const footballMatches: FootballMatch[] = footballLiveData?.matches || [];
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-input text-fg selection:bg-white/20">
@@ -41,7 +48,10 @@ export default async function Home() {
           <div className="inline-flex items-center border border-border-alt bg-card px-3 py-1.5 text-xs font-mono text-fg-dim mb-6 shadow-2xl">
             <span className="flex items-center gap-2 tracking-widest uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-              {featuredMatch ? `> Live Now: ${featuredMatch.team1.name} vs ${featuredMatch.team2.name}` : `> Edge Proxy Connection Status: Nominal`}
+              {(() => {
+                const liveMatch = footballMatches.find(m => m.strStatus === "LIVE" || m.strStatus === "1H" || m.strStatus === "2H" || m.strStatus === "HT");
+                return liveMatch ? `> Live Now: ${liveMatch.strHomeTeam} vs ${liveMatch.strAwayTeam}` : `> Edge Proxy Connection Status: Nominal`;
+              })()}
             </span>
           </div>
 
@@ -62,7 +72,7 @@ export default async function Home() {
               [ Stream TV Live ]
             </Link>
             <Link
-              href="/matches"
+              href="/football"
               className="inline-flex items-center justify-center rounded-sm text-xs font-mono uppercase tracking-widest font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 disabled:pointer-events-none disabled:opacity-50 border border-border-alt bg-transparent hover:bg-hover h-10 px-8 py-2 text-fg-muted w-full sm:w-auto"
             >
               <Trophy className="mr-3 h-4 w-4 text-fg-dim" />
@@ -226,52 +236,65 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Upcoming Matches Section */}
+        {/* Football Matches */}
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-32 border-t border-border-alt">
-          <div className="flex flex-col items-center justify-center text-center space-y-4 mb-8 md:mb-16">
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl font-mono uppercase tracking-widest">Match Schedule</h2>
+          <div className="flex flex-col items-center justify-center text-center space-y-4 mb-8 md:mb-12">
+            <h2 className="text-3xl font-bold tracking-tight md:text-5xl font-mono uppercase tracking-widest">Football Matches</h2>
             <p className="text-fg-dim text-lg max-w-[600px] font-mono">
-              Track upcoming global broadcasts and scheduled system transmissions.
+              Today&apos;s global football fixtures with scores and broadcast details.
             </p>
           </div>
 
-          {upcomingMatches.length === 0 ? (
+          {footballMatches.length === 0 ? (
             <div className="rounded-xl border border-border-alt bg-card p-10 text-center font-mono text-fg-faint text-sm">
-              NO_UPCOMING_MATCHES_SCHEDULED
+              NO_FOOTBALL_FIXTURES_FOUND
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {upcomingMatches.map((match, idx) => {
-                const startTime = match.start_time ? new Date(match.start_time) : null;
-                const formattedTime = startTime
-                  ? startTime.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-                  : "TBD";
-                const formattedDate = startTime
-                  ? startTime.toLocaleDateString(undefined, { month: "short", day: "numeric" })
-                  : "TBD";
+              {footballMatches.slice(0, 4).map((match, idx) => {
+                const isLive = match.strStatus === "LIVE" || match.strStatus === "1H" || match.strStatus === "HT" || match.strStatus === "2H";
+                const isFinished = match.strStatus === "FT" || match.strStatus === "AET" || match.strStatus === "Pen";
+                const isScheduled = match.strStatus === "NS" || match.strStatus === "TBD";
+                const homeScore = match.intHomeScore;
+                const awayScore = match.intAwayScore;
 
                 return (
                   <div
-                    key={match.match_id}
+                    key={match.idEvent}
                     className="rounded-xl border border-border-alt bg-card p-6 flex flex-col relative overflow-hidden group shadow-2xl min-h-[240px]"
                   >
+                    <Link href={match.idEvent ? `/football?match=${match.idEvent}` : "#"} className="absolute inset-0 z-0" aria-label={`View ${match.strHomeTeam} vs ${match.strAwayTeam}`} />
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_14px] pointer-events-none" />
                     <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    <div className="relative z-10 flex-1 flex flex-col justify-between">
+                    <div className="relative flex-1 flex flex-col justify-between pointer-events-none">
                       <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-mono text-fg-faint">
-                        <span>{match.stage}</span>
-                        <span>MATCH_0{idx + 1}</span>
+                        <span>{match.strLeague || "Unknown League"}</span>
+                        <div className="flex items-center gap-2">
+                          {isLive && (
+                            <span className="flex items-center gap-1 text-red-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                              LIVE
+                            </span>
+                          )}
+                          {isFinished && (
+                            <span className="text-emerald-400">FT</span>
+                          )}
+                          {isScheduled && (
+                            <span className="text-fg-dim">SCHEDULED</span>
+                          )}
+                          <span>MATCH_{String(idx + 1).padStart(2, "0")}</span>
+                        </div>
                       </div>
 
                       {/* Scoreboard block */}
                       <div className="flex flex-col items-center justify-center my-6 gap-2">
                         <div className="flex items-center justify-center gap-4 text-center">
-                          <div className="flex flex-col items-center gap-1 w-24">
-                            {match.team1.flag_url ? (
+                          <Link href={match.idHomeTeam ? `/football?team=${match.idHomeTeam}` : "#"} className="flex flex-col items-center gap-1 w-28 cursor-pointer hover:opacity-80 relative z-20 pointer-events-auto">
+                            {match.strHomeTeamBadge ? (
                               <Image
-                                src={match.team1.flag_url}
-                                alt={match.team1.name}
+                                src={match.strHomeTeamBadge}
+                                alt={match.strHomeTeam}
                                 width={40}
                                 height={28}
                                 className="object-cover border border-border-alt shadow"
@@ -282,18 +305,22 @@ export default async function Home() {
                                 FLAG
                               </div>
                             )}
-                            <span className="text-xs font-semibold text-fg truncate max-w-[90px]">
-                              {match.team1.name}
+                            <span className="text-xs font-semibold text-fg truncate max-w-[100px] hover:text-red-400 transition-colors">
+                              {match.strHomeTeam}
                             </span>
+                          </Link>
+
+                          <div className="text-lg font-mono font-bold text-fg shrink-0 tabular-nums">
+                            {homeScore !== null && homeScore !== "null" ? homeScore : "-"}
+                            <span className="text-fg-dim mx-1">-</span>
+                            {awayScore !== null && awayScore !== "null" ? awayScore : "-"}
                           </div>
 
-                          <div className="text-xs font-mono text-fg-dim shrink-0">VS</div>
-
-                          <div className="flex flex-col items-center gap-1 w-24">
-                            {match.team2.flag_url ? (
+                          <Link href={match.idAwayTeam ? `/football?team=${match.idAwayTeam}` : "#"} className="flex flex-col items-center gap-1 w-28 cursor-pointer hover:opacity-80 relative z-20 pointer-events-auto">
+                            {match.strAwayTeamBadge ? (
                               <Image
-                                src={match.team2.flag_url}
-                                alt={match.team2.name}
+                                src={match.strAwayTeamBadge}
+                                alt={match.strAwayTeam}
                                 width={40}
                                 height={28}
                                 className="object-cover border border-border-alt shadow"
@@ -304,20 +331,20 @@ export default async function Home() {
                                 FLAG
                               </div>
                             )}
-                            <span className="text-xs font-semibold text-fg truncate max-w-[90px]">
-                              {match.team2.name}
+                            <span className="text-xs font-semibold text-fg truncate max-w-[100px] hover:text-red-400 transition-colors">
+                              {match.strAwayTeam}
                             </span>
-                          </div>
+                          </Link>
                         </div>
                       </div>
 
                       <div className="mt-auto border-t border-border pt-4 flex justify-between items-center text-xs font-mono text-fg-dim">
                         <span className="flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 bg-neutral-600 rounded-full" />
-                          {match.group || "Stage Series"}
+                          {match.strVenue || "TBD"}
                         </span>
                         <span className="text-fg-dim">
-                          {formattedDate} @ {formattedTime}
+                          {match.dateEvent ? new Date(match.dateEvent).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "TBD"} @ {match.strTimestamp ? formatMatchTimeBD(match.strTimestamp) : "TBD"}
                         </span>
                       </div>
                     </div>
@@ -326,6 +353,15 @@ export default async function Home() {
               })}
             </div>
           )}
+
+          <div className="flex justify-center mt-8 md:mt-12">
+            <Link
+              href="/football"
+              className="inline-flex items-center justify-center rounded-sm text-xs font-mono uppercase tracking-widest font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500/30 border border-border-alt bg-transparent hover:bg-hover h-10 px-8 py-2 text-fg-muted hover:text-fg hover:border-red-500/20"
+            >
+              [ View All Matches ]
+            </Link>
+          </div>
         </section>
 
         {/* Premium Bottom CTA */}
