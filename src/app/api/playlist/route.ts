@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
     }
 
     const sources = await KHELA_SETTINGS.get(`playlist_sources_${source}`, "json") || [];
+    const overrides = (await KHELA_SETTINGS.get(`playlist_overrides_${source}`, "json")) || {};
     
     if (!Array.isArray(sources) || sources.length === 0) {
       // If KV is empty, return fallback data
@@ -103,26 +104,42 @@ export async function GET(request: NextRequest) {
     // Merge everything into a flat array
     const rawChannels = channelsListArray.flat();
 
-    // Remove duplicates dynamically
+    // Remove duplicates dynamically and apply overrides
     const seenUrls = new Set<string>();
-    const uniqueChannels = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const uniqueChannels: any[] = [];
 
     for (const ch of rawChannels) {
       const url = ch.url || ch.stream_url;
       if (url) {
-        const normalizedUrl = url.trim().toLowerCase();
+        const rawUrl = url.trim();
+        const normalizedUrl = rawUrl.toLowerCase();
         if (!seenUrls.has(normalizedUrl)) {
           seenUrls.add(normalizedUrl);
+          
+          const override = overrides[rawUrl] || overrides[normalizedUrl];
+          if (override?.hidden) continue;
+          
+          if (override?.customName) ch.name = override.customName;
+          ch._order = typeof override?.order === 'number' ? override.order : 999999;
+          
           uniqueChannels.push(ch);
         }
       } else {
+        ch._order = 999999;
         uniqueChannels.push(ch);
       }
     }
 
-    const finalChannels = uniqueChannels.length > 0 ? uniqueChannels : FALLBACK_DATA[source];
+    // Sort uniquely ordered channels to top
+    uniqueChannels.sort((a, b) => a._order - b._order);
+    
+    const finalChannels = uniqueChannels.map(ch => {
+      const { _order, ...rest } = ch;
+      return rest;
+    });
 
-    return NextResponse.json({ channels: finalChannels }, {
+    return NextResponse.json({ channels: finalChannels.length > 0 ? finalChannels : FALLBACK_DATA[source] }, {
       headers: { "Access-Control-Allow-Origin": "*" },
     });
 

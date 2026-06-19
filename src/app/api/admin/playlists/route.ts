@@ -21,7 +21,11 @@ export async function POST(req: NextRequest) {
     if (action === 'get') {
       const liveTvSources = await KHELA_SETTINGS.get("playlist_sources_live-tv", "json") || [];
       const liveMatchesSources = await KHELA_SETTINGS.get("playlist_sources_live-matches", "json") || [];
-      return NextResponse.json({ liveTvSources, liveMatchesSources });
+      
+      const liveTvOverrides = await KHELA_SETTINGS.get("playlist_overrides_live-tv", "json") || {};
+      const liveMatchesOverrides = await KHELA_SETTINGS.get("playlist_overrides_live-matches", "json") || {};
+      
+      return NextResponse.json({ liveTvSources, liveMatchesSources, liveTvOverrides, liveMatchesOverrides });
     }
 
     if (action === 'update') {
@@ -30,6 +34,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid source type' }, { status: 400 });
       }
       await KHELA_SETTINGS.put(`playlist_sources_${source}`, JSON.stringify(data));
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'update-overrides') {
+      const { source, overrides } = payload;
+      if (source !== 'live-tv' && source !== 'live-matches') {
+        return NextResponse.json({ error: 'Invalid source type' }, { status: 400 });
+      }
+      await KHELA_SETTINGS.put(`playlist_overrides_${source}`, JSON.stringify(overrides));
       return NextResponse.json({ success: true });
     }
 

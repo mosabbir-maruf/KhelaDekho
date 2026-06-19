@@ -9,8 +9,10 @@ import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Edit3 from "lucide-react/dist/esm/icons/edit-3";
 import FileText from "lucide-react/dist/esm/icons/file-text";
-import LinkIcon from "lucide-react/dist/esm/icons/link";
 import ListVideo from "lucide-react/dist/esm/icons/list-video";
+import Sliders from "lucide-react/dist/esm/icons/sliders";
+import GripVertical from "lucide-react/dist/esm/icons/grip-vertical";
+import LinkIcon from "lucide-react/dist/esm/icons/link";
 import Link from "next/link";
 
 
@@ -35,6 +37,13 @@ export default function AdminPage() {
   const [newSourceType, setNewSourceType] = useState<'url' | 'raw'>('url');
   const [newSourceContent, setNewSourceContent] = useState('');
   const [playlistMessage, setPlaylistMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  // Channel Manager States
+  const [activeSubTab, setActiveSubTab] = useState<'sources' | 'channels'>('sources');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [parsedChannels, setParsedChannels] = useState<any[]>([]);
+  const [parsedLoading, setParsedLoading] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const fetchPlaylists = async (authSecret: string) => {
     try {
@@ -394,10 +403,39 @@ export default function AdminPage() {
                   Live TV
                 </button>
                 <button
-                  onClick={() => { setActiveTab('live-matches'); setPlaylistMessage(null); }}
+                  onClick={() => { setActiveTab('live-matches'); setPlaylistMessage(null); setActiveSubTab('sources'); setParsedChannels([]); }}
                   className={`px-4 py-3 text-xs font-mono transition-colors ${activeTab === 'live-matches' ? 'border-b-2 border-red-500 text-fg font-bold' : 'text-fg-dim hover:text-fg'}`}
                 >
                   Live Matches
+                </button>
+              </div>
+
+              {/* Sub-tabs */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveSubTab('sources')}
+                  className={`px-3 py-1.5 text-xs font-mono border transition-all ${
+                    activeSubTab === 'sources' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'
+                  }`}
+                >
+                  <LinkIcon className="w-3 h-3 inline-block mr-1.5" /> Source URLs
+                </button>
+                <button
+                  onClick={async () => {
+                    setActiveSubTab('channels');
+                    setParsedLoading(true);
+                    try {
+                      const res = await fetch(`/api/playlist?source=${activeTab}`);
+                      const data = await res.json();
+                      setParsedChannels(data.channels || []);
+                    } catch {}
+                    setParsedLoading(false);
+                  }}
+                  className={`px-3 py-1.5 text-xs font-mono border transition-all ${
+                    activeSubTab === 'channels' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'
+                  }`}
+                >
+                  <Sliders className="w-3 h-3 inline-block mr-1.5" /> Manage Channels
                 </button>
               </div>
 
@@ -412,124 +450,217 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                {/* Sources List */}
-                {!isAddingSource && (
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                    {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).map((source) => (
-                      <div key={source.id} className="flex items-center justify-between p-3 border border-border-alt bg-input group">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          {source.type === 'url' ? <LinkIcon className="w-4 h-4 text-cyan-500 shrink-0" /> : <FileText className="w-4 h-4 text-purple-500 shrink-0" />}
-                          <div className="text-xs font-mono text-fg truncate">
-                            {source.type === 'url' ? source.content : "Raw M3U8/JSON Content"}
+                {/* --- SOURCES MANAGER VIEW --- */}
+                {activeSubTab === 'sources' && (
+                  <>
+                    {!isAddingSource && (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                        {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).map((source) => (
+                          <div key={source.id} className="flex items-center justify-between p-3 border border-border-alt bg-input group">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              {source.type === 'url' ? <LinkIcon className="w-4 h-4 text-cyan-500 shrink-0" /> : <FileText className="w-4 h-4 text-purple-500 shrink-0" />}
+                              <div className="text-xs font-mono text-fg truncate">
+                                {source.type === 'url' ? source.content : "Raw M3U8/JSON Content"}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => handleEditSource(source)}
+                                disabled={playlistLoading}
+                                className="text-fg-dim hover:text-cyan-500 p-1.5 transition-colors disabled:opacity-50"
+                                title="Edit Source"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSource(source.id)}
+                                disabled={playlistLoading}
+                                className="text-fg-dim hover:text-red-500 p-1.5 transition-colors disabled:opacity-50"
+                                title="Delete Source"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => handleEditSource(source)}
-                            disabled={playlistLoading}
-                            className="text-fg-dim hover:text-cyan-500 p-1.5 transition-colors disabled:opacity-50"
-                            title="Edit Source"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteSource(source.id)}
-                            disabled={playlistLoading}
-                            className="text-fg-dim hover:text-red-500 p-1.5 transition-colors disabled:opacity-50"
-                            title="Delete Source"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).length === 0 && (
-                      <div className="p-6 border border-dashed border-border-alt text-center text-xs font-mono text-fg-dim">
-                        No custom sources added. Falling back to default static files.
+                        ))}
+                        {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).length === 0 && (
+                          <div className="p-6 border border-dashed border-border-alt text-center text-xs font-mono text-fg-dim">
+                            No custom sources added. Falling back to default static files.
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                )}
 
-                {/* Add/Edit Source UI */}
-                {isAddingSource ? (
-                  <div className="p-4 border border-border-alt bg-input/50 space-y-4">
-                    <div className="font-mono text-xs font-bold text-fg pb-2 border-b border-border-alt">
-                      {editingSourceId ? "Edit Playlist Source" : "Add New Playlist Source"}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setNewSourceType('url')}
-                        className={`px-3 py-1.5 text-xs font-mono border ${newSourceType === 'url' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'}`}
-                      >
-                        External URL
-                      </button>
-                      <button
-                        onClick={() => setNewSourceType('raw')}
-                        className={`px-3 py-1.5 text-xs font-mono border ${newSourceType === 'raw' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'}`}
-                      >
-                        Code Editor (Raw Text)
-                      </button>
-                    </div>
-                    
-                    {newSourceType === 'url' ? (
-                      <input
-                        type="url"
-                        value={newSourceContent}
-                        onChange={(e) => setNewSourceContent(e.target.value)}
-                        placeholder="https://example.com/playlist.m3u8"
-                        className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50"
-                      />
-                    ) : (
-                      <>
-                        <div className="pt-2 pb-1">
-                          <label className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border-alt hover:border-red-500/50 hover:bg-red-500/5 cursor-pointer transition-all text-xs font-mono text-fg-dim">
-                            <Plus className="w-4 h-4 mr-2" /> Upload .json or .m3u8 file from device
-                            <input 
-                              type="file" 
-                              accept=".json,.m3u8,.m3u,.txt" 
-                              className="hidden" 
-                              onChange={handleFileSelect}
+                    {isAddingSource ? (
+                      <div className="p-4 border border-border-alt bg-input/50 space-y-4">
+                        <div className="font-mono text-xs font-bold text-fg pb-2 border-b border-border-alt">
+                          {editingSourceId ? "Edit Playlist Source" : "Add New Playlist Source"}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setNewSourceType('url')}
+                            className={`px-3 py-1.5 text-xs font-mono border ${newSourceType === 'url' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'}`}
+                          >
+                            External URL
+                          </button>
+                          <button
+                            onClick={() => setNewSourceType('raw')}
+                            className={`px-3 py-1.5 text-xs font-mono border ${newSourceType === 'raw' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'}`}
+                          >
+                            Code Editor (Raw Text)
+                          </button>
+                        </div>
+                        
+                        {newSourceType === 'url' ? (
+                          <input
+                            type="url"
+                            value={newSourceContent}
+                            onChange={(e) => setNewSourceContent(e.target.value)}
+                            placeholder="https://example.com/playlist.m3u8"
+                            className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50"
+                          />
+                        ) : (
+                          <>
+                            <div className="pt-2 pb-1">
+                              <label className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border-alt hover:border-red-500/50 hover:bg-red-500/5 cursor-pointer transition-all text-xs font-mono text-fg-dim">
+                                <Plus className="w-4 h-4 mr-2" /> Upload .json or .m3u8 file from device
+                                <input 
+                                  type="file" 
+                                  accept=".json,.m3u8,.m3u,.txt" 
+                                  className="hidden" 
+                                  onChange={handleFileSelect}
+                                />
+                              </label>
+                              <div className="text-center mt-2 mb-2 text-[10px] text-fg-faint">OR edit the content manually below:</div>
+                            </div>
+                            <textarea
+                              value={newSourceContent}
+                              onChange={(e) => setNewSourceContent(e.target.value)}
+                              placeholder="#EXTM3U..."
+                              rows={15}
+                              spellCheck="false"
+                              className="w-full px-4 py-3 bg-[#0a0a0a] border border-border-alt text-xs font-mono text-fg-dim focus:text-fg focus:outline-none focus:border-red-500/50 resize-y custom-scrollbar leading-relaxed"
                             />
-                          </label>
-                          <div className="text-center mt-2 mb-2 text-[10px] text-fg-faint">OR edit the content manually below:</div>
-                        </div>
-                        <textarea
-                          value={newSourceContent}
-                          onChange={(e) => setNewSourceContent(e.target.value)}
-                          placeholder="#EXTM3U..."
-                          rows={15}
-                          spellCheck="false"
-                          className="w-full px-4 py-3 bg-[#0a0a0a] border border-border-alt text-xs font-mono text-fg-dim focus:text-fg focus:outline-none focus:border-red-500/50 resize-y custom-scrollbar leading-relaxed"
-                        />
-                      </>
-                    )}
+                          </>
+                        )}
 
-                    <div className="flex justify-end gap-2 pt-2">
+                        <div className="flex justify-end gap-2 pt-2">
+                          <button
+                            onClick={() => { setIsAddingSource(false); setNewSourceContent(''); setEditingSourceId(null); }}
+                            className="px-4 py-2 text-xs font-mono text-fg-dim hover:text-fg transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveSource}
+                            disabled={playlistLoading || !newSourceContent.trim()}
+                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-mono text-xs font-bold transition-all disabled:opacity-50"
+                          >
+                            {playlistLoading ? "Saving..." : "Save Changes"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
                       <button
-                        onClick={() => { setIsAddingSource(false); setNewSourceContent(''); setEditingSourceId(null); }}
-                        className="px-4 py-2 text-xs font-mono text-fg-dim hover:text-fg transition-colors"
+                        onClick={() => setIsAddingSource(true)}
+                        className="w-full py-3 border border-dashed border-border-alt hover:border-red-500/50 hover:text-red-400 text-fg-dim text-xs font-mono transition-colors flex items-center justify-center gap-2"
                       >
-                        Cancel
+                        <Plus className="w-4 h-4" /> Add New Source
                       </button>
-                      <button
-                        onClick={handleSaveSource}
-                        disabled={playlistLoading || !newSourceContent.trim()}
-                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-mono text-xs font-bold transition-all disabled:opacity-50"
-                      >
-                        {playlistLoading ? "Saving..." : "Save Changes"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsAddingSource(true)}
-                    className="w-full py-3 border border-dashed border-border-alt hover:border-red-500/50 hover:text-red-400 text-fg-dim text-xs font-mono transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Add New Source
-                  </button>
+                    )}
+                  </>
                 )}
 
+
+                {/* --- CHANNELS MANAGER VIEW --- */}
+                {activeSubTab === 'channels' && (
+                  <div className="space-y-4 border border-border-alt bg-input/20 p-4">
+                    <div className="flex items-center justify-between border-b border-border-alt pb-2">
+                      <div className="text-xs font-mono text-fg font-bold">Drag & Drop Reordering & Renaming</div>
+                      <button
+                        onClick={async () => {
+                          setPlaylistLoading(true);
+                          try {
+                            const newOverrides: Record<string, any> = {};
+                            parsedChannels.forEach((ch, index) => {
+                              const key = (ch.url || ch.stream_url).trim().toLowerCase();
+                              newOverrides[key] = { customName: ch.name, order: index };
+                            });
+                            const res = await fetch("/api/admin/playlists", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ secret, action: 'update-overrides', payload: { source: activeTab, overrides: newOverrides } }),
+                            });
+                            if (res.ok) setPlaylistMessage({ type: 'success', text: 'Channel layout and names saved successfully!' });
+                            else setPlaylistMessage({ type: 'error', text: 'Failed to save channel layout.' });
+                          } catch {
+                            setPlaylistMessage({ type: 'error', text: 'Network error saving layout.' });
+                          }
+                          setPlaylistLoading(false);
+                        }}
+                        disabled={playlistLoading || parsedLoading || parsedChannels.length === 0}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-mono text-[10px] uppercase font-bold transition-all disabled:opacity-50"
+                      >
+                        {playlistLoading ? "Saving Layout..." : "Deploy Channel Layout"}
+                      </button>
+                    </div>
+
+                    {parsedLoading ? (
+                      <div className="text-center py-8 text-xs font-mono text-fg-dim animate-pulse">Parsing channels from sources...</div>
+                    ) : parsedChannels.length === 0 ? (
+                      <div className="text-center py-8 text-xs font-mono text-fg-dim">No channels found. Add sources first.</div>
+                    ) : (
+                      <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        {parsedChannels.map((ch, index) => (
+                          <div
+                            key={`${ch.url || ch.stream_url}-${index}`}
+                            draggable
+                            onDragStart={(e) => {
+                              setDraggedIndex(index);
+                              e.dataTransfer.effectAllowed = "move";
+                              // slight delay for drag styling
+                              setTimeout(() => (e.target as HTMLElement).classList.add("opacity-30"), 0);
+                            }}
+                            onDragEnd={(e) => {
+                              setDraggedIndex(null);
+                              (e.target as HTMLElement).classList.remove("opacity-30");
+                            }}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.dataTransfer.dropEffect = "move";
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              if (draggedIndex === null || draggedIndex === index) return;
+                              const newChannels = [...parsedChannels];
+                              const [draggedItem] = newChannels.splice(draggedIndex, 1);
+                              newChannels.splice(index, 0, draggedItem);
+                              setParsedChannels(newChannels);
+                              setDraggedIndex(null);
+                            }}
+                            className="flex items-center gap-3 p-2 border border-border-alt bg-card cursor-move group transition-all hover:border-red-500/30"
+                          >
+                            <GripVertical className="w-4 h-4 text-fg-dim group-hover:text-red-400 shrink-0" />
+                            <span className="text-[10px] font-mono text-fg-faint w-6 text-right shrink-0">{index + 1}.</span>
+                            <input
+                              type="text"
+                              value={ch.name || ''}
+                              onChange={(e) => {
+                                const newChannels = [...parsedChannels];
+                                newChannels[index].name = e.target.value;
+                                setParsedChannels(newChannels);
+                              }}
+                              className="bg-transparent border-b border-transparent focus:border-red-500/50 outline-none text-xs font-mono text-fg flex-1 min-w-0 px-1 py-0.5"
+                            />
+                            <span className="text-[9px] font-mono text-fg-faint truncate max-w-[150px] shrink-0" title={ch.url || ch.stream_url}>
+                              {ch.url || ch.stream_url}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
