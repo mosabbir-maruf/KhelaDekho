@@ -8,6 +8,7 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Edit3 from "lucide-react/dist/esm/icons/edit-3";
+import FileText from "lucide-react/dist/esm/icons/file-text";
 import ListVideo from "lucide-react/dist/esm/icons/list-video";
 import Sliders from "lucide-react/dist/esm/icons/sliders";
 import ArrowUpToLine from "lucide-react/dist/esm/icons/arrow-up-to-line";
