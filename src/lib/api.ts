@@ -79,6 +79,15 @@ export function sanitizeBaseUrl(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
+export function getXKey(): string {
+  if (typeof window !== "undefined") {
+    const injected = (window as Window & { __KHELADEKHO_XKEY?: string }).__KHELADEKHO_XKEY;
+    if (injected) return injected;
+    return process.env.NEXT_PUBLIC_XKEY || "";
+  }
+  return process.env.XKEY || process.env.NEXT_PUBLIC_XKEY || "";
+}
+
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     if (isDebugMode) {
@@ -105,10 +114,12 @@ async function fetchAPI<T>(path: string, options: RequestInit = {}): Promise<T |
     const rawBaseUrl = getApiBaseUrl();
     if (!rawBaseUrl) return null;
     const baseUrl = rawBaseUrl.replace(/\/+$/, "");
+    const xkey = getXKey();
     const res = await fetch(`${baseUrl}${path}`, {
       ...options,
       headers: {
         Accept: "application/json",
+        ...(xkey ? { "xkey": xkey } : {}),
         ...options.headers,
       },
       next: { revalidate: 10 },

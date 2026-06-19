@@ -137,6 +137,7 @@ V4_HOME_URL=https://example.com`} />
                                 <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Frontend (.env.local)</div>
                                 <CodeBlock code={`# --- Backend API ---
 KHELADEKHO_API_URL=https://your-api.workers.dev
+NEXT_PUBLIC_XKEY=your-xkey-here
 
 # --- Telegram Contact Form ---
 TELEGRAM_BOT_TOKEN=your-telegram-bot-token-here

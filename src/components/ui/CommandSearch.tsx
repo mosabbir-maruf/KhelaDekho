@@ -9,7 +9,7 @@ import CornerDownLeft from "lucide-react/dist/esm/icons/corner-down-left";
 import Activity from "lucide-react/dist/esm/icons/activity";
 import Users from "lucide-react/dist/esm/icons/users";
 import User from "lucide-react/dist/esm/icons/user";
-import { getApiBaseUrl, type ChannelInfo, type Match } from "@/lib/api";
+import { getApiBaseUrl, getXKey, type ChannelInfo, type Match } from "@/lib/api";
 import { event } from "@/lib/analytics";
 
 interface SearchItem {
@@ -86,9 +86,12 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
     const fetchSearchData = async () => {
       try {
         const baseUrl = getApiBaseUrl();
+        const xkey = getXKey();
+        const headers: Record<string, string> = { Accept: "application/json" };
+        if (xkey) headers["xkey"] = xkey;
         const [resMatches, resChannels] = await Promise.all([
-          fetch(`${baseUrl}/api/v1/matches`, { signal: controller.signal }),
-          fetch(`${baseUrl}/api/v1/channels`, { signal: controller.signal }),
+          fetch(`${baseUrl}/api/v1/matches`, { signal: controller.signal, headers }),
+          fetch(`${baseUrl}/api/v1/channels`, { signal: controller.signal, headers }),
         ]);
 
         const itemsList: SearchItem[] = [...defaultItems];

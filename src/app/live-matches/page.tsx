@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { getApiBaseUrl, sanitizeBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
 import { LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
@@ -155,7 +155,12 @@ export default function LiveMatchesPage() {
           const url = apiVersion === "v3"
             ? "/api/playlist?source=live-matches"
             : `${baseUrl}/api/${apiVersion}/channels${apiVersion === "v1" || apiVersion === "v2" ? "?limit=200" : "?alive=true"}`;
-          const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
+          const hdrs: Record<string, string> = { Accept: "application/json" };
+          if (apiVersion !== "v3") {
+            const xkey = getXKey();
+            if (xkey) hdrs["xkey"] = xkey;
+          }
+          const res = await fetch(url, { signal: controller.signal, headers: hdrs });
           if (!active) return;
           const body = res.ok ? await res.json() : {};
           fetched = apiVersion === "v3" ? (body?.channels || []) : (body?.data?.channels || []);

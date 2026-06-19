@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { StatsGrid } from "@/components/ui/StatsGrid";
-import { getApiBaseUrl, sanitizeBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
 import { useCopyButton } from "@/hooks/useCopyButton";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
@@ -33,11 +33,14 @@ export default function V4ChannelPage() {
     let active = true;
     const controller = new AbortController();
     const baseUrl = sanitizeBaseUrl(getApiBaseUrl() || "");
+    const xkey = getXKey();
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (xkey) headers["xkey"] = xkey;
     (async () => {
       try {
         const res = await fetch(`${baseUrl}/api/v4/channels/${encodeURIComponent(id)}`, {
           signal: controller.signal,
-          headers: { Accept: "application/json" },
+          headers,
         });
         if (!res.ok) throw new Error("Channel not found");
         const body = await res.json();
