@@ -7,6 +7,7 @@ import Lock from "lucide-react/dist/esm/icons/lock";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Plus from "lucide-react/dist/esm/icons/plus";
+import Edit3 from "lucide-react/dist/esm/icons/edit-3";
 import FileText from "lucide-react/dist/esm/icons/file-text";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
 import ListVideo from "lucide-react/dist/esm/icons/list-video";
@@ -30,6 +31,7 @@ export default function AdminPage() {
   const [liveMatchesSources, setLiveMatchesSources] = useState<PlaylistSource[]>([]);
   const [playlistLoading, setPlaylistLoading] = useState(false);
   const [isAddingSource, setIsAddingSource] = useState(false);
+  const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
   const [newSourceType, setNewSourceType] = useState<'url' | 'raw'>('url');
   const [newSourceContent, setNewSourceContent] = useState('');
   const [playlistMessage, setPlaylistMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -95,7 +97,7 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ type: 'success', text: `Successfully updated default routing to ${version.toUpperCase()}` });
+        setMessage({ type: 'success', text: `Successfully updated default proxy to ${version.toUpperCase()}` });
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to update settings' });
       }
@@ -103,27 +105,6 @@ export default function AdminPage() {
       setMessage({ type: 'error', text: 'Network error occurred' });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const savePlaylistsToKV = async (source: 'live-tv' | 'live-matches', data: PlaylistSource[]) => {
-    setPlaylistLoading(true);
-    setPlaylistMessage(null);
-    try {
-      const res = await fetch("/api/admin/playlists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret, action: 'update', payload: { source, data } }),
-      });
-      if (res.ok) {
-        setPlaylistMessage({ type: 'success', text: `Successfully updated ${source} playlists!` });
-      } else {
-        setPlaylistMessage({ type: 'error', text: `Failed to update ${source} playlists` });
-      }
-    } catch (e) {
-      setPlaylistMessage({ type: 'error', text: 'Network error saving playlists' });
-    } finally {
-      setPlaylistLoading(false);
     }
   };
 
@@ -141,26 +122,59 @@ export default function AdminPage() {
     reader.readAsText(file);
   };
 
-  const handleAddSource = async () => {
-    if (!newSourceContent.trim()) return;
-    const newSource: PlaylistSource = {
-      id: Math.random().toString(36).substring(7),
-      type: newSourceType,
-      content: newSourceContent.trim()
-    };
-
-    if (activeTab === 'live-tv') {
-      const updated = [...liveTvSources, newSource];
-      setLiveTvSources(updated);
-      await savePlaylistsToKV('live-tv', updated);
-    } else {
-      const updated = [...liveMatchesSources, newSource];
-      setLiveMatchesSources(updated);
-      await savePlaylistsToKV('live-matches', updated);
+  const savePlaylistsToKV = async (source: 'live-tv' | 'live-matches', data: PlaylistSource[]) => {
+    setPlaylistLoading(true);
+    setPlaylistMessage(null);
+    try {
+      const res = await fetch("/api/admin/playlists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret, action: 'update', payload: { source, data } }),
+      });
+      if (res.ok) {
+        setPlaylistMessage({ type: 'success', text: `Successfully saved ${source} playlists!` });
+      } else {
+        setPlaylistMessage({ type: 'error', text: `Failed to save ${source} playlists` });
+      }
+    } catch (e) {
+      setPlaylistMessage({ type: 'error', text: 'Network error saving playlists' });
+    } finally {
+      setPlaylistLoading(false);
     }
+  };
 
+  const handleEditSource = (source: PlaylistSource) => {
+    setEditingSourceId(source.id);
+    setNewSourceType(source.type);
+    setNewSourceContent(source.content);
+    setIsAddingSource(true);
+  };
+
+  const handleSaveSource = async () => {
+    if (!newSourceContent.trim()) return;
+    
+    let updatedSources;
+    if (activeTab === 'live-tv') {
+      if (editingSourceId) {
+        updatedSources = liveTvSources.map(s => s.id === editingSourceId ? { ...s, type: newSourceType, content: newSourceContent.trim() } : s);
+      } else {
+        updatedSources = [...liveTvSources, { id: Math.random().toString(36).substring(7), type: newSourceType, content: newSourceContent.trim() }];
+      }
+      setLiveTvSources(updatedSources);
+      await savePlaylistsToKV('live-tv', updatedSources);
+    } else {
+      if (editingSourceId) {
+        updatedSources = liveMatchesSources.map(s => s.id === editingSourceId ? { ...s, type: newSourceType, content: newSourceContent.trim() } : s);
+      } else {
+        updatedSources = [...liveMatchesSources, { id: Math.random().toString(36).substring(7), type: newSourceType, content: newSourceContent.trim() }];
+      }
+      setLiveMatchesSources(updatedSources);
+      await savePlaylistsToKV('live-matches', updatedSources);
+    }
+    
     setNewSourceContent('');
     setIsAddingSource(false);
+    setEditingSourceId(null);
   };
 
   const handleDeleteSource = async (id: string) => {
@@ -237,7 +251,7 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-6">
 
 
-        {/* Hero Section (Matched with About Page) */}
+        {/* Hero Section */}
         <div className="relative border border-border-alt bg-card overflow-hidden p-8 md:p-12">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
@@ -255,7 +269,7 @@ export default function AdminPage() {
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
                 Configure edge proxy routing and default server infrastructure. Changes made here apply immediately to all clients.
               </p>
-
+              
               {/* Inline Status Row */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] sm:text-xs font-mono text-fg-dim pt-2 border-t border-border-alt/30">
                 <div className="flex items-center gap-2">
@@ -268,11 +282,12 @@ export default function AdminPage() {
                 </div>
                 <div className="text-fg-faint opacity-50">|</div>
                 <div className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full ${version === "v1" ? "bg-yellow-500" :
-                      version === "v2" ? "bg-green-500" :
-                        version === "v3" ? "bg-cyan-500" :
-                          "bg-purple-500"
-                    }`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    version === "v1" ? "bg-yellow-500" :
+                    version === "v2" ? "bg-green-500" :
+                    version === "v3" ? "bg-cyan-500" :
+                    "bg-purple-500"
+                  }`} />
                   <span>Active Default: <strong className="text-fg">{version.toUpperCase()}</strong></span>
                 </div>
               </div>
@@ -286,11 +301,11 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Configuration Box */}
-          <div className="border border-border-alt bg-card relative">
+          <div className="border border-border-alt bg-card relative sticky top-6">
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
-
+            
             <div className="p-6 space-y-6">
               <div className="space-y-1">
                 <h2 className="text-sm font-mono font-bold text-fg flex items-center gap-2">
@@ -302,7 +317,7 @@ export default function AdminPage() {
               </div>
 
               <form onSubmit={handleUpdateSettings} className="space-y-6">
-
+                
                 {/* Compact Version Selectors */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {(["v1", "v2", "v3", "v4"] as const).map((v) => {
@@ -319,10 +334,11 @@ export default function AdminPage() {
                         key={v}
                         type="button"
                         onClick={() => setVersion(v)}
-                        className={`p-3 border font-mono text-xs text-center transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${version === v
+                        className={`p-3 border font-mono text-xs text-center transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+                          version === v
                             ? `${activeBorders[v]} font-bold`
                             : "border-border-alt text-fg-dim bg-input hover:border-border hover:text-fg"
-                          }`}
+                        }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${dotColors[v]}`} />
                         {labels[v]}
@@ -332,10 +348,11 @@ export default function AdminPage() {
                 </div>
 
                 {message && (
-                  <div className={`p-3.5 text-xs font-mono border ${message.type === 'success'
+                  <div className={`p-3.5 text-xs font-mono border ${
+                    message.type === 'success'
                       ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                       : 'border-red-500/30 bg-red-500/10 text-red-400'
-                    }`}>
+                  }`}>
                     {message.text}
                   </div>
                 )}
@@ -386,44 +403,60 @@ export default function AdminPage() {
 
               <div className="space-y-4">
                 {playlistMessage && (
-                  <div className={`p-3.5 text-xs font-mono border ${playlistMessage.type === 'success'
+                  <div className={`p-3.5 text-xs font-mono border ${
+                    playlistMessage.type === 'success'
                       ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                       : 'border-red-500/30 bg-red-500/10 text-red-400'
-                    }`}>
+                  }`}>
                     {playlistMessage.text}
                   </div>
                 )}
 
                 {/* Sources List */}
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                  {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).map((source) => (
-                    <div key={source.id} className="flex items-center justify-between p-3 border border-border-alt bg-input group">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        {source.type === 'url' ? <LinkIcon className="w-4 h-4 text-cyan-500 shrink-0" /> : <FileText className="w-4 h-4 text-purple-500 shrink-0" />}
-                        <div className="text-xs font-mono text-fg truncate">
-                          {source.type === 'url' ? source.content : "Raw M3U8/JSON Content (Parsed dynamically)"}
+                {!isAddingSource && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                    {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).map((source) => (
+                      <div key={source.id} className="flex items-center justify-between p-3 border border-border-alt bg-input group">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          {source.type === 'url' ? <LinkIcon className="w-4 h-4 text-cyan-500 shrink-0" /> : <FileText className="w-4 h-4 text-purple-500 shrink-0" />}
+                          <div className="text-xs font-mono text-fg truncate">
+                            {source.type === 'url' ? source.content : "Raw M3U8/JSON Content"}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => handleEditSource(source)}
+                            disabled={playlistLoading}
+                            className="text-fg-dim hover:text-cyan-500 p-1.5 transition-colors disabled:opacity-50"
+                            title="Edit Source"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSource(source.id)}
+                            disabled={playlistLoading}
+                            className="text-fg-dim hover:text-red-500 p-1.5 transition-colors disabled:opacity-50"
+                            title="Delete Source"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleDeleteSource(source.id)}
-                        disabled={playlistLoading}
-                        className="text-fg-dim hover:text-red-500 p-1.5 transition-colors disabled:opacity-50 shrink-0"
-                        title="Delete Source"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).length === 0 && (
-                    <div className="p-6 border border-dashed border-border-alt text-center text-xs font-mono text-fg-dim">
-                      No custom sources added. Falling back to default static files.
-                    </div>
-                  )}
-                </div>
+                    ))}
+                    {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).length === 0 && (
+                      <div className="p-6 border border-dashed border-border-alt text-center text-xs font-mono text-fg-dim">
+                        No custom sources added. Falling back to default static files.
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Add New Source UI */}
+                {/* Add/Edit Source UI */}
                 {isAddingSource ? (
                   <div className="p-4 border border-border-alt bg-input/50 space-y-4">
+                    <div className="font-mono text-xs font-bold text-fg pb-2 border-b border-border-alt">
+                      {editingSourceId ? "Edit Playlist Source" : "Add New Playlist Source"}
+                    </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setNewSourceType('url')}
@@ -435,10 +468,10 @@ export default function AdminPage() {
                         onClick={() => setNewSourceType('raw')}
                         className={`px-3 py-1.5 text-xs font-mono border ${newSourceType === 'raw' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'}`}
                       >
-                        Raw Text Content
+                        Code Editor (Raw Text)
                       </button>
                     </div>
-
+                    
                     {newSourceType === 'url' ? (
                       <input
                         type="url"
@@ -449,43 +482,42 @@ export default function AdminPage() {
                       />
                     ) : (
                       <>
-                        {newSourceType === 'raw' && (
-                          <div className="pt-2 pb-1">
-                            <label className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border-alt hover:border-red-500/50 hover:bg-red-500/5 cursor-pointer transition-all text-xs font-mono text-fg-dim">
-                              <Plus className="w-4 h-4 mr-2" /> Select .json or .m3u8 file from device
-                              <input
-                                type="file"
-                                accept=".json,.m3u8,.m3u,.txt"
-                                className="hidden"
-                                onChange={handleFileSelect}
-                              />
-                            </label>
-                            <div className="text-center mt-2 mb-2 text-[10px] text-fg-faint">OR paste the content below:</div>
-                          </div>
-                        )}
+                        <div className="pt-2 pb-1">
+                          <label className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border-alt hover:border-red-500/50 hover:bg-red-500/5 cursor-pointer transition-all text-xs font-mono text-fg-dim">
+                            <Plus className="w-4 h-4 mr-2" /> Upload .json or .m3u8 file from device
+                            <input 
+                              type="file" 
+                              accept=".json,.m3u8,.m3u,.txt" 
+                              className="hidden" 
+                              onChange={handleFileSelect}
+                            />
+                          </label>
+                          <div className="text-center mt-2 mb-2 text-[10px] text-fg-faint">OR edit the content manually below:</div>
+                        </div>
                         <textarea
                           value={newSourceContent}
                           onChange={(e) => setNewSourceContent(e.target.value)}
                           placeholder="#EXTM3U..."
-                          rows={5}
-                          className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50 resize-y"
+                          rows={15}
+                          spellCheck="false"
+                          className="w-full px-4 py-3 bg-[#0a0a0a] border border-border-alt text-xs font-mono text-fg-dim focus:text-fg focus:outline-none focus:border-red-500/50 resize-y custom-scrollbar leading-relaxed"
                         />
                       </>
                     )}
 
                     <div className="flex justify-end gap-2 pt-2">
                       <button
-                        onClick={() => { setIsAddingSource(false); setNewSourceContent(''); }}
+                        onClick={() => { setIsAddingSource(false); setNewSourceContent(''); setEditingSourceId(null); }}
                         className="px-4 py-2 text-xs font-mono text-fg-dim hover:text-fg transition-colors"
                       >
                         Cancel
                       </button>
                       <button
-                        onClick={handleAddSource}
+                        onClick={handleSaveSource}
                         disabled={playlistLoading || !newSourceContent.trim()}
                         className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-mono text-xs font-bold transition-all disabled:opacity-50"
                       >
-                        {playlistLoading ? "Saving..." : "Save Source"}
+                        {playlistLoading ? "Saving..." : "Save Changes"}
                       </button>
                     </div>
                   </div>
