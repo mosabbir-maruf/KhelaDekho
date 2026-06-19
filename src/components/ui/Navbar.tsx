@@ -17,6 +17,7 @@ import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CommandSearch, useIsMac } from "@/components/ui/CommandSearch";
+import { LiveScoreTicker } from "@/components/ui/LiveScoreTicker";
 import { event } from "@/lib/analytics";
 
 export function Navbar() {
@@ -60,9 +61,11 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-page/90 backdrop-blur-md">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center justify-between">
-          {/* Left Side: Brand Panel */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center justify-center">
+
+          {/* Right Side: Search & Social & Mobile Toggle */}
           <div className="flex items-center h-full">
+
             {/* Logo */}
             <Link
               href="/"
@@ -75,58 +78,53 @@ export function Navbar() {
             </Link>
 
             {/* Nav Links (desktop only) */}
-            <nav className="hidden md:flex items-center h-full ml-12">
+            <nav className="hidden md:flex items-center h-full">
               <Link
                 href="/live-tv"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center h-full border-x border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
                 Live TV
               </Link>
               <Link
                 href="/live-matches"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
                 Live Matches
               </Link>
               <Link
                 href="/football"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/football") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/football") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
                 Football
               </Link>
               <Link
                 href="/about"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/about") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/about") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
                 About
               </Link>
-
               <Link
                 href="/contact"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/contact") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/contact") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
                 Contact
               </Link>
               <Link
                 href="/docs/api"
-                className={`px-6 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/docs/api") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/docs/api") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
                 Docs
               </Link>
+              <LiveScoreTicker isNavbar={true} />
             </nav>
-          </div>
-
-          {/* Right Side: Search & Social & Mobile Toggle */}
-          <div className="flex items-center h-full">
 
 
-            {/* Search Trigger (desktop only) */}
             <button
               onClick={() => setSearchOpen(true)}
               className="hidden lg:flex items-center h-full border-l border-border px-4 bg-transparent cursor-pointer group w-[280px] hover:bg-hover transition-colors"

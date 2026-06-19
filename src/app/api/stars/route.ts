@@ -29,12 +29,15 @@ export async function GET() {
                     },
                     next: { revalidate: 300 },
                 });
-                if (publicRes.ok) {
-                    const data = await publicRes.json();
-                    return NextResponse.json({ stars: data.stargazers_count ?? 0 });
+                if (!publicRes.ok) {
+                    await publicRes.text().catch(() => {});
+                    return NextResponse.json({ stars: 0 });
                 }
+                const data = await publicRes.json();
+                return NextResponse.json({ stars: data.stargazers_count ?? 0 });
             }
-            return NextResponse.json({ stars: null });
+            await res.text().catch(() => {});
+            return NextResponse.json({ stars: 0 });
         }
 
         const data = await res.json();

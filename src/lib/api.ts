@@ -272,8 +272,29 @@ async function fetchFootballMatches(date: string, options?: RequestInit): Promis
   }
 }
 
-export async function getFootballLiveMatches(options?: RequestInit) {
-  return fetchFootballMatches(new Date().toISOString().split('T')[0], options);
+export async function getFootballLiveMatches(options?: RequestInit): Promise<{ matches: FootballMatch[]; total: number; cached_at: string } | null> {
+  const d = new Date();
+  d.setUTCHours(d.getUTCHours() + 6); // BD Time
+  const today = d.toISOString().split('T')[0];
+  d.setDate(d.getDate() - 1);
+  const yesterday = d.toISOString().split('T')[0];
+
+  const [res1, res2] = await Promise.all([
+    fetchFootballMatches(yesterday, options),
+    fetchFootballMatches(today, options)
+  ]);
+
+  const allMatches = [...(res1?.matches || []), ...(res2?.matches || [])];
+  
+  const seen = new Set<string>();
+  const deduped = allMatches.filter((e) => {
+    const uid = e.idEvent;
+    if (!uid || seen.has(uid)) return false;
+    seen.add(uid);
+    return true;
+  });
+
+  return { matches: deduped, total: deduped.length, cached_at: new Date().toISOString() };
 }
 
 export async function getFootballMatchesByDate(date: string, options?: RequestInit) {

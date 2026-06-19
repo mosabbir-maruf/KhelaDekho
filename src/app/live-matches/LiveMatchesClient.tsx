@@ -10,6 +10,7 @@ import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { useCopyButton } from "@/hooks/useCopyButton";
 import { Virtuoso } from "react-virtuoso";
+import { LiveScoreTicker } from "@/components/ui/LiveScoreTicker";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -369,23 +370,7 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
           </div>
 
           {/* LIVE MATCHES HERO TICKER */}
-          {initialLiveMatches && initialLiveMatches.filter(m => m.intHomeScore !== null && m.intAwayScore !== null && !["Match Finished", "Finished", "FT", "Not Started", "Postponed", "Cancelled", "TBA"].includes(m.strStatus)).length > 0 && (
-            <div className="relative mt-6 z-10 overflow-hidden mask-edges select-none pointer-events-none md:pointer-events-auto">
-              <div className="flex justify-center overflow-x-auto gap-6 pb-2 custom-scrollbar snap-x">
-                {initialLiveMatches.filter(m => m.intHomeScore !== null && m.intAwayScore !== null && !["Match Finished", "Finished", "FT", "Not Started", "Postponed", "Cancelled", "TBA"].includes(m.strStatus)).map((match, i) => (
-                  <div key={match.idEvent || i} className="snap-start shrink-0 inline-flex items-center gap-2.5 text-[10px] font-mono uppercase tracking-widest bg-input/30 px-3 py-1.5 border border-border-alt/50 shadow-sm rounded-sm pointer-events-auto select-none">
-                    {match.strHomeTeamBadge && <img src={match.strHomeTeamBadge} alt="" draggable={false} className="w-3.5 h-3.5 object-contain select-none pointer-events-none" />}
-                    <span className="text-fg-dim font-bold">{match.strHomeTeam}</span>
-                    <span className="font-bold text-red-500 tabular-nums">{match.intHomeScore !== null ? match.intHomeScore : "-"}</span>
-                    <span className="text-fg-faint mx-0.5">-</span>
-                    <span className="font-bold text-red-500 tabular-nums">{match.intAwayScore !== null ? match.intAwayScore : "-"}</span>
-                    <span className="text-fg-dim font-bold">{match.strAwayTeam}</span>
-                    {match.strAwayTeamBadge && <img src={match.strAwayTeamBadge} alt="" draggable={false} className="w-3.5 h-3.5 object-contain select-none pointer-events-none" />}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <LiveScoreTicker initialMatches={initialLiveMatches} />
           <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-3">
             Stream buffering? Switch channel or server.
           </p>
