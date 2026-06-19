@@ -192,7 +192,7 @@ export default function LiveTvPage() {
             </div>
 
             {/* ── Middle: Player ── */}
-            <div className="min-w-0 w-full min-h-0 flex flex-col gap-3">
+            <div className="min-w-0 w-full min-h-0 flex flex-col gap-3 overflow-y-auto">
               {selectedChannel ? (
                 <>
                   {/* Channel details header */}
