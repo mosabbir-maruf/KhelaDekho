@@ -6,8 +6,7 @@ export const runtime = "edge";
 // To add a new JSON file: just add another import line here and merge into DATA.
 import liveTvBangla from "@/../playlist/live-tv/json/bangla.json" with { type: "json" };
 import liveMatchesFifa from "@/../playlist/live-matches/json/fifa.json" with { type: "json" };
-import liveMatchesSports from "@/../playlist/live-matches/json/sports.json" with { type: "json" };
-
+import liveMatchesSports from "@/../playlist/live-tv/json/sports.json" with { type: "json" };
 const DATA: Record<string, unknown[]> = {
   "live-tv": [
     ...(Array.isArray(liveTvBangla) ? liveTvBangla : []),
