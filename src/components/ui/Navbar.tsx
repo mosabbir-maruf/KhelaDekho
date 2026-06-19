@@ -8,7 +8,6 @@ import Menu from "lucide-react/dist/esm/icons/menu";
 import X from "lucide-react/dist/esm/icons/x";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Tv from "lucide-react/dist/esm/icons/tv";
-import Trophy from "lucide-react/dist/esm/icons/trophy";
 import Activity from "lucide-react/dist/esm/icons/activity";
 import FileText from "lucide-react/dist/esm/icons/file-text";
 import Shield from "lucide-react/dist/esm/icons/shield";
@@ -198,68 +197,11 @@ export function Navbar() {
                     }`}
                 >
                   <Calendar className="w-4 h-4" />
-                  Matches
-                </Link>
-
-                <Link
-                  href="/privacy"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/privacy") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <Shield className="w-4 h-4" />
-                  Privacy Policy
-                </Link>
-                <Link
-                  href="/about"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/about") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <Info className="w-4 h-4" />
-                  About Us
-                </Link>
-                <Link
-                  href="/contact"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/contact") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <Mail className="w-4 h-4" />
-                  Contact Us
-                </Link>
-                <Link
-                  href="/docs/api"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/api") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <Terminal className="w-4 h-4 text-emerald-500" />
-                  Decryption API
-                </Link>
-                <Link
-                  href="/docs/architecture"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/architecture") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <Activity className="w-4 h-4" />
-                  Architecture
-                </Link>
-                <Link
-                  href="/docs/installation"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/installation") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <FileText className="w-4 h-4" />
-                  Installation Guide
-                </Link>
-                <Link
-                  href="/docs/request"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/request") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                    }`}
-                >
-                  <Key className="w-4 h-4 text-red-500" />
-                  Request API / Repo
+                  Football
                 </Link>
               </div>
 
-              {/* Quick Categories */}
+              {/* Quick Links */}
               <div className="border-t border-border-alt pt-4">
                 <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
                   Quick Links
@@ -279,21 +221,80 @@ export function Navbar() {
                     <Tv className="w-4 h-4 text-red-500" />
                     Live Matches
                   </Link>
-                  <Link
-                    href="/football"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
-                  >
-                    <Calendar className="w-4 h-4 text-red-500 animate-pulse" />
-                    Matches
-                  </Link>
-                  <Link
-                    href="/live-matches"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
-                  >
-                    <Trophy className="w-4 h-4 text-yellow-400" />
-                    FIFA World Cup
-                  </Link>
+                </div>
+              </div>
 
+              {/* Docs */}
+              <div className="border-t border-border-alt pt-4">
+                <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
+                  Docs
+                </h4>
+                <div className="space-y-1">
+                  <Link
+                    href="/docs/api"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/api") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                  >
+                    <Terminal className="w-4 h-4 text-emerald-500" />
+                    Decryption API
+                  </Link>
+                  <Link
+                    href="/docs/architecture"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/architecture") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                  >
+                    <Activity className="w-4 h-4" />
+                    Architecture
+                  </Link>
+                  <Link
+                    href="/docs/installation"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/installation") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Installation Guide
+                  </Link>
+                  <Link
+                    href="/docs/request"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/request") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                  >
+                    <Key className="w-4 h-4 text-red-500" />
+                    Request API / Repo
+                  </Link>
+                </div>
+              </div>
+
+              {/* About & Legal */}
+              <div className="border-t border-border-alt pt-4">
+                <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
+                  About & Legal
+                </h4>
+                <div className="space-y-1">
+                  <Link
+                    href="/about"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/about") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                  >
+                    <Info className="w-4 h-4" />
+                    About Us
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/contact") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                  >
+                    <Mail className="w-4 h-4" />
+                    Contact Us
+                  </Link>
+                  <Link
+                    href="/privacy"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/privacy") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                  >
+                    <Shield className="w-4 h-4" />
+                    Privacy Policy
+                  </Link>
                 </div>
               </div>
 
