@@ -7,3 +7,8 @@ pages_build_output_dir = ".vercel/output/static"
 [vars]
 NEXT_PUBLIC_GA_MEASUREMENT_ID = "G-RF383CBPS9"
 
+[[kv_namespaces]]
+binding = "KHELA_SETTINGS"
+id = "dcdd237727e34e87b0c0943b24c1c4dd"
+
+
