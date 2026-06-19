@@ -127,6 +127,20 @@ export default function AdminPage() {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        setNewSourceContent(content);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleAddSource = async () => {
     if (!newSourceContent.trim()) return;
     const newSource: PlaylistSource = {
@@ -438,13 +452,29 @@ export default function AdminPage() {
                         className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50"
                       />
                     ) : (
-                      <textarea
-                        value={newSourceContent}
-                        onChange={(e) => setNewSourceContent(e.target.value)}
-                        placeholder="#EXTM3U..."
-                        rows={5}
-                        className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50 resize-y"
-                      />
+                      <>
+                        {newSourceType === 'raw' && (
+                          <div className="pt-2 pb-1">
+                            <label className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border-alt hover:border-red-500/50 hover:bg-red-500/5 cursor-pointer transition-all text-xs font-mono text-fg-dim">
+                              <Plus className="w-4 h-4 mr-2" /> Select .json or .m3u8 file from device
+                              <input 
+                                type="file" 
+                                accept=".json,.m3u8,.m3u,.txt" 
+                                className="hidden" 
+                                onChange={handleFileSelect}
+                              />
+                            </label>
+                            <div className="text-center mt-2 mb-2 text-[10px] text-fg-faint">OR paste the content below:</div>
+                          </div>
+                        )}
+                        <textarea
+                          value={newSourceContent}
+                          onChange={(e) => setNewSourceContent(e.target.value)}
+                          placeholder="#EXTM3U..."
+                          rows={5}
+                          className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50 resize-y"
+                        />
+                      </>
                     )}
 
                     <div className="flex justify-end gap-2 pt-2">
