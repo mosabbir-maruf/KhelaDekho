@@ -276,20 +276,27 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       }
       return false;
     };
+    const destroyAllPlayers = () => {
+      if (hlsPlayerRef.current) { hlsPlayerRef.current.destroy(); hlsPlayerRef.current = null; }
+      if (shakaPlayerRef.current) { try { shakaPlayerRef.current.destroy(); } catch {} shakaPlayerRef.current = null; }
+      if (mpegtsPlayerRef.current) { try { mpegtsPlayerRef.current.destroy(); } catch {} mpegtsPlayerRef.current = null; }
+      if (cleanupNativeListeners) { cleanupNativeListeners(); cleanupNativeListeners = null; }
+    };
+
     const loadStream = async () => {
-      if (newType !== "hls" && hlsPlayerRef.current) {
-        hlsPlayerRef.current.destroy();
-        hlsPlayerRef.current = null;
-      }
-      if (newType !== "dash" && shakaPlayerRef.current) {
-        try { await shakaPlayerRef.current.destroy(); } catch {}
-        shakaPlayerRef.current = null;
-      }
-      if (newType !== "direct" && mpegtsPlayerRef.current) {
-        try { mpegtsPlayerRef.current.destroy(); } catch {}
-        mpegtsPlayerRef.current = null;
-      }
+      destroyAllPlayers();
       attachedTypeRef.current = null;
+
+      const attachNativeListeners = (errorMsg = "Failed to load stream natively.") => {
+        const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
+        const onError = () => { if (destroyed) return; setIsLoading(false); if (!tryFallback()) setPlayerError(errorMsg); };
+        video.addEventListener("loadedmetadata", onLoaded);
+        video.addEventListener("error", onError);
+        cleanupNativeListeners = () => {
+          video.removeEventListener("loadedmetadata", onLoaded);
+          video.removeEventListener("error", onError);
+        };
+      };
 
       if (newType === "dash") {
         // Reuse existing Shaka player or create one
@@ -381,19 +388,13 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
               if (!destroyed && !tryFallback()) setPlayerError("Failed to load direct stream.");
             });
 
-            const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
-            video.addEventListener("loadedmetadata", onLoaded, { once: true });
-            cleanupNativeListeners = () => { video.removeEventListener("loadedmetadata", onLoaded); };
+            attachNativeListeners("Failed to load direct stream (mpegts).");
             return;
           }
         } catch {}
 
         video.src = effectiveUrl;
-        const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
-        const onError = () => { if (destroyed) return; setIsLoading(false); if (!tryFallback()) setPlayerError("Failed to load direct stream."); };
-        video.addEventListener("loadedmetadata", onLoaded, { once: true });
-        video.addEventListener("error", onError, { once: true });
-        cleanupNativeListeners = () => { video.removeEventListener("loadedmetadata", onLoaded); video.removeEventListener("error", onError); };
+        attachNativeListeners("Failed to load direct stream.");
         return;
       }
 
@@ -424,15 +425,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
       if (typeof video.canPlayType === "function" && video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = effectiveUrl;
-        const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
-        video.addEventListener("loadedmetadata", onLoaded);
-        const nativeErrorHandler = () => {
-          video.removeEventListener("loadedmetadata", onLoaded);
-          video.removeEventListener("error", nativeErrorHandler);
-          if (!tryFallback()) setIsLoading(false);
-        };
-        video.addEventListener("error", nativeErrorHandler);
-        cleanupNativeListeners = () => { video.removeEventListener("loadedmetadata", onLoaded); video.removeEventListener("error", nativeErrorHandler); };
+        attachNativeListeners("Failed to load stream via native HLS.");
         return;
       } else {
         if (!tryFallback()) {
@@ -446,12 +439,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
     const cleanup = () => {
       destroyed = true;
-      if (hlsPlayerRef.current) { hlsPlayerRef.current.destroy(); hlsPlayerRef.current = null; }
-      if (shakaPlayerRef.current) { try { shakaPlayerRef.current.destroy(); } catch {} shakaPlayerRef.current = null; }
-      if (mpegtsPlayerRef.current) { try { mpegtsPlayerRef.current.destroy(); } catch {} mpegtsPlayerRef.current = null; }
-      attachedTypeRef.current = null;
+      destroyAllPlayers();
       if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
-      if (cleanupNativeListeners) { cleanupNativeListeners(); cleanupNativeListeners = null; }
     };
 
     loadStream();
