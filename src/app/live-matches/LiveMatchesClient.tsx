@@ -267,9 +267,9 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
         : rawUrl.match(/\.ts($|\?)/) ? "direct"
         : ch.content_type === "video/mp2t" ? "direct"
         : "hls";
-      // We ONLY proxy V3 streams if they are HTTP (insecure) because browsers strictly block mixed content.
+      // We proxy V3 streams ONLY if they are HTTP (insecure) because browsers strictly block mixed content.
       // If they are HTTPS, we load them directly to prevent Edge function timeouts.
-      const useProxy = streamType === "hls" && rawUrl.startsWith("http://");
+      const useProxy = rawUrl.startsWith("http://");
       const url = useProxy ? `/api/iptv/proxy?url=${encodeURIComponent(rawUrl)}` : rawUrl;
       const clearKeys = ch.kid && ch.key ? { [ch.kid]: ch.key } : null;
       return {
