@@ -17,8 +17,6 @@ const FALLBACK_DATA: Record<string, unknown[]> = {
   ],
 };
 
-const GITHUB_REPO = "mosabbir-maruf/KhelaDekho";
-
 // Utility to parse M3U8 string to JSON format
 function parseM3u8(text: string): { name: string; url: string; group?: string }[] {
   const channels: { name: string; url: string; group?: string }[] = [];
@@ -62,71 +60,51 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ channels: [] }, { headers: { "Access-Control-Allow-Origin": "*" } });
   }
 
-  const headers: Record<string, string> = {
-    "User-Agent": "KhelaDekho-App",
-    "Accept": "application/vnd.github.v3+json",
-  };
-
-  const githubToken = process.env.GITHUB_TOKEN;
-  if (githubToken) {
-    headers["Authorization"] = `token ${githubToken}`;
-  }
-
   try {
-    const listUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/KhelaDekho-Frontend/playlist/${source}`;
-    // Cache for 60 seconds
-    const fileListRes = await fetch(listUrl, { headers, next: { revalidate: 60 } });
+    const processEnv = process.env as any;
+    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS;
 
-    if (!fileListRes.ok) {
-      throw new Error(`GitHub Directory API returned ${fileListRes.status}`);
+    if (!KHELA_SETTINGS) {
+       console.error("KV Database not bound. Falling back.");
+       return NextResponse.json({ channels: FALLBACK_DATA[source], fallback: true }, { headers: { "Access-Control-Allow-Origin": "*" } });
     }
 
-    const contents = await fileListRes.json();
-    if (!Array.isArray(contents)) {
-      throw new Error("Invalid response format from GitHub Content API");
+    const sources = await KHELA_SETTINGS.get(`playlist_sources_${source}`, "json") || [];
+    
+    if (!Array.isArray(sources) || sources.length === 0) {
+      // If KV is empty, return fallback data
+      return NextResponse.json({ channels: FALLBACK_DATA[source], fallback: true }, { headers: { "Access-Control-Allow-Origin": "*" } });
     }
 
-    // Identify target directories (json, m3u8)
-    const subDirs = contents.filter(
-      (item) => item.type === "dir" && (item.name === "json" || item.name === "m3u8")
-    );
-
-    // Fetch subdirectory contents concurrently
-    const subDirsContents = await Promise.all(
-      subDirs.map(async (dir) => {
-        try {
-          const res = await fetch(dir.url, { headers, next: { revalidate: 60 } });
-          if (!res.ok) return [];
-          const files = await res.json();
-          return Array.isArray(files) ? files : [];
-        } catch {
-          return [];
-        }
-      })
-    );
-
-    // Flatten all files inside json/ and m3u8/
-    const allFiles = subDirsContents.flat().filter((file) => file.type === "file");
-
-    // Fetch and parse all file contents concurrently to avoid sequential loading slowness
+    // Fetch and parse all sources
     const channelsListArray = await Promise.all(
-      allFiles.map(async (file) => {
-        const rawUrl = file.download_url;
-        if (!rawUrl) return [];
-
+      sources.map(async (src: { id: string; type: 'url' | 'raw'; content: string }) => {
         try {
-          const fileContentRes = await fetch(rawUrl, { next: { revalidate: 60 } });
-          if (!fileContentRes.ok) return [];
-
-          if (file.name.endsWith(".json")) {
-            const jsonContent = await fileContentRes.json();
-            return Array.isArray(jsonContent) ? jsonContent : [];
-          } else if (file.name.endsWith(".m3u8") || file.name.endsWith(".m3u")) {
-            const textContent = await fileContentRes.text();
+          if (src.type === 'url') {
+            const res = await fetch(src.content, { next: { revalidate: 60 } });
+            if (!res.ok) return [];
+            
+            // Check if JSON
+            if (src.content.endsWith('.json') || res.headers.get('content-type')?.includes('json')) {
+              const jsonContent = await res.json();
+              return Array.isArray(jsonContent) ? jsonContent : [];
+            }
+            // Assume M3U8
+            const textContent = await res.text();
             return parseM3u8(textContent);
+
+          } else if (src.type === 'raw') {
+            // Check if it's JSON array
+            try {
+              const json = JSON.parse(src.content);
+              if (Array.isArray(json)) return json;
+            } catch (e) {
+              // Not json, assume M3U8
+            }
+            return parseM3u8(src.content);
           }
         } catch (err) {
-          console.error(`Error parsing file ${file.name}:`, err);
+          console.error(`Error parsing source ${src.id}:`, err);
         }
         return [];
       })
@@ -135,7 +113,7 @@ export async function GET(request: NextRequest) {
     // Merge everything into a flat array
     const rawChannels = channelsListArray.flat();
 
-    // Remove duplicates dynamically by streaming URL to ensure clean UI lists
+    // Remove duplicates dynamically
     const seenUrls = new Set<string>();
     const uniqueChannels = [];
 
@@ -159,11 +137,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error fetching playlists dynamically from GitHub:", error);
+    console.error("Error fetching playlists dynamically from KV:", error);
     return NextResponse.json({ channels: FALLBACK_DATA[source], fallback: true }, {
       headers: { "Access-Control-Allow-Origin": "*" },
     });
   }
 }
-
-

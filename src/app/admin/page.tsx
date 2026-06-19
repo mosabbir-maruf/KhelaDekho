@@ -5,6 +5,11 @@ import ShieldCheck from "lucide-react/dist/esm/icons/shield-check";
 import Server from "lucide-react/dist/esm/icons/server";
 import Lock from "lucide-react/dist/esm/icons/lock";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import FileText from "lucide-react/dist/esm/icons/file-text";
+import LinkIcon from "lucide-react/dist/esm/icons/link";
+import ListVideo from "lucide-react/dist/esm/icons/list-video";
 import Link from "next/link";
 
 
@@ -17,6 +22,34 @@ export default function AdminPage() {
   // Messages for Auth and Settings forms
   const [authError, setAuthError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  // Playlist Management States
+  type PlaylistSource = { id: string; type: 'url' | 'raw'; content: string };
+  const [activeTab, setActiveTab] = useState<'live-tv' | 'live-matches'>('live-tv');
+  const [liveTvSources, setLiveTvSources] = useState<PlaylistSource[]>([]);
+  const [liveMatchesSources, setLiveMatchesSources] = useState<PlaylistSource[]>([]);
+  const [playlistLoading, setPlaylistLoading] = useState(false);
+  const [isAddingSource, setIsAddingSource] = useState(false);
+  const [newSourceType, setNewSourceType] = useState<'url' | 'raw'>('url');
+  const [newSourceContent, setNewSourceContent] = useState('');
+  const [playlistMessage, setPlaylistMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const fetchPlaylists = async (authSecret: string) => {
+    try {
+      const res = await fetch("/api/admin/playlists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: authSecret, action: 'get' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLiveTvSources(data.liveTvSources || []);
+        setLiveMatchesSources(data.liveMatchesSources || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch playlists");
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +69,7 @@ export default function AdminPage() {
           setVersion(data.defaultVersion);
         }
         setIsAuthenticated(true);
+        fetchPlaylists(secret);
       } else {
         setAuthError("Invalid authentication key. Access denied.");
       }
@@ -69,6 +103,61 @@ export default function AdminPage() {
       setMessage({ type: 'error', text: 'Network error occurred' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const savePlaylistsToKV = async (source: 'live-tv' | 'live-matches', data: PlaylistSource[]) => {
+    setPlaylistLoading(true);
+    setPlaylistMessage(null);
+    try {
+      const res = await fetch("/api/admin/playlists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret, action: 'update', payload: { source, data } }),
+      });
+      if (res.ok) {
+        setPlaylistMessage({ type: 'success', text: `Successfully updated ${source} playlists!` });
+      } else {
+        setPlaylistMessage({ type: 'error', text: `Failed to update ${source} playlists` });
+      }
+    } catch (e) {
+      setPlaylistMessage({ type: 'error', text: 'Network error saving playlists' });
+    } finally {
+      setPlaylistLoading(false);
+    }
+  };
+
+  const handleAddSource = async () => {
+    if (!newSourceContent.trim()) return;
+    const newSource: PlaylistSource = {
+      id: Math.random().toString(36).substring(7),
+      type: newSourceType,
+      content: newSourceContent.trim()
+    };
+    
+    if (activeTab === 'live-tv') {
+      const updated = [...liveTvSources, newSource];
+      setLiveTvSources(updated);
+      await savePlaylistsToKV('live-tv', updated);
+    } else {
+      const updated = [...liveMatchesSources, newSource];
+      setLiveMatchesSources(updated);
+      await savePlaylistsToKV('live-matches', updated);
+    }
+    
+    setNewSourceContent('');
+    setIsAddingSource(false);
+  };
+
+  const handleDeleteSource = async (id: string) => {
+    if (activeTab === 'live-tv') {
+      const updated = liveTvSources.filter(s => s.id !== id);
+      setLiveTvSources(updated);
+      await savePlaylistsToKV('live-tv', updated);
+    } else {
+      const updated = liveMatchesSources.filter(s => s.id !== id);
+      setLiveMatchesSources(updated);
+      await savePlaylistsToKV('live-matches', updated);
     }
   };
 
@@ -184,75 +273,207 @@ export default function AdminPage() {
           </div>
         </div>
 
-
-        {/* Configuration Box */}
-        <div className="border border-border-alt bg-card relative">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
-          
-          <div className="p-6 space-y-6">
-            <div className="space-y-1">
-              <h2 className="text-sm font-mono font-bold text-fg flex items-center gap-2">
-                <Server className="w-4 h-4 text-red-500" /> Live Matches Page Routing
-              </h2>
-              <p className="text-xs font-mono text-fg-dim">
-                Select default streaming server version for live football matches.
-              </p>
-            </div>
-
-            <form onSubmit={handleUpdateSettings} className="space-y-6">
-              
-              {/* Compact Version Selectors */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {(["v1", "v2", "v3", "v4"] as const).map((v) => {
-                  const labels = { v1: "V1", v2: "V2", v3: "V3", v4: "V4" };
-                  const dotColors = { v1: "bg-yellow-500", v2: "bg-green-500", v3: "bg-cyan-500", v4: "bg-purple-500" };
-                  const activeBorders = {
-                    v1: "border-yellow-500/50 text-yellow-400 bg-yellow-500/[0.03]",
-                    v2: "border-green-500/50 text-green-400 bg-green-500/[0.03]",
-                    v3: "border-cyan-500/50 text-cyan-400 bg-cyan-500/[0.03]",
-                    v4: "border-purple-500/50 text-purple-400 bg-purple-500/[0.03]"
-                  };
-                  return (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setVersion(v)}
-                      className={`p-3 border font-mono text-xs text-center transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
-                        version === v
-                          ? `${activeBorders[v]} font-bold`
-                          : "border-border-alt text-fg-dim bg-input hover:border-border hover:text-fg"
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${dotColors[v]}`} />
-                      {labels[v]}
-                    </button>
-                  );
-                })}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Configuration Box */}
+          <div className="border border-border-alt bg-card relative">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
+            
+            <div className="p-6 space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-sm font-mono font-bold text-fg flex items-center gap-2">
+                  <Server className="w-4 h-4 text-red-500" /> Live Matches Page Routing
+                </h2>
+                <p className="text-xs font-mono text-fg-dim">
+                  Select default streaming server version for live football matches.
+                </p>
               </div>
 
-              {message && (
-                <div className={`p-3.5 text-xs font-mono border ${
-                  message.type === 'success'
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                    : 'border-red-500/30 bg-red-500/10 text-red-400'
-                }`}>
-                  {message.text}
+              <form onSubmit={handleUpdateSettings} className="space-y-6">
+                
+                {/* Compact Version Selectors */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {(["v1", "v2", "v3", "v4"] as const).map((v) => {
+                    const labels = { v1: "V1", v2: "V2", v3: "V3", v4: "V4" };
+                    const dotColors = { v1: "bg-yellow-500", v2: "bg-green-500", v3: "bg-cyan-500", v4: "bg-purple-500" };
+                    const activeBorders = {
+                      v1: "border-yellow-500/50 text-yellow-400 bg-yellow-500/[0.03]",
+                      v2: "border-green-500/50 text-green-400 bg-green-500/[0.03]",
+                      v3: "border-cyan-500/50 text-cyan-400 bg-cyan-500/[0.03]",
+                      v4: "border-purple-500/50 text-purple-400 bg-purple-500/[0.03]"
+                    };
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setVersion(v)}
+                        className={`p-3 border font-mono text-xs text-center transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+                          version === v
+                            ? `${activeBorders[v]} font-bold`
+                            : "border-border-alt text-fg-dim bg-input hover:border-border hover:text-fg"
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${dotColors[v]}`} />
+                        {labels[v]}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
 
-              <div className="pt-5 border-t border-border-alt flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <span className="text-[10px] font-mono text-fg-faint">
-                  * New match sessions connect via selected default.
-                </span>
+                {message && (
+                  <div className={`p-3.5 text-xs font-mono border ${
+                    message.type === 'success'
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                      : 'border-red-500/30 bg-red-500/10 text-red-400'
+                  }`}>
+                    {message.text}
+                  </div>
+                )}
+
+                <div className="pt-5 border-t border-border-alt flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <span className="text-[10px] font-mono text-fg-faint">
+                    * New match sessions connect via selected default.
+                  </span>
+                  <button
+                    type="submit"
+                    disabled={loading || !isAuthenticated}
+                    className="w-full sm:w-auto px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white font-mono text-xs uppercase tracking-wider font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {loading && isAuthenticated ? "Deploying..." : "Update Default"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Playlist Management Box */}
+          <div className="border border-border-alt bg-card relative">
+            <div className="p-6 space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-sm font-mono font-bold text-fg flex items-center gap-2">
+                  <ListVideo className="w-4 h-4 text-red-500" /> Playlist Management
+                </h2>
+                <p className="text-xs font-mono text-fg-dim">
+                  Manage external M3U8 URLs or raw playlists stored in Cloudflare KV.
+                </p>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex border-b border-border-alt">
                 <button
-                  type="submit"
-                  disabled={loading || !isAuthenticated}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white font-mono text-xs uppercase tracking-wider font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  onClick={() => { setActiveTab('live-tv'); setPlaylistMessage(null); }}
+                  className={`px-4 py-3 text-xs font-mono transition-colors ${activeTab === 'live-tv' ? 'border-b-2 border-red-500 text-fg font-bold' : 'text-fg-dim hover:text-fg'}`}
                 >
-                  {loading && isAuthenticated ? "Deploying..." : "Update Default"}
+                  Live TV
+                </button>
+                <button
+                  onClick={() => { setActiveTab('live-matches'); setPlaylistMessage(null); }}
+                  className={`px-4 py-3 text-xs font-mono transition-colors ${activeTab === 'live-matches' ? 'border-b-2 border-red-500 text-fg font-bold' : 'text-fg-dim hover:text-fg'}`}
+                >
+                  Live Matches
                 </button>
               </div>
-            </form>
+
+              <div className="space-y-4">
+                {playlistMessage && (
+                  <div className={`p-3.5 text-xs font-mono border ${
+                    playlistMessage.type === 'success'
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                      : 'border-red-500/30 bg-red-500/10 text-red-400'
+                  }`}>
+                    {playlistMessage.text}
+                  </div>
+                )}
+
+                {/* Sources List */}
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                  {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).map((source) => (
+                    <div key={source.id} className="flex items-center justify-between p-3 border border-border-alt bg-input group">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {source.type === 'url' ? <LinkIcon className="w-4 h-4 text-cyan-500 shrink-0" /> : <FileText className="w-4 h-4 text-purple-500 shrink-0" />}
+                        <div className="text-xs font-mono text-fg truncate">
+                          {source.type === 'url' ? source.content : "Raw M3U8/JSON Content (Parsed dynamically)"}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteSource(source.id)}
+                        disabled={playlistLoading}
+                        className="text-fg-dim hover:text-red-500 p-1.5 transition-colors disabled:opacity-50 shrink-0"
+                        title="Delete Source"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {(activeTab === 'live-tv' ? liveTvSources : liveMatchesSources).length === 0 && (
+                    <div className="p-6 border border-dashed border-border-alt text-center text-xs font-mono text-fg-dim">
+                      No custom sources added. Falling back to default static files.
+                    </div>
+                  )}
+                </div>
+
+                {/* Add New Source UI */}
+                {isAddingSource ? (
+                  <div className="p-4 border border-border-alt bg-input/50 space-y-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setNewSourceType('url')}
+                        className={`px-3 py-1.5 text-xs font-mono border ${newSourceType === 'url' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'}`}
+                      >
+                        External URL
+                      </button>
+                      <button
+                        onClick={() => setNewSourceType('raw')}
+                        className={`px-3 py-1.5 text-xs font-mono border ${newSourceType === 'raw' ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-border-alt text-fg-dim hover:text-fg'}`}
+                      >
+                        Raw Text Content
+                      </button>
+                    </div>
+                    
+                    {newSourceType === 'url' ? (
+                      <input
+                        type="url"
+                        value={newSourceContent}
+                        onChange={(e) => setNewSourceContent(e.target.value)}
+                        placeholder="https://example.com/playlist.m3u8"
+                        className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50"
+                      />
+                    ) : (
+                      <textarea
+                        value={newSourceContent}
+                        onChange={(e) => setNewSourceContent(e.target.value)}
+                        placeholder="#EXTM3U..."
+                        rows={5}
+                        className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50 resize-y"
+                      />
+                    )}
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        onClick={() => { setIsAddingSource(false); setNewSourceContent(''); }}
+                        className="px-4 py-2 text-xs font-mono text-fg-dim hover:text-fg transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleAddSource}
+                        disabled={playlistLoading || !newSourceContent.trim()}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-mono text-xs font-bold transition-all disabled:opacity-50"
+                      >
+                        {playlistLoading ? "Saving..." : "Save Source"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsAddingSource(true)}
+                    className="w-full py-3 border border-dashed border-border-alt hover:border-red-500/50 hover:text-red-400 text-fg-dim text-xs font-mono transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Add New Source
+                  </button>
+                )}
+
+              </div>
+            </div>
           </div>
         </div>
 
