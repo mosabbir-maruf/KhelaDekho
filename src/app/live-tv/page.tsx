@@ -8,11 +8,12 @@ import { CATEGORIES, LOGO_BASE, LOGO_MAP, getCategory } from "@/data/liveTv";
 import { useCopyButton } from "@/hooks/useCopyButton";
 import type { Category } from "@/data/liveTv";
 import Tv from "lucide-react/dist/esm/icons/tv";
-import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Monitor from "lucide-react/dist/esm/icons/monitor";
+import { StatsGrid } from "@/components/ui/StatsGrid";
 import X from "lucide-react/dist/esm/icons/x";
 import Search from "lucide-react/dist/esm/icons/search";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
@@ -282,8 +283,17 @@ export default function LiveTvPage() {
                     </button>
                   </div>
 
-                  <div className="flex-1 min-h-0">
-                    <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} />
+                  <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} />
+
+                  {/* Mobile-only: channel details */}
+                  <div className="lg:hidden shrink-0">
+                    <StatsGrid
+                      items={[
+                        { label: "Stream Type", value: "HLS", icon: "zap" },
+                        { label: "Drm", value: "NONE", icon: "shield" },
+                        { label: "Channels", value: String(channels.length), icon: "monitor" },
+                      ]}
+                    />
                   </div>
                 </>
               ) : (
