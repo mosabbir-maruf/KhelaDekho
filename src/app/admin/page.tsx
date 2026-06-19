@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import ShieldCheck from "lucide-react/dist/esm/icons/shield-check";
 import Server from "lucide-react/dist/esm/icons/server";
 import Lock from "lucide-react/dist/esm/icons/lock";
@@ -29,7 +29,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Playlist Management States
-  type PlaylistSource = { id: string; type: 'url' | 'raw'; content: string };
+  type PlaylistSource = { id: string; type: 'url' | 'raw'; content: string; name?: string };
   const [activeTab, setActiveTab] = useState<'live-tv' | 'live-matches'>('live-tv');
   const [liveTvSources, setLiveTvSources] = useState<PlaylistSource[]>([]);
   const [liveMatchesSources, setLiveMatchesSources] = useState<PlaylistSource[]>([]);
@@ -38,6 +38,7 @@ export default function AdminPage() {
   const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
   const [newSourceType, setNewSourceType] = useState<'url' | 'raw'>('url');
   const [newSourceContent, setNewSourceContent] = useState('');
+  const [newSourceName, setNewSourceName] = useState('');
   const [playlistMessage, setPlaylistMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Channel Manager States
@@ -47,6 +48,20 @@ export default function AdminPage() {
   const [parsedLoading, setParsedLoading] = useState(false);
   const [channelSearch, setChannelSearch] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleDragOverContainer = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const threshold = 50;
+    if (e.clientY > rect.bottom - threshold) {
+      container.scrollTop += 15;
+    } else if (e.clientY < rect.top + threshold) {
+      container.scrollTop -= 15;
+    }
+  };
 
   const moveChannel = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0) toIndex = 0;
@@ -169,6 +184,7 @@ export default function AdminPage() {
     setEditingSourceId(source.id);
     setNewSourceType(source.type);
     setNewSourceContent(source.content);
+    setNewSourceName(source.name || '');
     setIsAddingSource(true);
   };
 
@@ -178,23 +194,24 @@ export default function AdminPage() {
     let updatedSources;
     if (activeTab === 'live-tv') {
       if (editingSourceId) {
-        updatedSources = liveTvSources.map(s => s.id === editingSourceId ? { ...s, type: newSourceType, content: newSourceContent.trim() } : s);
+        updatedSources = liveTvSources.map(s => s.id === editingSourceId ? { ...s, type: newSourceType, content: newSourceContent.trim(), name: newSourceName.trim() } : s);
       } else {
-        updatedSources = [...liveTvSources, { id: Math.random().toString(36).substring(7), type: newSourceType, content: newSourceContent.trim() }];
+        updatedSources = [...liveTvSources, { id: Math.random().toString(36).substring(7), type: newSourceType, content: newSourceContent.trim(), name: newSourceName.trim() }];
       }
       setLiveTvSources(updatedSources);
       await savePlaylistsToKV('live-tv', updatedSources);
     } else {
       if (editingSourceId) {
-        updatedSources = liveMatchesSources.map(s => s.id === editingSourceId ? { ...s, type: newSourceType, content: newSourceContent.trim() } : s);
+        updatedSources = liveMatchesSources.map(s => s.id === editingSourceId ? { ...s, type: newSourceType, content: newSourceContent.trim(), name: newSourceName.trim() } : s);
       } else {
-        updatedSources = [...liveMatchesSources, { id: Math.random().toString(36).substring(7), type: newSourceType, content: newSourceContent.trim() }];
+        updatedSources = [...liveMatchesSources, { id: Math.random().toString(36).substring(7), type: newSourceType, content: newSourceContent.trim(), name: newSourceName.trim() }];
       }
       setLiveMatchesSources(updatedSources);
       await savePlaylistsToKV('live-matches', updatedSources);
     }
     
     setNewSourceContent('');
+    setNewSourceName('');
     setIsAddingSource(false);
     setEditingSourceId(null);
   };
@@ -472,8 +489,9 @@ export default function AdminPage() {
                           <div key={source.id} className="flex items-center justify-between p-3 border border-border-alt bg-input group">
                             <div className="flex items-center gap-3 overflow-hidden">
                               {source.type === 'url' ? <LinkIcon className="w-4 h-4 text-cyan-500 shrink-0" /> : <FileText className="w-4 h-4 text-purple-500 shrink-0" />}
-                              <div className="text-xs font-mono text-fg truncate">
-                                {source.type === 'url' ? source.content : "Raw M3U8/JSON Content"}
+                              <div className="text-xs font-mono truncate flex flex-col">
+                                {source.name && <span className="font-bold text-fg">{source.name}</span>}
+                                <span className="text-fg-faint text-[10px]">{source.type === 'url' ? source.content : "Raw M3U8/JSON Content"}</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
@@ -523,6 +541,17 @@ export default function AdminPage() {
                             Code Editor (Raw Text)
                           </button>
                         </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono text-fg-dim uppercase tracking-wider">Playlist Name (Optional)</label>
+                          <input
+                            type="text"
+                            value={newSourceName}
+                            onChange={(e) => setNewSourceName(e.target.value)}
+                            placeholder="e.g. Sports Channels V3"
+                            className="w-full px-3 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50"
+                          />
+                        </div>
                         
                         {newSourceType === 'url' ? (
                           <input
@@ -559,7 +588,7 @@ export default function AdminPage() {
 
                         <div className="flex justify-end gap-2 pt-2">
                           <button
-                            onClick={() => { setIsAddingSource(false); setNewSourceContent(''); setEditingSourceId(null); }}
+                            onClick={() => { setIsAddingSource(false); setNewSourceContent(''); setNewSourceName(''); setEditingSourceId(null); }}
                             className="px-4 py-2 text-xs font-mono text-fg-dim hover:text-fg transition-colors"
                           >
                             Cancel
@@ -645,7 +674,11 @@ export default function AdminPage() {
                             className="w-full pl-9 pr-4 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50"
                           />
                         </div>
-                        <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div 
+                          ref={scrollContainerRef}
+                          onDragOver={handleDragOverContainer}
+                          className="space-y-1.5 h-[600px] max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar"
+                        >
                           {parsedChannels
                             .map((ch, index) => ({ ch, index }))
                             .filter(({ ch }) => !channelSearch.trim() || ch.name.toLowerCase().includes(channelSearch.toLowerCase()) || (ch.url || ch.stream_url).toLowerCase().includes(channelSearch.toLowerCase()))
