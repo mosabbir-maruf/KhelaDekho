@@ -20,6 +20,7 @@ const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mo
 interface M3u8Channel {
   name: string;
   url: string;
+  isDefault?: boolean;
 }
 
 function getLogoUrl(name: string): string | null {
@@ -57,12 +58,12 @@ export default function LiveTvPage() {
         if (!res.ok) throw new Error("Failed to fetch channels");
         const body = await res.json();
         if (!active) return;
-        const chs: M3u8Channel[] = (body?.channels || []).map((ch: Record<string, unknown>) => ({ name: ch.name as string, url: ch.url as string }));
+        const chs: M3u8Channel[] = (body?.channels || []).map((ch: Record<string, unknown>) => ({ name: ch.name as string, url: ch.url as string, isDefault: !!ch.isDefault }));
         setChannels(chs);
         if (chs.length > 0) {
           const urlCh = getUrlCh();
           const match = urlCh ? chs.find((c) => c.name === urlCh) : null;
-          setSelectedChannel(match || chs[0]);
+          setSelectedChannel(match || chs.find(c => c.isDefault) || chs[0]);
         }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;

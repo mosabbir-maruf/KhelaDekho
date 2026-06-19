@@ -202,7 +202,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
           const { ch: urlCh } = getUrlParams();
           const matchUrl = (ch: ChannelData) => String(cfg.id(ch)) === urlCh;
           let target = urlCh ? fetched.find(matchUrl) : null;
-          target = target || fetched.find((ch: ChannelData) => cfg.alive(ch)) || fetched[0];
+          target = target || fetched.find((ch: ChannelData) => ch.isDefault) || fetched.find((ch: ChannelData) => cfg.alive(ch)) || fetched[0];
           selectAndReplaceUrl(target);
         }
       } catch {

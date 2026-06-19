@@ -13,6 +13,7 @@ import ListVideo from "lucide-react/dist/esm/icons/list-video";
 import Sliders from "lucide-react/dist/esm/icons/sliders";
 import GripVertical from "lucide-react/dist/esm/icons/grip-vertical";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
+import Star from "lucide-react/dist/esm/icons/star";
 import Link from "next/link";
 
 
@@ -584,7 +585,7 @@ export default function AdminPage() {
                             const newOverrides: Record<string, any> = {};
                             parsedChannels.forEach((ch, index) => {
                               const key = (ch.url || ch.stream_url).trim().toLowerCase();
-                              newOverrides[key] = { customName: ch.name, order: index };
+                              newOverrides[key] = { customName: ch.name, order: index, isDefault: !!ch.isDefault };
                             });
                             const res = await fetch("/api/admin/playlists", {
                               method: "POST",
@@ -655,6 +656,16 @@ export default function AdminPage() {
                             <span className="text-[9px] font-mono text-fg-faint truncate max-w-[150px] shrink-0" title={ch.url || ch.stream_url}>
                               {ch.url || ch.stream_url}
                             </span>
+                            <button
+                              onClick={() => {
+                                const newChannels = parsedChannels.map((c, i) => i === index ? { ...c, isDefault: !c.isDefault } : { ...c, isDefault: false });
+                                setParsedChannels(newChannels);
+                              }}
+                              className={`p-1 transition-colors shrink-0 ${ch.isDefault ? "text-yellow-500" : "text-fg-dim hover:text-yellow-500"}`}
+                              title={ch.isDefault ? "Unset Default" : "Set as Default Channel"}
+                            >
+                              <Star className={`w-4 h-4 ${ch.isDefault ? "fill-yellow-500" : ""}`} />
+                            </button>
                           </div>
                         ))}
                       </div>

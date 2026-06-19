@@ -121,6 +121,7 @@ export async function GET(request: NextRequest) {
           if (override?.hidden) continue;
           
           if (override?.customName) ch.name = override.customName;
+          if (override?.isDefault) ch.isDefault = true;
           ch._order = typeof override?.order === 'number' ? override.order : 999999;
           
           uniqueChannels.push(ch);
