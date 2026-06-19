@@ -75,7 +75,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-24 sm:pb-4 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 24px))" }}>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-4 pt-4 flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-3">
           <div className="flex items-center gap-4 text-[10px] font-mono text-fg-faint uppercase tracking-widest">
             <span className="flex items-center gap-2">
               <span className="text-fg-dim">VERSION:</span> beta-1.0.1
@@ -85,15 +85,17 @@ export function Footer() {
               <span className="text-emerald-500/60">SYS_OPERATIONAL</span>
             </span>
           </div>
-          <div className="text-[10px] font-mono text-fg-faint uppercase tracking-widest flex flex-wrap items-center justify-center sm:justify-end gap-3">
-            <Link href="/docs/api" className="hover:text-fg transition-colors flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-red-500/50" />
-              API Docs
-            </Link>
-            <span className="border-l border-border-alt h-3" />
-            <span>© {new Date().getFullYear()} KhelaDekho</span>
-            <span className="border-l border-border-alt h-3" />
-            <span>A sideproject by Mosabbir Maruf</span>
+          <div className="text-[10px] font-mono text-fg-faint uppercase tracking-widest flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-3">
+            <div className="flex items-center gap-3">
+              <Link href="/docs/api" className="hover:text-fg transition-colors flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-red-500/50" />
+                API Docs
+              </Link>
+              <span className="border-l border-border-alt h-3" />
+              <span>© {new Date().getFullYear()} KhelaDekho</span>
+            </div>
+            <span className="hidden sm:block border-l border-border-alt h-3" />
+            <span className="mt-1 sm:mt-0 text-fg-dim">A sideproject by Mosabbir Maruf</span>
           </div>
         </div>
       </div>
