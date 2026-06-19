@@ -267,9 +267,9 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
         : rawUrl.match(/\.ts($|\?)/) ? "direct"
         : ch.content_type === "video/mp2t" ? "direct"
         : "hls";
-      // Disable proxy for V3 streams to prevent edge function timeouts on heavy video traffic.
-      // Most public V3 links already have CORS enabled natively.
-      const useProxy = false;
+      // We ONLY proxy V3 streams if they are HTTP (insecure) because browsers strictly block mixed content.
+      // If they are HTTPS, we load them directly to prevent Edge function timeouts.
+      const useProxy = streamType === "hls" && rawUrl.startsWith("http://");
       const url = useProxy ? `/api/iptv/proxy?url=${encodeURIComponent(rawUrl)}` : rawUrl;
       const clearKeys = ch.kid && ch.key ? { [ch.kid]: ch.key } : null;
       return {

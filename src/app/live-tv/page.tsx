@@ -283,7 +283,11 @@ export default function LiveTvPage() {
                     </button>
                   </div>
 
-                  <VideoPlayer streamUrl={selectedChannel.url} streamType="hls" clearKeys={null} />
+                  <VideoPlayer 
+                    streamUrl={selectedChannel.url.startsWith("http://") ? `/api/iptv/proxy?url=${encodeURIComponent(selectedChannel.url)}` : selectedChannel.url} 
+                    streamType="hls" 
+                    clearKeys={null} 
+                  />
 
                   {/* Mobile-only: channel details */}
                   <div className="lg:hidden shrink-0">
