@@ -59,6 +59,7 @@ interface ChannelData {
   key?: string;
   id?: string | number;
   status?: string;
+  isDefault?: boolean;
 }
 
 interface VersionMeta {
