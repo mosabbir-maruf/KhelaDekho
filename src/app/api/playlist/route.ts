@@ -2,19 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-// Statically bundled fallback data in case GitHub API fails, rate-limits, or token is missing.
-import liveTvBanglaFallback from "@/../playlist/live-tv/json/bangla.json" with { type: "json" };
-import liveMatchesFifaFallback from "@/../playlist/live-matches/json/fifa.json" with { type: "json" };
-import liveMatchesSportsFallback from "@/../playlist/live-tv/json/sports.json" with { type: "json" };
-
 const FALLBACK_DATA: Record<string, unknown[]> = {
-  "live-tv": [
-    ...(Array.isArray(liveTvBanglaFallback) ? liveTvBanglaFallback : []),
-  ],
-  "live-matches": [
-    ...(Array.isArray(liveMatchesFifaFallback) ? liveMatchesFifaFallback : []),
-    ...(Array.isArray(liveMatchesSportsFallback) ? liveMatchesSportsFallback : []),
-  ],
+  "live-tv": [],
+  "live-matches": [],
 };
 
 // Utility to parse M3U8 string to JSON format
