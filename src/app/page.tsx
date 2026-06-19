@@ -66,13 +66,13 @@ export default async function Home() {
 
           <div className="flex w-full items-center justify-center flex-col sm:flex-row gap-3 sm:gap-4 py-4 mt-6">
             <Link
-              href="/live-matches"
+              href="/live-tv"
               className="inline-flex items-center justify-center rounded-sm text-xs font-mono uppercase tracking-widest font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 disabled:pointer-events-none disabled:opacity-50 bg-white text-black hover:bg-neutral-200 h-10 px-8 py-2 border border-transparent shadow shadow-white/20 w-full sm:w-auto"
             >
               [ Stream TV Live ]
             </Link>
             <Link
-              href="/football"
+              href="/live-matches"
               className="inline-flex items-center justify-center rounded-sm text-xs font-mono uppercase tracking-widest font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 disabled:pointer-events-none disabled:opacity-50 border border-border-alt bg-transparent hover:bg-hover h-10 px-8 py-2 text-fg-muted w-full sm:w-auto"
             >
               <Trophy className="mr-3 h-4 w-4 text-fg-dim" />
@@ -406,14 +406,14 @@ export default async function Home() {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 pt-2 w-full max-w-[500px]">
-                    <Link
-                      href="/live-matches"
-                      className="w-full sm:flex-1 inline-flex items-center justify-center bg-white text-black hover:bg-neutral-200 h-12 px-8 py-2 font-mono text-xs uppercase tracking-widest font-bold transition-all hover:shadow-[0_0_30px_rgba(255,255,255,0.15)]"
-                    >
-                      [ Live Matches ]
-                    </Link>
-                  </div>
+                  <Link
+                    href="/live-matches"
+                    className="w-full sm:flex-1 inline-flex items-center justify-center bg-white text-black hover:bg-neutral-200 h-12 px-8 py-2 font-mono text-xs uppercase tracking-widest font-bold transition-all hover:shadow-[0_0_30px_rgba(255,255,255,0.15)]"
+                  >
+                    [ Live Matches ]
+                  </Link>
                 </div>
+              </div>
 
               {/* Bottom Stats */}
               <div className="flex flex-wrap items-center justify-center sm:justify-between gap-2 sm:gap-0 px-4 sm:px-6 py-3 border-t border-border bg-white/[0.01] text-[10px] font-mono text-fg-faint tracking-widest uppercase">
