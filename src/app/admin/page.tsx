@@ -626,6 +626,7 @@ export default function AdminPage() {
                       >
                         {playlistLoading ? "Saving Layout..." : "Deploy Channel Layout"}
                       </button>
+                      </div>
                     </div>
 
                     {parsedLoading ? (
