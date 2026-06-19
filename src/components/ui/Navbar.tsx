@@ -236,7 +236,7 @@ export function Navbar() {
                       }`}
                   >
                     <Terminal className="w-4 h-4 text-emerald-500" />
-                    Decryption API
+                    KhelaDekho API
                   </Link>
                   <Link
                     href="/docs/architecture"

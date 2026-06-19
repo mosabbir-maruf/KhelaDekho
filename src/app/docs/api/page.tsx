@@ -15,7 +15,7 @@ export default function DecryptionApiPage() {
     { icon: Cpu, label: "FastAPI Backend", value: "Port 8000", desc: "Local server runner" },
     { icon: Zap, label: "Cloudflare Edge", value: "Edge Worker", desc: "Serverless V8 routes" },
     { icon: Key, label: "Authentication", value: "Token Auth", desc: "Edge validation" },
-    { icon: Shield, label: "Stream Decoding", value: "AES-GCM", desc: "A256GCM v2 parser" },
+    { icon: Shield, label: "Stream Decoding", value: "AES-GCM", desc: "Stream parser" },
   ];
 
   return (
@@ -29,14 +29,13 @@ export default function DecryptionApiPage() {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
                 <Cpu className="w-3 h-3 text-red-500" />
-                API Specification
+                API Reference
               </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-fg font-mono leading-tight">
-                Decryption<span className="text-red-500">.</span> API
+                KhelaDekho<span className="text-red-500">.</span> API
               </h1>
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
-                Technical reference for KhelaDekho proxy aggregation, cryptographic key signatures, 
-                and AES-GCM stream decryption pipelines.
+                Technical reference for KhelaDekho proxy aggregation, stream proxying, and API endpoints.
               </p>
             </div>
             <Link

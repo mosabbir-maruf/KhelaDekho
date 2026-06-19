@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-const title = "Decryption & Scraper API";
-const description = "Technical documentation for the KhelaDekho Scraper and stream decryption API endpoints, signature authentication, and client integrations.";
+const title = "KhelaDekho API";
+const description = "Technical reference for KhelaDekho proxy aggregation, stream proxying, and API endpoints.";
 const url = "https://kheladekho.pages.dev/docs/api";
 
 export const metadata: Metadata = {

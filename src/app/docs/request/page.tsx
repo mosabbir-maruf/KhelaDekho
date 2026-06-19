@@ -83,7 +83,7 @@ export default function RequestAccessPage() {
                     <ArrowLeft className="w-4 h-4" />
                     <div className="flex flex-col text-left">
                         <span className="text-[10px] text-fg-faint uppercase tracking-widest group-hover:text-fg-dim transition-colors">Back to Start</span>
-                        <span>Decryption API</span>
+                        <span>KhelaDekho API</span>
                     </div>
                 </Link>
 

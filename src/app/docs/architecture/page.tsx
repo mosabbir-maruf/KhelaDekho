@@ -150,7 +150,7 @@ const stream = await response.json();
                     <ArrowLeft className="w-4 h-4" />
                     <div className="flex flex-col text-left">
                         <span className="text-[10px] text-fg-faint uppercase tracking-widest group-hover:text-fg-dim transition-colors">Previous</span>
-                        <span>Decryption API Docs</span>
+                        <span>KhelaDekho API</span>
                     </div>
                 </Link>
 

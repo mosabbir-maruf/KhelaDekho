@@ -80,7 +80,7 @@ export function Sidebar() {
                 className={`${baseLinkClass} ${isActive("/docs/api") ? activeLinkClass : inactiveLinkClass}`}
               >
                 <Terminal className="w-4 h-4 text-emerald-500" />
-                Decryption API Docs
+                KhelaDekho API
               </Link>
             </li>
             <li>
