@@ -8,12 +8,12 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Edit3 from "lucide-react/dist/esm/icons/edit-3";
-import FileText from "lucide-react/dist/esm/icons/file-text";
 import ListVideo from "lucide-react/dist/esm/icons/list-video";
 import Sliders from "lucide-react/dist/esm/icons/sliders";
-import GripVertical from "lucide-react/dist/esm/icons/grip-vertical";
+import ArrowUpToLine from "lucide-react/dist/esm/icons/arrow-up-to-line";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
 import Star from "lucide-react/dist/esm/icons/star";
+import Search from "lucide-react/dist/esm/icons/search";
 import Link from "next/link";
 
 
@@ -44,7 +44,17 @@ export default function AdminPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [parsedChannels, setParsedChannels] = useState<any[]>([]);
   const [parsedLoading, setParsedLoading] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [channelSearch, setChannelSearch] = useState("");
+
+  const moveChannel = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0) toIndex = 0;
+    if (toIndex >= parsedChannels.length) toIndex = parsedChannels.length - 1;
+    if (fromIndex === toIndex) return;
+    const newChannels = [...parsedChannels];
+    const [moved] = newChannels.splice(fromIndex, 1);
+    newChannels.splice(toIndex, 0, moved);
+    setParsedChannels(newChannels);
+  };
 
   const fetchPlaylists = async (authSecret: string) => {
     try {
@@ -611,63 +621,74 @@ export default function AdminPage() {
                     ) : parsedChannels.length === 0 ? (
                       <div className="text-center py-8 text-xs font-mono text-fg-dim">No channels found. Add sources first.</div>
                     ) : (
-                      <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                        {parsedChannels.map((ch, index) => (
-                          <div
-                            key={`${ch.url || ch.stream_url}-${index}`}
-                            draggable
-                            onDragStart={(e) => {
-                              setDraggedIndex(index);
-                              e.dataTransfer.effectAllowed = "move";
-                              // slight delay for drag styling
-                              setTimeout(() => (e.target as HTMLElement).classList.add("opacity-30"), 0);
-                            }}
-                            onDragEnd={(e) => {
-                              setDraggedIndex(null);
-                              (e.target as HTMLElement).classList.remove("opacity-30");
-                            }}
-                            onDragOver={(e) => {
-                              e.preventDefault();
-                              e.dataTransfer.dropEffect = "move";
-                            }}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              if (draggedIndex === null || draggedIndex === index) return;
-                              const newChannels = [...parsedChannels];
-                              const [draggedItem] = newChannels.splice(draggedIndex, 1);
-                              newChannels.splice(index, 0, draggedItem);
-                              setParsedChannels(newChannels);
-                              setDraggedIndex(null);
-                            }}
-                            className="flex items-center gap-3 p-2 border border-border-alt bg-card cursor-move group transition-all hover:border-red-500/30"
-                          >
-                            <GripVertical className="w-4 h-4 text-fg-dim group-hover:text-red-400 shrink-0" />
-                            <span className="text-[10px] font-mono text-fg-faint w-6 text-right shrink-0">{index + 1}.</span>
-                            <input
-                              type="text"
-                              value={ch.name || ''}
-                              onChange={(e) => {
-                                const newChannels = [...parsedChannels];
-                                newChannels[index].name = e.target.value;
-                                setParsedChannels(newChannels);
-                              }}
-                              className="bg-transparent border-b border-transparent focus:border-red-500/50 outline-none text-xs font-mono text-fg flex-1 min-w-0 px-1 py-0.5"
-                            />
-                            <span className="text-[9px] font-mono text-fg-faint truncate max-w-[150px] shrink-0" title={ch.url || ch.stream_url}>
-                              {ch.url || ch.stream_url}
-                            </span>
-                            <button
-                              onClick={() => {
-                                const newChannels = parsedChannels.map((c, i) => i === index ? { ...c, isDefault: !c.isDefault } : { ...c, isDefault: false });
-                                setParsedChannels(newChannels);
-                              }}
-                              className={`p-1 transition-colors shrink-0 ${ch.isDefault ? "text-yellow-500" : "text-fg-dim hover:text-yellow-500"}`}
-                              title={ch.isDefault ? "Unset Default" : "Set as Default Channel"}
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-dim" />
+                          <input
+                            type="text"
+                            placeholder="Search to quickly find and move a channel..."
+                            value={channelSearch}
+                            onChange={(e) => setChannelSearch(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-input border border-border-alt text-xs font-mono text-fg focus:outline-none focus:border-red-500/50"
+                          />
+                        </div>
+                        <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                          {parsedChannels
+                            .map((ch, index) => ({ ch, index }))
+                            .filter(({ ch }) => !channelSearch.trim() || ch.name.toLowerCase().includes(channelSearch.toLowerCase()) || (ch.url || ch.stream_url).toLowerCase().includes(channelSearch.toLowerCase()))
+                            .map(({ ch, index }) => (
+                            <div
+                              key={`${ch.url || ch.stream_url}-${index}`}
+                              className="flex items-center gap-3 p-2 border border-border-alt bg-card transition-all hover:border-red-500/30"
                             >
-                              <Star className={`w-4 h-4 ${ch.isDefault ? "fill-yellow-500" : ""}`} />
-                            </button>
-                          </div>
-                        ))}
+                              <input
+                                type="number"
+                                value={index + 1}
+                                min={1}
+                                max={parsedChannels.length}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  if (!isNaN(val)) moveChannel(index, val - 1);
+                                }}
+                                className="w-12 bg-input border border-border-alt text-[10px] font-mono text-fg text-center py-0.5 focus:border-red-500 outline-none hide-spinners shrink-0"
+                                title="Type position number to move instantly"
+                              />
+                              <input
+                                type="text"
+                                value={ch.name || ''}
+                                onChange={(e) => {
+                                  const newChannels = [...parsedChannels];
+                                  newChannels[index].name = e.target.value;
+                                  setParsedChannels(newChannels);
+                                }}
+                                className="bg-transparent border-b border-transparent focus:border-red-500/50 outline-none text-xs font-mono text-fg flex-1 min-w-0 px-1 py-0.5"
+                              />
+                              <span className="text-[9px] font-mono text-fg-faint truncate max-w-[100px] sm:max-w-[150px] shrink-0" title={ch.url || ch.stream_url}>
+                                {ch.url || ch.stream_url}
+                              </span>
+                              
+                              <div className="flex items-center gap-1 shrink-0 border-l border-border-alt pl-2">
+                                <button
+                                  onClick={() => moveChannel(index, 0)}
+                                  className="p-1 text-fg-dim hover:text-cyan-400 transition-colors"
+                                  title="Send to Top (Position 1)"
+                                >
+                                  <ArrowUpToLine className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const newChannels = parsedChannels.map((c, i) => i === index ? { ...c, isDefault: !c.isDefault } : { ...c, isDefault: false });
+                                    setParsedChannels(newChannels);
+                                  }}
+                                  className={`p-1 transition-colors ${ch.isDefault ? "text-yellow-500" : "text-fg-dim hover:text-yellow-500"}`}
+                                  title={ch.isDefault ? "Unset Default" : "Set as Default Channel"}
+                                >
+                                  <Star className={`w-4 h-4 ${ch.isDefault ? "fill-yellow-500" : ""}`} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
