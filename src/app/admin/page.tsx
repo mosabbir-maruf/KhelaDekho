@@ -95,7 +95,7 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ type: 'success', text: `Successfully updated default proxy to ${version.toUpperCase()}` });
+        setMessage({ type: 'success', text: `Successfully updated default routing to ${version.toUpperCase()}` });
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to update settings' });
       }
@@ -148,7 +148,7 @@ export default function AdminPage() {
       type: newSourceType,
       content: newSourceContent.trim()
     };
-    
+
     if (activeTab === 'live-tv') {
       const updated = [...liveTvSources, newSource];
       setLiveTvSources(updated);
@@ -158,7 +158,7 @@ export default function AdminPage() {
       setLiveMatchesSources(updated);
       await savePlaylistsToKV('live-matches', updated);
     }
-    
+
     setNewSourceContent('');
     setIsAddingSource(false);
   };
@@ -255,7 +255,7 @@ export default function AdminPage() {
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
                 Configure edge proxy routing and default server infrastructure. Changes made here apply immediately to all clients.
               </p>
-              
+
               {/* Inline Status Row */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] sm:text-xs font-mono text-fg-dim pt-2 border-t border-border-alt/30">
                 <div className="flex items-center gap-2">
@@ -268,12 +268,11 @@ export default function AdminPage() {
                 </div>
                 <div className="text-fg-faint opacity-50">|</div>
                 <div className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    version === "v1" ? "bg-yellow-500" :
-                    version === "v2" ? "bg-green-500" :
-                    version === "v3" ? "bg-cyan-500" :
-                    "bg-purple-500"
-                  }`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${version === "v1" ? "bg-yellow-500" :
+                      version === "v2" ? "bg-green-500" :
+                        version === "v3" ? "bg-cyan-500" :
+                          "bg-purple-500"
+                    }`} />
                   <span>Active Default: <strong className="text-fg">{version.toUpperCase()}</strong></span>
                 </div>
               </div>
@@ -291,7 +290,7 @@ export default function AdminPage() {
           {/* Configuration Box */}
           <div className="border border-border-alt bg-card relative">
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
-            
+
             <div className="p-6 space-y-6">
               <div className="space-y-1">
                 <h2 className="text-sm font-mono font-bold text-fg flex items-center gap-2">
@@ -303,7 +302,7 @@ export default function AdminPage() {
               </div>
 
               <form onSubmit={handleUpdateSettings} className="space-y-6">
-                
+
                 {/* Compact Version Selectors */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {(["v1", "v2", "v3", "v4"] as const).map((v) => {
@@ -320,11 +319,10 @@ export default function AdminPage() {
                         key={v}
                         type="button"
                         onClick={() => setVersion(v)}
-                        className={`p-3 border font-mono text-xs text-center transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
-                          version === v
+                        className={`p-3 border font-mono text-xs text-center transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${version === v
                             ? `${activeBorders[v]} font-bold`
                             : "border-border-alt text-fg-dim bg-input hover:border-border hover:text-fg"
-                        }`}
+                          }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${dotColors[v]}`} />
                         {labels[v]}
@@ -334,11 +332,10 @@ export default function AdminPage() {
                 </div>
 
                 {message && (
-                  <div className={`p-3.5 text-xs font-mono border ${
-                    message.type === 'success'
+                  <div className={`p-3.5 text-xs font-mono border ${message.type === 'success'
                       ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                       : 'border-red-500/30 bg-red-500/10 text-red-400'
-                  }`}>
+                    }`}>
                     {message.text}
                   </div>
                 )}
@@ -389,11 +386,10 @@ export default function AdminPage() {
 
               <div className="space-y-4">
                 {playlistMessage && (
-                  <div className={`p-3.5 text-xs font-mono border ${
-                    playlistMessage.type === 'success'
+                  <div className={`p-3.5 text-xs font-mono border ${playlistMessage.type === 'success'
                       ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                       : 'border-red-500/30 bg-red-500/10 text-red-400'
-                  }`}>
+                    }`}>
                     {playlistMessage.text}
                   </div>
                 )}
@@ -442,7 +438,7 @@ export default function AdminPage() {
                         Raw Text Content
                       </button>
                     </div>
-                    
+
                     {newSourceType === 'url' ? (
                       <input
                         type="url"
@@ -457,10 +453,10 @@ export default function AdminPage() {
                           <div className="pt-2 pb-1">
                             <label className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border-alt hover:border-red-500/50 hover:bg-red-500/5 cursor-pointer transition-all text-xs font-mono text-fg-dim">
                               <Plus className="w-4 h-4 mr-2" /> Select .json or .m3u8 file from device
-                              <input 
-                                type="file" 
-                                accept=".json,.m3u8,.m3u,.txt" 
-                                className="hidden" 
+                              <input
+                                type="file"
+                                accept=".json,.m3u8,.m3u,.txt"
+                                className="hidden"
                                 onChange={handleFileSelect}
                               />
                             </label>
