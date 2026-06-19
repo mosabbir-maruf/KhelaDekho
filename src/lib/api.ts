@@ -114,7 +114,10 @@ async function fetchAPI<T>(path: string, options: RequestInit = {}): Promise<T |
     if (!rawBaseUrl) return null;
     const baseUrl = rawBaseUrl.replace(/\/+$/, "");
     const xkey = getXKey();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(`${baseUrl}${path}`, {
+      signal: controller.signal,
       ...options,
       headers: {
         Accept: "application/json",
@@ -123,6 +126,7 @@ async function fetchAPI<T>(path: string, options: RequestInit = {}): Promise<T |
       },
       next: { revalidate: 10 },
     });
+    clearTimeout(timeoutId);
     if (!res.ok) {
       console.error(`API Fetch Error: Status ${res.status} for path ${path}`);
       return null;
