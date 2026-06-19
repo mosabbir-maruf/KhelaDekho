@@ -362,6 +362,31 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         return;
       }
 
+      try {
+        const HlsClass = await getHls();
+        if (HlsClass.isSupported()) {
+          const hls = new HlsClass({ enableWorker: true, lowLatencyMode: true, maxBufferLength: 15, maxMaxBufferLength: 30, backBufferLength: 10, capLevelToPlayerSize: false, autoStartLoad: true });
+          hlsPlayerRef.current = hls;
+          hls.loadSource(effectiveUrl);
+          hls.attachMedia(video);
+          hls.on(HlsClass.Events.MANIFEST_PARSED, (_, data) => {
+            setIsLoading(false);
+            autoPlayVideo(video);
+            setLevels(data.levels.map((level, idx) => ({ id: idx, name: level.height ? `${level.height}p` : `Level ${idx}` })).sort((a, b) => b.id - a.id));
+          });
+          hls.on(HlsClass.Events.ERROR, (_, data) => {
+            if (data.fatal) {
+              if (!tryFallback()) {
+                if (data.type === HlsClass.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+                else if (data.type === HlsClass.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+                else { cleanup(); }
+              }
+            }
+          });
+          return;
+        }
+      } catch {}
+
       if (typeof video.canPlayType === "function" && video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = effectiveUrl;
         const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
@@ -375,29 +400,10 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         cleanupNativeListeners = () => { video.removeEventListener("loadedmetadata", onLoaded); video.removeEventListener("error", nativeErrorHandler); };
         return;
       } else {
-        try {
-          const HlsClass = await getHls();
-          if (HlsClass.isSupported()) {
-            const hls = new HlsClass({ enableWorker: true, lowLatencyMode: true, maxBufferLength: 15, maxMaxBufferLength: 30, backBufferLength: 10, capLevelToPlayerSize: false, autoStartLoad: true });
-            hlsPlayerRef.current = hls;
-            hls.loadSource(effectiveUrl);
-            hls.attachMedia(video);
-            hls.on(HlsClass.Events.MANIFEST_PARSED, (_, data) => {
-              setIsLoading(false);
-              autoPlayVideo(video);
-              setLevels(data.levels.map((level, idx) => ({ id: idx, name: level.height ? `${level.height}p` : `Level ${idx}` })).sort((a, b) => b.id - a.id));
-            });
-            hls.on(HlsClass.Events.ERROR, (_, data) => {
-              if (data.fatal) {
-                if (!tryFallback()) {
-                  if (data.type === HlsClass.ErrorTypes.NETWORK_ERROR) hls.startLoad();
-                  else if (data.type === HlsClass.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-                  else { cleanup(); }
-                }
-              }
-            });
-          } else { setIsLoading(false); }
-        } catch { setIsLoading(false); }
+        if (!tryFallback()) {
+          setPlayerError("HLS playback is not supported on this device.");
+          setIsLoading(false);
+        }
       }
     };
 
