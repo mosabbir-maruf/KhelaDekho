@@ -81,6 +81,15 @@ async function getHls(): Promise<typeof Hls> {
   return hlsConstructor;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mpegtsModule: any = null;
+async function getMpegts() {
+  if (!mpegtsModule) {
+    mpegtsModule = (await import("mpegts.js")).default;
+  }
+  return mpegtsModule;
+}
+
 function detectType(url: string, hint: string): string {
   if (hint === "dash" || url.includes(".mpd")) return "dash";
   if (hint === "direct" || url.match(/\.ts($|\?)/)) return "direct";
@@ -105,6 +114,8 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shakaPlayerRef = useRef<any>(null);
   const hlsPlayerRef = useRef<Hls | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mpegtsPlayerRef = useRef<any>(null);
   const attachedTypeRef = useRef<string | null>(null);
 
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
@@ -266,19 +277,19 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       return false;
     };
     const loadStream = async () => {
-      // Destroy HLS if switching to DASH
-      if (newType === "dash" && hlsPlayerRef.current) {
+      if (newType !== "hls" && hlsPlayerRef.current) {
         hlsPlayerRef.current.destroy();
         hlsPlayerRef.current = null;
-        attachedTypeRef.current = null;
       }
-
-      // Destroy Shaka if switching to HLS
       if (newType !== "dash" && shakaPlayerRef.current) {
         try { await shakaPlayerRef.current.destroy(); } catch {}
         shakaPlayerRef.current = null;
-        attachedTypeRef.current = null;
       }
+      if (newType !== "direct" && mpegtsPlayerRef.current) {
+        try { mpegtsPlayerRef.current.destroy(); } catch {}
+        mpegtsPlayerRef.current = null;
+      }
+      attachedTypeRef.current = null;
 
       if (newType === "dash") {
         // Reuse existing Shaka player or create one
@@ -353,6 +364,30 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       }
 
       if (newType === "direct") {
+        try {
+          const mpegts = await getMpegts();
+          if (mpegts.isSupported()) {
+            const isTs = effectiveUrl.toLowerCase().includes(".ts");
+            const player = mpegts.createPlayer({
+              type: isTs ? "m2ts" : "mp4",
+              isLive: true,
+              url: effectiveUrl,
+            });
+            mpegtsPlayerRef.current = player;
+            player.attachMediaElement(video);
+            player.load();
+
+            player.on(mpegts.Events.ERROR, () => {
+              if (!destroyed && !tryFallback()) setPlayerError("Failed to load direct stream.");
+            });
+
+            const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
+            video.addEventListener("loadedmetadata", onLoaded, { once: true });
+            cleanupNativeListeners = () => { video.removeEventListener("loadedmetadata", onLoaded); };
+            return;
+          }
+        } catch {}
+
         video.src = effectiveUrl;
         const onLoaded = () => { if (destroyed) return; setIsLoading(false); autoPlayVideo(video); };
         const onError = () => { if (destroyed) return; setIsLoading(false); if (!tryFallback()) setPlayerError("Failed to load direct stream."); };
@@ -413,6 +448,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       destroyed = true;
       if (hlsPlayerRef.current) { hlsPlayerRef.current.destroy(); hlsPlayerRef.current = null; }
       if (shakaPlayerRef.current) { try { shakaPlayerRef.current.destroy(); } catch {} shakaPlayerRef.current = null; }
+      if (mpegtsPlayerRef.current) { try { mpegtsPlayerRef.current.destroy(); } catch {} mpegtsPlayerRef.current = null; }
       attachedTypeRef.current = null;
       if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
       if (cleanupNativeListeners) { cleanupNativeListeners(); cleanupNativeListeners = null; }
