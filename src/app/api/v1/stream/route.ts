@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
-    const xkey = process.env.NEXT_PUBLIC_XKEY || "";
+    const xkey = process.env.XKEY || "";
     const headers: Record<string, string> = { Accept: "application/json" };
     if (xkey) headers["xkey"] = xkey;
     const res = await fetch(`${workerUrl}/api/v1/channels/${encodeURIComponent(key)}/stream`, {

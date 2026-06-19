@@ -133,7 +133,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `window.__KHELADEKHO_API_URL = ${JSON.stringify(process.env.KHELADEKHO_API_URL || "")};
-window.__KHELADEKHO_XKEY = ${JSON.stringify(process.env.NEXT_PUBLIC_XKEY || "")};`,
+window.__KHELADEKHO_XKEY = ${JSON.stringify(process.env.XKEY || "")};`,
           }}
         />
       </head>

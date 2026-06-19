@@ -83,9 +83,8 @@ export function getXKey(): string {
   if (typeof window !== "undefined") {
     const injected = (window as Window & { __KHELADEKHO_XKEY?: string }).__KHELADEKHO_XKEY;
     if (injected) return injected;
-    return process.env.NEXT_PUBLIC_XKEY || "";
   }
-  return process.env.XKEY || process.env.NEXT_PUBLIC_XKEY || "";
+  return process.env.XKEY || "";
 }
 
 export function getApiBaseUrl(): string {
