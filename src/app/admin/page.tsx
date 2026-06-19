@@ -85,7 +85,7 @@ export default function AdminPage() {
         setLiveTvSources(data.liveTvSources || []);
         setLiveMatchesSources(data.liveMatchesSources || []);
       }
-    } catch (e) {
+    } catch {
       console.error("Failed to fetch playlists");
     }
   };
@@ -112,7 +112,7 @@ export default function AdminPage() {
       } else {
         setAuthError("Invalid authentication key. Access denied.");
       }
-    } catch (error) {
+    } catch {
       setAuthError("Network error occurred during verification.");
     } finally {
       setLoading(false);
@@ -138,7 +138,7 @@ export default function AdminPage() {
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to update settings' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Network error occurred' });
     } finally {
       setLoading(false);
@@ -173,7 +173,7 @@ export default function AdminPage() {
       } else {
         setPlaylistMessage({ type: 'error', text: `Failed to save ${source} playlists` });
       }
-    } catch (e) {
+    } catch {
       setPlaylistMessage({ type: 'error', text: 'Network error saving playlists' });
     } finally {
       setPlaylistLoading(false);
@@ -633,7 +633,7 @@ export default function AdminPage() {
                         onClick={async () => {
                           setPlaylistLoading(true);
                           try {
-                            const newOverrides: Record<string, any> = {};
+                            const newOverrides: Record<string, unknown> = {};
                             parsedChannels.forEach((ch, index) => {
                               const key = (ch.url || ch.stream_url).trim().toLowerCase();
                               newOverrides[key] = { customName: ch.name, order: index, isDefault: !!ch.isDefault };

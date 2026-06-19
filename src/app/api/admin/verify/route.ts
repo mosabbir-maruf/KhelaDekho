@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
 
     let defaultVersion = "v4";
     try {
-      const processEnv = process.env as any;
-      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS;
+      const processEnv = process.env as Record<string, unknown>;
+      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (...args: unknown[]) => unknown, put: (...args: unknown[]) => unknown } | undefined;
       if (KHELA_SETTINGS) {
         const savedVersion = await KHELA_SETTINGS.get("defaultVersion");
         if (savedVersion && ["v1", "v2", "v3", "v4"].includes(savedVersion)) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, defaultVersion });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

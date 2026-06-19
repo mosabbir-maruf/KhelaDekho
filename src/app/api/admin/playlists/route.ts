@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const processEnv = process.env as any;
-    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS;
+    const processEnv = process.env as Record<string, unknown>;
+    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (...args: unknown[]) => unknown, put: (...args: unknown[]) => unknown } | undefined;
 
     if (!KHELA_SETTINGS) {
        return NextResponse.json({ error: 'KV Database not bound' }, { status: 500 });

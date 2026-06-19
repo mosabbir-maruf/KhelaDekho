@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, getXKey, sanitizeBaseUrl, FootballMatch } from "@/lib/api";
 import { LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
@@ -103,7 +103,7 @@ function getUrlParams() {
   return { v: params.get("v"), ch: params.get("ch") };
 }
 
-export default function LiveMatchesClient({ initialVersion }: { initialVersion: ApiVersion }) {
+export default function LiveMatchesClient({ initialVersion, initialLiveMatches = [] }: { initialVersion: ApiVersion; initialLiveMatches?: FootballMatch[] }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -321,13 +321,13 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   return (
     <div className="min-h-dvh">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
-        <div className="relative border border-border-alt bg-card p-8 md:p-12">
+        <div className="relative border border-border-alt bg-card p-6 md:p-8">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
           </div>
-          <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 z-10">
-            <div className="space-y-4">
+          <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-4 z-10">
+            <div className="space-y-2.5">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
                 <Tv className="w-3 h-3 text-red-500" />
                 {cfg.label}
@@ -359,7 +359,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                           : "text-fg-dim hover:text-fg hover:bg-hover"
                         }`}
                     >
-                      <span className={`w-2 h-2 rounded-full ${VERSION_CONFIG[v].color}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${VERSION_CONFIG[v].color}`} />
                       {v.toUpperCase()}
                     </button>
                   ))}
@@ -367,7 +367,26 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
               )}
             </div>
           </div>
-          <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-6">
+
+          {/* LIVE MATCHES HERO TICKER */}
+          {initialLiveMatches && initialLiveMatches.filter(m => m.intHomeScore !== null && m.intAwayScore !== null && !["Match Finished", "Finished", "FT", "Not Started", "Postponed", "Cancelled", "TBA"].includes(m.strStatus)).length > 0 && (
+            <div className="relative mt-6 z-10 overflow-hidden mask-edges select-none pointer-events-none md:pointer-events-auto">
+              <div className="flex justify-center overflow-x-auto gap-6 pb-2 custom-scrollbar snap-x">
+                {initialLiveMatches.filter(m => m.intHomeScore !== null && m.intAwayScore !== null && !["Match Finished", "Finished", "FT", "Not Started", "Postponed", "Cancelled", "TBA"].includes(m.strStatus)).map((match, i) => (
+                  <div key={match.idEvent || i} className="snap-start shrink-0 inline-flex items-center gap-2.5 text-[10px] font-mono uppercase tracking-widest bg-input/30 px-3 py-1.5 border border-border-alt/50 shadow-sm rounded-sm pointer-events-auto select-none">
+                    {match.strHomeTeamBadge && <img src={match.strHomeTeamBadge} alt="" draggable={false} className="w-3.5 h-3.5 object-contain select-none pointer-events-none" />}
+                    <span className="text-fg-dim font-bold">{match.strHomeTeam}</span>
+                    <span className="font-bold text-red-500 tabular-nums">{match.intHomeScore !== null ? match.intHomeScore : "-"}</span>
+                    <span className="text-fg-faint mx-0.5">-</span>
+                    <span className="font-bold text-red-500 tabular-nums">{match.intAwayScore !== null ? match.intAwayScore : "-"}</span>
+                    <span className="text-fg-dim font-bold">{match.strAwayTeam}</span>
+                    {match.strAwayTeamBadge && <img src={match.strAwayTeamBadge} alt="" draggable={false} className="w-3.5 h-3.5 object-contain select-none pointer-events-none" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-3">
             Stream buffering? Switch channel or server.
           </p>
         </div>

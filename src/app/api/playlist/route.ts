@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const processEnv = process.env as any;
-    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS;
+    const processEnv = process.env as Record<string, unknown>;
+    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (...args: unknown[]) => unknown, put: (...args: unknown[]) => unknown } | undefined;
 
     if (!KHELA_SETTINGS) {
        console.error("KV Database not bound. Falling back.");
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
             try {
               const json = JSON.parse(src.content);
               if (Array.isArray(json)) return json;
-            } catch (e) {
+            } catch {
               // Not json, assume M3U8
             }
             return parseM3u8(src.content);
@@ -136,6 +136,7 @@ export async function GET(request: NextRequest) {
     uniqueChannels.sort((a, b) => a._order - b._order);
     
     const finalChannels = uniqueChannels.map(ch => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { _order, ...rest } = ch;
       return rest;
     });
