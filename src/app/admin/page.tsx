@@ -11,7 +11,7 @@ import Edit3 from "lucide-react/dist/esm/icons/edit-3";
 import FileText from "lucide-react/dist/esm/icons/file-text";
 import ListVideo from "lucide-react/dist/esm/icons/list-video";
 import Sliders from "lucide-react/dist/esm/icons/sliders";
-import ArrowUpToLine from "lucide-react/dist/esm/icons/arrow-up-to-line";
+import GripVertical from "lucide-react/dist/esm/icons/grip-vertical";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
 import Star from "lucide-react/dist/esm/icons/star";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [parsedChannels, setParsedChannels] = useState<any[]>([]);
   const [parsedLoading, setParsedLoading] = useState(false);
   const [channelSearch, setChannelSearch] = useState("");
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const moveChannel = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0) toIndex = 0;
@@ -589,7 +590,17 @@ export default function AdminPage() {
                   <div className="space-y-4 border border-border-alt bg-input/20 p-4">
                     <div className="flex items-center justify-between border-b border-border-alt pb-2">
                       <div className="text-xs font-mono text-fg font-bold">Drag & Drop Reordering & Renaming</div>
-                      <button
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const newChannels = parsedChannels.map(c => ({ ...c, isDefault: false }));
+                            setParsedChannels(newChannels);
+                          }}
+                          className="px-3 py-2 border border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10 font-mono text-[10px] uppercase font-bold transition-all"
+                        >
+                          Clear Default
+                        </button>
+                        <button
                         onClick={async () => {
                           setPlaylistLoading(true);
                           try {
@@ -640,8 +651,29 @@ export default function AdminPage() {
                             .map(({ ch, index }) => (
                             <div
                               key={`${ch.url || ch.stream_url}-${index}`}
-                              className="flex items-center gap-3 p-2 border border-border-alt bg-card transition-all hover:border-red-500/30"
+                              draggable
+                              onDragStart={(e) => {
+                                setDraggedIndex(index);
+                                e.dataTransfer.effectAllowed = "move";
+                                setTimeout(() => (e.target as HTMLElement).classList.add("opacity-30"), 0);
+                              }}
+                              onDragEnd={(e) => {
+                                setDraggedIndex(null);
+                                (e.target as HTMLElement).classList.remove("opacity-30");
+                              }}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = "move";
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                if (draggedIndex === null || draggedIndex === index) return;
+                                moveChannel(draggedIndex, index);
+                                setDraggedIndex(null);
+                              }}
+                              className="flex items-center gap-3 p-2 border border-border-alt bg-card cursor-move transition-all hover:border-red-500/30 group"
                             >
+                              <GripVertical className="w-4 h-4 text-fg-dim group-hover:text-red-400 shrink-0" />
                               <input
                                 type="number"
                                 value={index + 1}
@@ -669,13 +701,6 @@ export default function AdminPage() {
                               </span>
                               
                               <div className="flex items-center gap-1 shrink-0 border-l border-border-alt pl-2">
-                                <button
-                                  onClick={() => moveChannel(index, 0)}
-                                  className="p-1 text-fg-dim hover:text-cyan-400 transition-colors"
-                                  title="Send to Top (Position 1)"
-                                >
-                                  <ArrowUpToLine className="w-4 h-4" />
-                                </button>
                                 <button
                                   onClick={() => {
                                     const newChannels = parsedChannels.map((c, i) => i === index ? { ...c, isDefault: !c.isDefault } : { ...c, isDefault: false });
