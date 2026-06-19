@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const processEnv = process.env as Record<string, unknown>;
-    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (...args: unknown[]) => unknown, put: (...args: unknown[]) => unknown } | undefined;
+    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (key: string, type?: string) => Promise<unknown>, put: (key: string, value: unknown) => Promise<void> } | undefined;
 
     if (!KHELA_SETTINGS) {
        return NextResponse.json({ error: 'KV Database not bound' }, { status: 500 });
@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
       const liveTvSources = await KHELA_SETTINGS.get("playlist_sources_live-tv", "json") || [];
       const liveMatchesSources = await KHELA_SETTINGS.get("playlist_sources_live-matches", "json") || [];
       
-      const liveTvOverrides = await KHELA_SETTINGS.get("playlist_overrides_live-tv", "json") || {};
-      const liveMatchesOverrides = await KHELA_SETTINGS.get("playlist_overrides_live-matches", "json") || {};
+      const liveTvOverrides = (await KHELA_SETTINGS.get("playlist_overrides_live-tv", "json") || {}) as Record<string, Record<string, unknown>>;
+      const liveMatchesOverrides = (await KHELA_SETTINGS.get("playlist_overrides_live-matches", "json") || {}) as Record<string, Record<string, unknown>>;
       
       return NextResponse.json({ liveTvSources, liveMatchesSources, liveTvOverrides, liveMatchesOverrides });
     }

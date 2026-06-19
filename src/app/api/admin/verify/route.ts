@@ -14,10 +14,10 @@ export async function POST(req: NextRequest) {
     let defaultVersion = "v4";
     try {
       const processEnv = process.env as Record<string, unknown>;
-      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (...args: unknown[]) => unknown, put: (...args: unknown[]) => unknown } | undefined;
+      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (key: string, type?: string) => Promise<unknown>, put: (key: string, value: unknown) => Promise<void> } | undefined;
       if (KHELA_SETTINGS) {
         const savedVersion = await KHELA_SETTINGS.get("defaultVersion");
-        if (savedVersion && ["v1", "v2", "v3", "v4"].includes(savedVersion)) {
+        if (typeof savedVersion === "string" && ["v1", "v2", "v3", "v4"].includes(savedVersion)) {
           defaultVersion = savedVersion;
         }
       }

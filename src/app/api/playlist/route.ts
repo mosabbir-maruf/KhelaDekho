@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const processEnv = process.env as Record<string, unknown>;
-    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (...args: unknown[]) => unknown, put: (...args: unknown[]) => unknown } | undefined;
+    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (key: string, type?: string) => Promise<unknown>, put: (key: string, value: unknown) => Promise<void> } | undefined;
 
     if (!KHELA_SETTINGS) {
        console.error("KV Database not bound. Falling back.");
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     }
 
     const sources = await KHELA_SETTINGS.get(`playlist_sources_${source}`, "json") || [];
-    const overrides = (await KHELA_SETTINGS.get(`playlist_overrides_${source}`, "json")) || {};
+    const overrides = (await KHELA_SETTINGS.get(`playlist_overrides_${source}`, "json") || {}) as Record<string, Record<string, unknown>>;
     
     if (!Array.isArray(sources) || sources.length === 0) {
       // If KV is empty, return fallback data

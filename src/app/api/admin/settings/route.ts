@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const processEnv = process.env as Record<string, unknown>;
-      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (...args: unknown[]) => unknown, put: (...args: unknown[]) => unknown } | undefined;
+      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (key: string, type?: string) => Promise<unknown>, put: (key: string, value: unknown) => Promise<void> } | undefined;
       if (KHELA_SETTINGS) {
         await KHELA_SETTINGS.put("defaultVersion", defaultVersion);
       }
