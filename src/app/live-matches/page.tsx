@@ -5,10 +5,23 @@ import LiveMatchesClient from './LiveMatchesClient';
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  // Since we are running on Cloudflare Edge, local file reads/writes (fs) are not supported.
-  // We default to "v4" as requested.
-  const defaultVersion = "v4";
+  let defaultVersion = "v4";
+
+  try {
+    // Cloudflare Edge binding lookup
+    const processEnv = process.env as any;
+    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS;
+    if (KHELA_SETTINGS) {
+      const savedVersion = await KHELA_SETTINGS.get("defaultVersion");
+      if (savedVersion && ["v1", "v2", "v3", "v4"].includes(savedVersion)) {
+        defaultVersion = savedVersion;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to read default version from KV:", error);
+  }
 
   return <LiveMatchesClient initialVersion={defaultVersion as any} />;
 }
+
 

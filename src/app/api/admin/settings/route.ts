@@ -15,13 +15,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid version' }, { status: 400 });
     }
 
-    // Since we are running on Cloudflare Edge, local file system writes (fs) are not supported.
-    // In a production setup with Cloudflare, we would use Cloudflare KV or D1 databases.
-    // For now, we return success to allow the build to pass and UI changes to be verified.
+    try {
+      const processEnv = process.env as any;
+      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS;
+      if (KHELA_SETTINGS) {
+        await KHELA_SETTINGS.put("defaultVersion", defaultVersion);
+      }
+    } catch (kvError) {
+      console.error("Failed to update KV storage:", kvError);
+      return NextResponse.json({ error: 'Failed to persist settings in KV Database' }, { status: 500 });
+    }
+
     return NextResponse.json({ success: true, defaultVersion });
   } catch (error) {
     console.error('Error updating settings:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
 

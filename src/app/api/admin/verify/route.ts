@@ -11,13 +11,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Since we are running on Cloudflare Edge, local file reads (fs) are not supported.
-    // We default to "v4".
-    const defaultVersion = "v4";
+    let defaultVersion = "v4";
+    try {
+      const processEnv = process.env as any;
+      const KHELA_SETTINGS = processEnv.KHELA_SETTINGS;
+      if (KHELA_SETTINGS) {
+        const savedVersion = await KHELA_SETTINGS.get("defaultVersion");
+        if (savedVersion && ["v1", "v2", "v3", "v4"].includes(savedVersion)) {
+          defaultVersion = savedVersion;
+        }
+      }
+    } catch (kvError) {
+      console.error("Failed to read KV verification status:", kvError);
+    }
 
     return NextResponse.json({ success: true, defaultVersion });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
 
