@@ -109,9 +109,9 @@ export default async function Home() {
                 <ShieldCheck className="w-5 h-5 text-red-400" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-sm font-mono font-semibold text-fg tracking-wide">HMAC Signature Tokens</h3>
+                <h3 className="text-sm font-mono font-semibold text-fg tracking-wide">Edge Token Security</h3>
                 <p className="text-xs font-mono text-fg-dim leading-relaxed">
-                  Every stream request is signed with SHA-256 HMAC tokens at the edge, preventing hotlinking and unauthorized access.
+                  Stream requests are validated at the Cloudflare edge, preventing hotlinking and unauthorized access.
                 </p>
               </div>
             </div>
@@ -212,7 +212,7 @@ export default async function Home() {
               },
               {
                 q: "How does stream decryption work?",
-                a: "Streams are decrypted at the Cloudflare edge proxy layer using HMAC-SHA256 signature tokens. The client never handles raw decryption keys.",
+                a: "Streams are proxied and decrypted at the Cloudflare edge layer. The client never handles raw decryption keys.",
               },
               {
                 q: "What sports and leagues are available?",

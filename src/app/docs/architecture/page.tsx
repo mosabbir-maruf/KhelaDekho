@@ -77,7 +77,7 @@ export default function ArchitecturePage() {
                         <div className="flex flex-wrap items-center gap-3 text-fg-dim">
                             <span className="px-3 py-1.5 border border-blue-500/20 bg-blue-500/5 text-blue-400">Client Request</span>
                             <span className="text-fg-faint">→</span>
-                            <span className="px-3 py-1.5 border border-purple-500/20 bg-purple-500/5 text-purple-400">HMAC Validation</span>
+                            <span className="px-3 py-1.5 border border-purple-500/20 bg-purple-500/5 text-purple-400">Edge Validation</span>
                             <span className="text-fg-faint">→</span>
                             <span className="px-3 py-1.5 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400">Cloudflare Edge Proxy</span>
                             <span className="text-fg-faint">→</span>

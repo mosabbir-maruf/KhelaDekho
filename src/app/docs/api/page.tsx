@@ -14,7 +14,7 @@ export default function DecryptionApiPage() {
   const stats = [
     { icon: Cpu, label: "FastAPI Backend", value: "Port 8000", desc: "Local server runner" },
     { icon: Zap, label: "Cloudflare Edge", value: "Edge Worker", desc: "Serverless V8 routes" },
-    { icon: Key, label: "Cryptographic", value: "HMAC-SHA256", desc: "Anti-hotlink check" },
+    { icon: Key, label: "Authentication", value: "Token Auth", desc: "Edge validation" },
     { icon: Shield, label: "Stream Decoding", value: "AES-GCM", desc: "A256GCM v2 parser" },
   ];
 
@@ -80,18 +80,16 @@ export default function DecryptionApiPage() {
                 <Key className="w-5 h-5 text-red-400" />
               </div>
               <h2 className="text-lg font-mono font-bold text-fg tracking-tight">
-                HMAC-SHA256 Verification
+                Token Verification
               </h2>
               <p className="text-xs font-mono text-fg-dim leading-relaxed">
-                To prevent stream theft and unauthorized proxy access, the stream extraction endpoint 
-                is protected with token signatures. Every request to get player keys must supply validation 
-                headers hashed using your shared secret key.
+                The stream extraction endpoint is validated at the Cloudflare edge. 
+                Requests are processed through the proxy layer for secure delivery.
               </p>
               <div className="pt-2 text-xs font-mono text-fg-dim">
-                <span className="text-red-400">Required Headers:</span>
+                <span className="text-red-400">Status:</span>
                 <ul className="list-disc pl-5 mt-1.5 space-y-1">
-                  <li><code>X-Signature-Token</code></li>
-                  <li><code>X-Signature-Timestamp</code></li>
+                  <li><code>Open Access — No signature required</code></li>
                 </ul>
               </div>
             </div>
@@ -101,15 +99,14 @@ export default function DecryptionApiPage() {
                 <Terminal className="w-5 h-5 text-amber-400" />
               </div>
               <h2 className="text-lg font-mono font-bold text-fg tracking-tight">
-                Message Signature Format
+                Request Format
               </h2>
               <p className="text-xs font-mono text-fg-dim leading-relaxed">
-                The HMAC signature payload must be constructed by concatenating the integer timestamp 
-                and the target request path, separated by a colon:
+                Stream requests use a standard REST format. No additional signature payload is required.
               </p>
-              <CodeBlock code="{timestamp}:{path}" />
+              <CodeBlock code="GET /api/v1/channels/{key}/stream" />
               <p className="text-[10px] font-mono text-fg-faint">
-                Example: <code>1781371516:/api/v1/channels/wctveng/stream</code>
+                Example: <code>/api/v1/channels/wctveng/stream</code>
               </p>
             </div>
           </div>
@@ -162,7 +159,7 @@ export default function DecryptionApiPage() {
                   <tr>
                     <td className="py-3 pr-4 text-red-500 font-bold">GET /api/v1/channels/:key/stream</td>
                     <td className="py-3 pr-4">Get decrypted manifest and decryption keys</td>
-                    <td className="py-3 text-red-400 font-bold">HMAC-SHA256</td>
+                    <td className="py-3 text-fg-faint">Open</td>
                   </tr>
                 </tbody>
               </table>
@@ -231,31 +228,13 @@ export default function DecryptionApiPage() {
                 </div>
                 <h3 className="text-sm font-mono font-semibold text-fg">Python Integration</h3>
               </div>
-              <CodeBlock code={`import time
-import hmac
-import hashlib
-import requests
+              <CodeBlock code={`import requests
 
-secret_key = "your-hmac-secret-key-here"
 channel_key = "wctveng"
 path = f"/api/v1/channels/{channel_key}/stream"
 base_url = "http://localhost:8000"
 
-timestamp = str(int(time.time()))
-message = f"{timestamp}:{path}".encode()
-
-token = hmac.new(
-    secret_key.encode(),
-    message,
-    hashlib.sha256
-).hexdigest()
-
-headers = {
-    "X-Signature-Token": token,
-    "X-Signature-Timestamp": timestamp
-}
-
-response = requests.get(f"{base_url}{path}", headers=headers)
+response = requests.get(f"{base_url}{path}")
 print(response.json())`} />
             </div>
 
@@ -266,28 +245,13 @@ print(response.json())`} />
                 </div>
                 <h3 className="text-sm font-mono font-semibold text-fg">Node.js Integration</h3>
               </div>
-              <CodeBlock code={`const crypto = require('crypto');
-const axios = require('axios');
+              <CodeBlock code={`const axios = require('axios');
 
-const secretKey = "your-hmac-secret-key-here";
 const channelKey = "wctveng";
 const path = \`/api/v1/channels/\${channelKey}/stream\`;
 const baseUrl = "http://localhost:8000";
 
-const timestamp = Math.floor(Date.now() / 1000).toString();
-const message = \`\${timestamp}:\${path}\`;
-
-const token = crypto
-  .createHmac('sha256', secretKey)
-  .update(message)
-  .digest('hex');
-
-axios.get(\`\${baseUrl}\${path}\`, {
-  headers: {
-    'X-Signature-Token': token,
-    'X-Signature-Timestamp': timestamp
-  }
-})
+axios.get(\`\${baseUrl}\${path}\`)
 .then(res => console.log("Decrypted stream:", res.data))
 .catch(err => console.error("Error:", err.message));`} />
             </div>

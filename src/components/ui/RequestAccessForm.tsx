@@ -76,7 +76,7 @@ export function RequestAccessForm() {
           <Send className="w-5 h-5 text-red-500" /> Request Access
         </h2>
         <p className="text-sm font-mono text-fg-dim">
-          Submit your details to request an HMAC secret key for production API access or GitHub repo.
+          Submit your details to request API access or GitHub repo access.
         </p>
       </div>
 

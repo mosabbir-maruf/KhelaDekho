@@ -7,7 +7,7 @@ const url = "https://kheladekho.pages.dev/docs/api";
 export const metadata: Metadata = {
     title,
     description,
-    keywords: ["kheladekho api", "decryption api", "stream decryption", "sports scraper api", "signature authentication", "hmac-sha256", "fastapi endpoints", "cloudflare edge worker"],
+    keywords: ["kheladekho api", "decryption api", "stream decryption", "sports scraper api", "signature authentication", "fastapi endpoints", "cloudflare edge worker"],
     openGraph: {
         title: `${title} | KhelaDekho`,
         description,
