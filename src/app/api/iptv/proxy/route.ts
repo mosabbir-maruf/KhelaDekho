@@ -73,6 +73,12 @@ export async function GET(request: NextRequest) {
       /\.m3u8?$/i.test(targetUrl.split(/[?#]/)[0]);
     const isMPD = contentType.includes("dash+xml") || /\.mpd$/i.test(targetUrl.split(/[?#]/)[0]);
 
+    const extraParams = new URLSearchParams();
+    if (customReferer) extraParams.set("referer", customReferer);
+    if (customOrigin) extraParams.set("origin", customOrigin);
+    if (ua) extraParams.set("ua", ua);
+    const extraSuffix = extraParams.toString();
+
     if (isM3U) {
       const text = await response.text();
       const proxyBase = `${origin}/api/iptv/proxy`;
@@ -88,13 +94,13 @@ export async function GET(request: NextRequest) {
               const uri = qD || qS || unq;
               if (!uri) return _;
               const resolved = resolve(uri, targetUrl);
-              return `URI="${proxyBase}?url=${encodeURIComponent(resolved)}"`;
+              return `URI="${proxyBase}?url=${encodeURIComponent(resolved)}${extraSuffix ? `&${extraSuffix}` : ''}"`;
             }
           );
         }
 
         const resolved = resolve(trimmed, targetUrl);
-        return `${proxyBase}?url=${encodeURIComponent(resolved)}`;
+        return `${proxyBase}?url=${encodeURIComponent(resolved)}${extraSuffix ? `&${extraSuffix}` : ''}`;
       }).join("\n");
 
       return new Response(rewritten, {
