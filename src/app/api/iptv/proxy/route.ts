@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const ua = searchParams.get("ua");
     const upstreamHeaders: Record<string, string> = {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "User-Agent": ua || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       "Accept": "*/*",
       "Accept-Language": "en-US,en;q=0.9",
     };
@@ -28,10 +29,13 @@ export async function GET(request: NextRequest) {
     const range = request.headers.get("range");
     if (range) upstreamHeaders["Range"] = range;
 
+    const customReferer = searchParams.get("referer");
+    const customOrigin = searchParams.get("origin");
+
     try {
       const parsed = new URL(targetUrl);
-      upstreamHeaders["Referer"] = `${parsed.origin}/`;
-      upstreamHeaders["Origin"] = parsed.origin;
+      upstreamHeaders["Referer"] = customReferer || `${parsed.origin}/`;
+      upstreamHeaders["Origin"] = customOrigin || parsed.origin;
     } catch {}
 
     const controller = new AbortController();

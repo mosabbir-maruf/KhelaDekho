@@ -44,6 +44,10 @@ interface V3Channel {
   status_code?: number;
   content_type?: string;
   id?: string;
+  useProxy?: boolean;
+  referer?: string;
+  origin?: string;
+  'user-agent'?: string;
 }
 
 type ApiVersion = "v1" | "v2" | "v3" | "v4";
@@ -306,10 +310,17 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
         : rawUrl.match(/\.ts($|\?)/) ? "direct"
         : ch.content_type === "video/mp2t" ? "direct"
         : "hls";
-      // We proxy V3 streams ONLY if they are HTTP (insecure) because browsers strictly block mixed content.
-      // If they are HTTPS, we load them directly to prevent Edge function timeouts.
-      const useProxy = rawUrl.startsWith("http://");
-      const url = useProxy ? `/api/iptv/proxy?url=${encodeURIComponent(rawUrl)}` : rawUrl;
+
+      const shouldProxy = rawUrl.startsWith("http://") || ch.useProxy === true;
+      let url = rawUrl;
+      if (shouldProxy) {
+        const params = new URLSearchParams({ url: rawUrl });
+        if (ch.referer) params.set("referer", ch.referer);
+        if (ch.origin) params.set("origin", ch.origin);
+        if (ch['user-agent']) params.set("ua", ch['user-agent']);
+        url = `/api/iptv/proxy?${params.toString()}`;
+      }
+
       const clearKeys = ch.kid && ch.key ? { [ch.kid]: ch.key } : null;
       return {
         streamUrl: url,
