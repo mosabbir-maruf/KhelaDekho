@@ -306,7 +306,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         // Reuse existing Shaka player or create one
         if (!shakaPlayerRef.current && video) {
           const shaka = await getShaka();
-          shakaPlayerRef.current = await makeShakaPlayer(video, shaka, clearKeysRef);
+          shakaPlayerRef.current = await makeShakaPlayer(video, shaka, clearKeysRef as { current: Record<string, string> | null });
         }
         attachedTypeRef.current = "dash";
 
