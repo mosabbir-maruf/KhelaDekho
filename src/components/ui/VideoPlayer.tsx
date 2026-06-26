@@ -72,7 +72,7 @@ async function makeShakaPlayer(video: HTMLVideoElement, shaka: typeof shakaModul
   }
   await player.attach(video);
   player.configure({
-    streaming: { bufferingGoal: 15, rebufferingGoal: 3, bufferBehind: 10 },
+    streaming: { bufferingGoal: 8, rebufferingGoal: 3, bufferBehind: 10 },
     abr: { enabled: true, restrictToElementSize: false },
   });
   return player;
