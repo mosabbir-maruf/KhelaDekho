@@ -318,7 +318,7 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
       };
     }
     return null;
-  }, [selectedChannel, selectedVersion, apiVersion, v1StreamData]);
+  }, [selectedChannel, selectedVersion, apiVersion, v1StreamData, apiBaseUrl]);
 
   return (
     <div className="min-h-dvh">

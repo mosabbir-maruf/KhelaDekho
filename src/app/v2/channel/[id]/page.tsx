@@ -55,7 +55,7 @@ export default function V2ChannelPage() {
       }
     })();
     return () => { active = false; controller.abort(); };
-  }, [id]);
+  }, [id, baseUrl]);
 
   const streamUrl = channel?.stream_url ? baseUrl + channel.stream_url : null;
 
