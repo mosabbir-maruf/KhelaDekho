@@ -2,7 +2,7 @@
 export const runtime = "edge";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageHero, LoadingSpinner } from "@/components/ui/PageHero";
 import { StatsGrid } from "@/components/ui/StatsGrid";
@@ -23,15 +23,34 @@ interface ChannelDetail {
 
 export default function V2ChannelPage() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const [channel, setChannel] = useState<ChannelDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
 
   const baseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
+  const directUrl = searchParams?.get("url");
+  const directType = searchParams?.get("type");
+  const directKid = searchParams?.get("kid");
+  const directKey = searchParams?.get("key");
 
   useEffect(() => {
     if (!id) return;
+
+    // If query params provided, use directly (match channels from /live-now)
+    if (directUrl) {
+      setChannel({
+        name: `Channel ${id}`,
+        stream_url: directUrl,
+        stream_type: directType || "hls",
+        drm_kid: directKid || undefined,
+        drm_key: directKey || undefined,
+      });
+      setLoading(false);
+      return;
+    }
+
     let active = true;
     const controller = new AbortController();
     const xkey = getXKey();
@@ -55,9 +74,9 @@ export default function V2ChannelPage() {
       }
     })();
     return () => { active = false; controller.abort(); };
-  }, [id, baseUrl]);
+  }, [id, baseUrl, directUrl, directType, directKid, directKey]);
 
-  const streamUrl = channel?.stream_url ? baseUrl + channel.stream_url : null;
+  const streamUrl = channel?.stream_url ? (channel.stream_url.startsWith("http") ? channel.stream_url : baseUrl + channel.stream_url) : null;
 
   return (
     <div className="min-h-dvh">

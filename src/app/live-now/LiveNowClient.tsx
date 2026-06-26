@@ -1,55 +1,41 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
-import { getApiBaseUrl, sanitizeBaseUrl, LiveNowMatchWithChannels, LiveNowChannel } from "@/lib/api";
+import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
+import { LiveNowMatchWithChannels } from "@/lib/api";
 import { LoadingSpinner } from "@/components/ui/PageHero";
-import { StatsGrid } from "@/components/ui/StatsGrid";
-import { useCopyButton } from "@/hooks/useCopyButton";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
-import Share2 from "lucide-react/dist/esm/icons/share-2";
 import Radio from "lucide-react/dist/esm/icons/radio";
+import Play from "lucide-react/dist/esm/icons/play";
 import Server from "lucide-react/dist/esm/icons/server";
-
-const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((m) => ({ default: m.VideoPlayer })), { ssr: false });
-
-interface PlayerConfig {
-  streamUrl: string;
-  streamType: string;
-  clearKeys: Record<string, string> | null;
-  stats: { label: string; value: string; icon: "zap" | "shield" | "monitor" }[];
-}
 
 function formatTeam(name: string): string {
   return name.length > 18 ? name.slice(0, 16) + "…" : name;
 }
 
 export default function LiveNowClient() {
-  const pathname = usePathname();
-  const apiBaseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
-
   const [matches, setMatches] = useState<LiveNowMatchWithChannels[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMatchIdx, setSelectedMatchIdx] = useState<number | null>(null);
-  const [selectedChannel, setSelectedChannel] = useState<LiveNowChannel | null>(null);
   const [mobileMatchOpen, setMobileMatchOpen] = useState(false);
-  const [mobileChannelOpen, setMobileChannelOpen] = useState(false);
-  const { copied, copy: handleShare } = useCopyButton();
 
   useEffect(() => {
     let active = true;
     (async () => {
       setLoading(true);
       try {
-        const baseUrl = sanitizeBaseUrl(getApiBaseUrl() || "");
-        const xkey = (typeof window !== "undefined"
-          ? (window as Window & { __KHELADEKHO_XKEY?: string }).__KHELADEKHO_XKEY
-          : "") || process.env.XKEY || "";
+        const baseUrl =
+          (typeof window !== "undefined"
+            ? (window as Window & { __KHELADEKHO_API_URL?: string }).__KHELADEKHO_API_URL
+            : "") || process.env.NEXT_PUBLIC_API_URL || "";
+        const xkey =
+          (typeof window !== "undefined"
+            ? (window as Window & { __KHELADEKHO_XKEY?: string }).__KHELADEKHO_XKEY
+            : "") || process.env.XKEY || "";
         const hdrs: Record<string, string> = { Accept: "application/json" };
         if (xkey) hdrs["xkey"] = xkey;
-        const res = await fetch(`${baseUrl}/api/v2/live`, { headers: hdrs });
+        const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/api/v2/live`, { headers: hdrs });
         if (!active) return;
         const body = res.ok ? await res.json() : {};
         const data: LiveNowMatchWithChannels[] = body?.data?.matches || [];
@@ -69,46 +55,6 @@ export default function LiveNowClient() {
     () => selectedMatch?.channels.filter((c) => c.is_alive) ?? [],
     [selectedMatch],
   );
-
-  const selectChannel = useCallback((ch: LiveNowChannel) => {
-    setSelectedChannel(ch);
-    setMobileChannelOpen(false);
-  }, []);
-
-  useEffect(() => {
-    setSelectedChannel(null);
-  }, [selectedMatchIdx]);
-
-  useEffect(() => {
-    if (aliveChannels.length > 0 && !selectedChannel) {
-      selectChannel(aliveChannels[0]);
-    }
-  }, [aliveChannels, selectedChannel, selectChannel]);
-
-  const playerConfig: PlayerConfig | null = useMemo(() => {
-    if (!selectedChannel || !selectedChannel.stream_url) return null;
-    const isDash = selectedChannel.stream_type === "dash";
-    const url = isDash
-      ? `${apiBaseUrl}/api/v2/proxy?url=${encodeURIComponent(selectedChannel.stream_url)}&source=v2`
-      : selectedChannel.stream_url;
-    return {
-      streamUrl: url,
-      streamType: selectedChannel.stream_type,
-      clearKeys: selectedChannel.drm_kid && selectedChannel.drm_key
-        ? { [selectedChannel.drm_kid]: selectedChannel.drm_key }
-        : null,
-      stats: [
-        { label: "Source", value: "V2", icon: "zap" as const },
-        { label: "Type", value: (selectedChannel.stream_type || "hls").toUpperCase(), icon: "shield" as const },
-        { label: "Status", value: selectedChannel.is_alive ? "ACTIVE" : "OFFLINE", icon: "monitor" as const },
-      ],
-    };
-  }, [selectedChannel, apiBaseUrl]);
-
-  const shareUrl = useMemo(() => {
-    if (selectedMatchIdx === null) return "";
-    return `${window.location.origin}${pathname}?match=${selectedMatchIdx}`;
-  }, [pathname, selectedMatchIdx]);
 
   return (
     <div className="min-h-dvh">
@@ -244,139 +190,85 @@ export default function LiveNowClient() {
               {selectedMatch ? (
                 <>
                   {/* Match Header */}
-                  <div className="flex items-center justify-between border border-border-alt bg-card p-4">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="text-center shrink-0">
-                        <div className="w-10 h-10 mx-auto rounded-full bg-hover flex items-center justify-center overflow-hidden">
+                  <div className="border border-border-alt bg-card p-4 md:p-6">
+                    <div className="flex items-center justify-center gap-4 md:gap-8">
+                      <div className="text-center shrink-0 w-24">
+                        <div className="w-14 h-14 mx-auto rounded-full bg-hover flex items-center justify-center overflow-hidden">
                           {selectedMatch.match.team_a.logo ? (
-                            <img src={selectedMatch.match.team_a.logo} alt="" className="w-8 h-8 object-contain" loading="lazy" />
+                            <img src={selectedMatch.match.team_a.logo} alt="" className="w-10 h-10 object-contain" loading="lazy" />
                           ) : (
-                            <Tv className="w-5 h-5 text-fg-dim" />
+                            <Tv className="w-6 h-6 text-fg-dim" />
                           )}
                         </div>
-                        <div className="text-[10px] font-mono text-fg mt-1 truncate max-w-[80px]">{formatTeam(selectedMatch.match.team_a.name)}</div>
+                        <div className="text-xs font-mono text-fg mt-2 truncate">{formatTeam(selectedMatch.match.team_a.name)}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs font-mono text-fg-dim">VS</div>
-                        <div className="text-[10px] font-mono text-fg-faint">{selectedMatch.match.league}</div>
+                        <div className="text-lg font-mono font-bold text-fg-dim">VS</div>
+                        <div className="text-[10px] font-mono text-fg-faint mt-1 max-w-[120px] truncate">{selectedMatch.match.league}</div>
                       </div>
-                      <div className="text-center shrink-0">
-                        <div className="w-10 h-10 mx-auto rounded-full bg-hover flex items-center justify-center overflow-hidden">
+                      <div className="text-center shrink-0 w-24">
+                        <div className="w-14 h-14 mx-auto rounded-full bg-hover flex items-center justify-center overflow-hidden">
                           {selectedMatch.match.team_b.logo ? (
-                            <img src={selectedMatch.match.team_b.logo} alt="" className="w-8 h-8 object-contain" loading="lazy" />
+                            <img src={selectedMatch.match.team_b.logo} alt="" className="w-10 h-10 object-contain" loading="lazy" />
                           ) : (
-                            <Tv className="w-5 h-5 text-fg-dim" />
+                            <Tv className="w-6 h-6 text-fg-dim" />
                           )}
                         </div>
-                        <div className="text-[10px] font-mono text-fg mt-1 truncate max-w-[80px]">{formatTeam(selectedMatch.match.team_b.name)}</div>
+                        <div className="text-xs font-mono text-fg mt-2 truncate">{formatTeam(selectedMatch.match.team_b.name)}</div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleShare(shareUrl)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      {copied ? "Copied!" : "Share"}
-                    </button>
                   </div>
 
-                  {/* Channel List */}
+                  {/* Channels */}
                   {selectedMatch.channels.length > 0 ? (
-                    <>
-                      {/* Mobile: Channel Selector */}
-                      <div className="relative lg:hidden w-full">
-                        <button
-                          type="button"
-                          onClick={() => setMobileChannelOpen((p) => !p)}
-                          className="w-full flex items-center justify-between border border-border-alt bg-card px-4 py-3.5 hover:border-red-500/20 transition-all shadow-md cursor-pointer"
-                        >
-                          <Server className="w-4 h-4 text-red-500 shrink-0" />
-                          <div className="min-w-0 text-center flex-1">
-                            <span className="text-[9px] font-mono text-fg-dim uppercase tracking-widest block">Select Channel</span>
-                            <span className="font-mono text-xs font-bold text-fg truncate block">
-                              {selectedChannel?.name || "Tap to select"}
-                            </span>
-                          </div>
-                          <ChevronDown className={`w-4 h-4 text-fg-dim transition-transform duration-200 ${mobileChannelOpen ? "rotate-180" : ""}`} />
-                        </button>
-                        {mobileChannelOpen && (
-                          <div className="absolute top-full left-0 right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 max-h-[50dvh] overflow-y-auto">
-                            {selectedMatch.channels.map((ch, i) => (
-                              <button
-                                key={i}
-                                onClick={() => selectChannel(ch)}
-                                disabled={!ch.is_alive}
-                                className={`w-full text-left px-4 py-3 text-xs font-mono transition-all cursor-pointer flex items-center gap-3 ${
-                                  !ch.is_alive
-                                    ? "text-fg-faint opacity-50 cursor-not-allowed"
-                                    : selectedChannel === ch
-                                    ? "text-red-400 bg-red-500/[0.03] font-semibold"
-                                    : "text-fg-dim hover:text-fg hover:bg-hover"
-                                }`}
-                              >
-                                <Server className={`w-3.5 h-3.5 ${ch.is_alive ? "text-green-500" : "text-fg-faint"}`} />
-                                <span className="flex-1">{ch.name}</span>
-                                <span className="text-[9px] font-mono uppercase">{ch.stream_type}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1">
+                        {aliveChannels.length} of {selectedMatch.channels.length} channels active
                       </div>
-
-                      {/* Desktop: Channel tabs */}
-                      <div className="hidden lg:flex flex-wrap gap-2">
-                        {selectedMatch.channels.map((ch, i) => (
-                          <button
-                            key={i}
-                            onClick={() => selectChannel(ch)}
-                            disabled={!ch.is_alive}
-                            className={`flex items-center gap-2 px-3 py-2 border text-xs font-mono transition-all cursor-pointer ${
-                              !ch.is_alive
-                                ? "border-border-alt bg-hover text-fg-faint opacity-50 cursor-not-allowed"
-                                : selectedChannel === ch
-                                ? "border-red-500/30 bg-red-500/[0.03] text-red-400"
-                                : "border-border-alt bg-card text-fg-dim hover:border-red-500/20 hover:text-fg"
-                            }`}
-                          >
-                            <Server className={`w-3.5 h-3.5 ${ch.is_alive ? "text-green-500" : "text-fg-faint"}`} />
-                            {ch.name}
-                            <span className="text-[9px] font-mono uppercase text-fg-faint">{ch.stream_type}</span>
-                          </button>
-                        ))}
+                      <div className="grid gap-2">
+                        {selectedMatch.channels.map((ch, i) => {
+                          const chId = `${selectedMatch.match.id}-${i}`;
+                          return (
+                            <Link
+                              key={i}
+                              href={ch.stream_url ? `/v2/channel/${encodeURIComponent(chId)}?url=${encodeURIComponent(ch.stream_url)}&type=${ch.stream_type}&kid=${ch.drm_kid || ""}&key=${ch.drm_key || ""}` : "#"}
+                              className={`flex items-center gap-3 border p-3 transition-all ${
+                                ch.is_alive
+                                  ? "border-border-alt bg-card hover:border-red-500/20 hover:bg-red-500/[0.02]"
+                                  : "border-border-alt bg-hover opacity-50 cursor-not-allowed"
+                              }`}
+                            >
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                ch.is_alive ? "bg-red-500/10 border border-red-500/20" : "bg-hover border border-border-alt"
+                              }`}>
+                                {ch.is_alive ? (
+                                  <Play className="w-4 h-4 text-red-400" />
+                                ) : (
+                                  <Server className="w-4 h-4 text-fg-faint" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-mono text-fg truncate">{ch.name}</div>
+                                <div className="text-[10px] font-mono text-fg-dim uppercase">{ch.stream_type}</div>
+                              </div>
+                              <div className="shrink-0">
+                                {ch.is_alive ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-[9px] font-mono text-green-400">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                    LIVE
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-mono text-fg-faint">OFFLINE</span>
+                                )}
+                              </div>
+                            </Link>
+                          );
+                        })}
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <div className="border border-border-alt bg-card p-4 text-center">
+                    <div className="border border-border-alt bg-card p-6 text-center">
                       <p className="font-mono text-xs text-fg-dim">No stream sources available for this match</p>
-                    </div>
-                  )}
-
-                  {/* Video Player */}
-                  {!selectedChannel ? (
-                    <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
-                      <div className="text-center space-y-3">
-                        <Tv className="w-8 h-8 text-fg-dim mx-auto" />
-                        <p className="font-mono text-sm text-fg-dim font-semibold">Select a channel</p>
-                      </div>
-                    </div>
-                  ) : selectedChannel.stream_url && playerConfig ? (
-                    <>
-                      <div className="flex items-center justify-between border border-border-alt bg-card p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                            <Server className="w-5 h-5 text-red-400" />
-                          </div>
-                          <div>
-                            <h2 className="font-mono text-lg font-bold text-fg tracking-tight">{selectedChannel.name}</h2>
-                          </div>
-                        </div>
-                      </div>
-                      <VideoPlayer streamUrl={playerConfig.streamUrl} streamType={playerConfig.streamType} clearKeys={playerConfig.clearKeys} />
-                      <StatsGrid items={playerConfig.stats} />
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
-                      <p className="font-mono text-xs text-fg-dim">Channel offline</p>
                     </div>
                   )}
                 </>
