@@ -284,7 +284,7 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
       const isDash = (ch.stream_type || defaultType) === "dash";
       // Proxy DASH streams through Worker (CDN rejects direct browser segment fetches)
       const url = ch.stream_url.startsWith("http")
-        ? (isDash ? `${apiBaseUrl}/api/v2/proxy?url=${encodeURIComponent(ch.stream_url)}` : ch.stream_url)
+        ? (isDash ? `${apiBaseUrl}/api/v2/proxy?url=${encodeURIComponent(ch.stream_url)}&source=${selectedVersion}` : ch.stream_url)
         : apiBaseUrl + ch.stream_url;
       return {
         streamUrl: url,
