@@ -28,11 +28,12 @@ export default function V2ChannelPage() {
   const [error, setError] = useState<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
 
+  const baseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
+
   useEffect(() => {
     if (!id) return;
     let active = true;
     const controller = new AbortController();
-    const baseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
     const xkey = getXKey();
     const headers: Record<string, string> = { Accept: "application/json" };
     if (xkey) headers["xkey"] = xkey;
@@ -56,7 +57,7 @@ export default function V2ChannelPage() {
     return () => { active = false; controller.abort(); };
   }, [id]);
 
-  const streamUrl = channel?.stream_url;
+  const streamUrl = channel?.stream_url ? baseUrl + channel.stream_url : null;
 
   return (
     <div className="min-h-dvh">

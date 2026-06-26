@@ -114,6 +114,7 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChannel, setSelectedChannel] = useState<ChannelData | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<ApiVersion | null>(null);
+  const apiBaseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
   const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: Record<string, string> | null } | null>(null);
   const [v1Error, setV1Error] = useState<string | null>(null);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
@@ -281,7 +282,7 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
       const serverLabel = selectedVersion === "v2" ? "V2" : "V4";
       const defaultType = selectedVersion === "v2" ? "hls" : "dash";
       return {
-        streamUrl: ch.stream_url,
+        streamUrl: ch.stream_url.startsWith("http") ? ch.stream_url : apiBaseUrl + ch.stream_url,
         streamType: ch.stream_type || defaultType,
         clearKeys: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null,
         stats: [
