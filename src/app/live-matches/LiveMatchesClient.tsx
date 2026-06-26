@@ -281,8 +281,13 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
       if (!ch.stream_url) return null;
       const serverLabel = selectedVersion === "v2" ? "V2" : "V4";
       const defaultType = selectedVersion === "v2" ? "hls" : "dash";
+      const isDash = (ch.stream_type || defaultType) === "dash";
+      // Proxy DASH streams through Worker (CDN rejects direct browser segment fetches)
+      const url = ch.stream_url.startsWith("http")
+        ? (isDash ? `${apiBaseUrl}/api/v2/proxy?url=${encodeURIComponent(ch.stream_url)}` : ch.stream_url)
+        : apiBaseUrl + ch.stream_url;
       return {
-        streamUrl: ch.stream_url.startsWith("http") ? ch.stream_url : apiBaseUrl + ch.stream_url,
+        streamUrl: url,
         streamType: ch.stream_type || defaultType,
         clearKeys: ch.drm_kid && ch.drm_key ? { [ch.drm_kid]: ch.drm_key } : null,
         stats: [

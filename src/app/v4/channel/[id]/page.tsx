@@ -57,7 +57,11 @@ export default function V4ChannelPage() {
   }, [id]);
 
   const rawUrl = channel?.stream_url;
-  const streamUrl = rawUrl;
+  const streamType = channel?.stream_type || "dash";
+  // Proxy DASH streams through Worker (CDN rejects direct browser segment fetches)
+  const streamUrl = rawUrl && streamType === "dash"
+    ? `${sanitizeBaseUrl(getApiBaseUrl() || "")}/api/v2/proxy?url=${encodeURIComponent(rawUrl)}`
+    : rawUrl;
 
   return (
     <div className="min-h-dvh">
