@@ -47,7 +47,7 @@ const PSSH_REGEX = new RegExp(
   "g"
 );
 
-async function makeShakaPlayer(video: HTMLVideoElement, shaka: typeof shakaModule) {
+async function makeShakaPlayer(video: HTMLVideoElement, shaka: typeof shakaModule, clearKeysRef: { current: Record<string, string> | null }) {
   const player = new shaka.Player();
   const netEngine = player.getNetworkingEngine();
   if (netEngine) {
@@ -59,10 +59,13 @@ async function makeShakaPlayer(video: HTMLVideoElement, shaka: typeof shakaModul
     });
     netEngine.registerResponseFilter((type: unknown, response: { data: ArrayBuffer }) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST && response.data) {
-        const text = new TextDecoder().decode(response.data);
-        const stripped = text.replace(PSSH_REGEX, "");
-        if (stripped.length !== text.length) {
-          response.data = new TextEncoder().encode(stripped).buffer;
+        const keys = clearKeysRef.current;
+        if (keys && Object.keys(keys).length > 0) {
+          const text = new TextDecoder().decode(response.data);
+          const stripped = text.replace(PSSH_REGEX, "");
+          if (stripped.length !== text.length) {
+            response.data = new TextEncoder().encode(stripped).buffer;
+          }
         }
       }
     });
@@ -256,10 +259,11 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     /* eslint-enable react-hooks/set-state-in-effect */
 
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+    const timeoutMs = newType === "dash" ? 45000 : 20000;
     const timeoutId = setTimeout(() => {
-      setPlayerError("Stream is taking too long to load — the feed may be unavailable.");
+      setPlayerError(newType === "dash" ? "DASH stream is taking too long to load — the feed may be slow or unavailable." : "Stream is taking too long to load — the feed may be unavailable.");
       setIsLoading(false);
-    }, 20000);
+    }, timeoutMs);
     loadingTimeoutRef.current = timeoutId;
 
     let destroyed = false;
@@ -302,7 +306,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         // Reuse existing Shaka player or create one
         if (!shakaPlayerRef.current && video) {
           const shaka = await getShaka();
-          shakaPlayerRef.current = await makeShakaPlayer(video, shaka);
+          shakaPlayerRef.current = await makeShakaPlayer(video, shaka, clearKeysRef);
         }
         attachedTypeRef.current = "dash";
 
@@ -401,7 +405,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       try {
         const HlsClass = await getHls();
         if (HlsClass.isSupported()) {
-          const hls = new HlsClass({ enableWorker: true, lowLatencyMode: true, maxBufferLength: 15, maxMaxBufferLength: 30, backBufferLength: 10, capLevelToPlayerSize: false, autoStartLoad: true });
+          const hls = new HlsClass({ enableWorker: true, lowLatencyMode: false, maxBufferLength: 30, maxMaxBufferLength: 60, backBufferLength: 30, capLevelToPlayerSize: true, autoStartLoad: true });
           hlsPlayerRef.current = hls;
           hls.loadSource(effectiveUrl);
           hls.attachMedia(video);
