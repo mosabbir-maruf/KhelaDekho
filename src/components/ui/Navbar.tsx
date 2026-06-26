@@ -8,6 +8,7 @@ import Menu from "lucide-react/dist/esm/icons/menu";
 import X from "lucide-react/dist/esm/icons/x";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Tv from "lucide-react/dist/esm/icons/tv";
+import Radio from "lucide-react/dist/esm/icons/radio";
 import Activity from "lucide-react/dist/esm/icons/activity";
 import FileText from "lucide-react/dist/esm/icons/file-text";
 import Shield from "lucide-react/dist/esm/icons/shield";
@@ -85,6 +86,14 @@ export function Navbar() {
                   }`}
               >
                 Live TV
+              </Link>
+              <Link
+                href="/live-now"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-now") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                  }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse mr-2 shrink-0" />
+                Live Now
               </Link>
               <Link
                 href="/live-matches"
@@ -211,6 +220,13 @@ export function Navbar() {
                   >
                     <Tv className="w-4 h-4 text-red-500" />
                     Live TV
+                  </Link>
+                  <Link
+                    href="/live-now"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
+                  >
+                    <Radio className="w-4 h-4 text-red-500" />
+                    Live Now
                   </Link>
                   <Link
                     href="/live-matches"

@@ -301,4 +301,47 @@ export async function getFootballMatchesByDate(date: string, options?: RequestIn
   return fetchFootballMatches(date, options);
 }
 
+// --- Live Now (V2 Kickbd) ---
+
+export interface LiveNowTeam {
+  name: string;
+  logo: string | null;
+}
+
+export interface LiveNowMatch {
+  id: string;
+  league: string;
+  sport_emoji: string;
+  team_a: LiveNowTeam;
+  team_b: LiveNowTeam;
+  starts_at: string | null;
+  match_url: string;
+  is_live: boolean;
+  cached_at: string;
+}
+
+export interface LiveNowChannel {
+  name: string;
+  stream_type: string;
+  stream_url: string | null;
+  drm_kid: string | null;
+  drm_key: string | null;
+  is_alive: boolean;
+}
+
+export interface LiveNowMatchWithChannels {
+  match: LiveNowMatch;
+  channels: LiveNowChannel[];
+}
+
+export interface LiveNowData {
+  matches: LiveNowMatchWithChannels[];
+  total: number;
+  cached_at: string;
+}
+
+export async function getLiveNow(options?: RequestInit): Promise<LiveNowData | null> {
+  return fetchAPI<LiveNowData>("/api/v2/live", options);
+}
+
 
