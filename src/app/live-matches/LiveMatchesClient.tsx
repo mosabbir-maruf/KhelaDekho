@@ -3,14 +3,13 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { getApiBaseUrl, getXKey, sanitizeBaseUrl, FootballMatch } from "@/lib/api";
+import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
 import { LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { useCopyButton } from "@/hooks/useCopyButton";
 import { Virtuoso } from "react-virtuoso";
-import { LiveScoreTicker } from "@/components/ui/LiveScoreTicker";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -108,7 +107,7 @@ function getUrlParams() {
   return { v: params.get("v"), ch: params.get("ch") };
 }
 
-export default function LiveMatchesClient({ initialVersion, initialLiveMatches = [] }: { initialVersion: ApiVersion; initialLiveMatches?: FootballMatch[] }) {
+export default function LiveMatchesClient({ initialVersion }: { initialVersion: ApiVersion }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -339,13 +338,11 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
   return (
     <div className="min-h-dvh">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
-        <div className="relative border border-border-alt bg-card p-6 md:p-8">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-          </div>
-          <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-4 z-10">
-            <div className="space-y-2.5">
+        <div className="relative border border-border-alt bg-card overflow-hidden p-8 md:p-12">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+          <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 z-10">
+            <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
                 <Tv className="w-3 h-3 text-red-500" />
                 {cfg.label}
@@ -387,7 +384,6 @@ export default function LiveMatchesClient({ initialVersion, initialLiveMatches =
           </div>
 
           {/* LIVE MATCHES HERO TICKER */}
-          <LiveScoreTicker initialMatches={initialLiveMatches} />
           <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-3">
             Stream buffering? Switch channel or server.
           </p>

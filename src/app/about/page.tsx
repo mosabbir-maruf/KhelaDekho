@@ -1,42 +1,32 @@
 import type { Metadata } from "next";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
-import Zap from "lucide-react/dist/esm/icons/zap";
 import Users from "lucide-react/dist/esm/icons/users";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Shield from "lucide-react/dist/esm/icons/shield";
 import Cpu from "lucide-react/dist/esm/icons/cpu";
 import Layers from "lucide-react/dist/esm/icons/layers";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import Link from "next/link";
-import { getMatches, getPlatformStats } from "@/lib/api";
+import { getMatches, getGoalScores } from "@/lib/api";
 
 export const metadata: Metadata = {
     title: "About",
-    description: "Learn about KhelaDekho — a real-time sports streaming aggregation platform built on edge infrastructure. Open source, private, and free.",
+    description: "Learn about KhelaDekho — a real-time sports streaming aggregation platform with live scores, match details, and player profiles. Open source, private, and free.",
 };
 
 export default async function AboutPage() {
-  const [matchesData, statsData] = await Promise.all([
-    getMatches(),
-    getPlatformStats(),
-  ]);
+  const matchesData = await getMatches();
   const totalMatches = matchesData?.total?.toLocaleString() || "...";
-  const platformStats = statsData?.stats;
+  const goalData = await getGoalScores();
+  const goalMatches = goalData?.total_matches || 0;
 
   const stats = [];
 
-  if (platformStats) {
-    if (platformStats.active_channels !== undefined) {
-      stats.push({ icon: Zap, label: "Active Channels", value: String(platformStats.active_channels), desc: "Currently live feeds" });
-    }
-    if (platformStats.live_viewers !== undefined) {
-      stats.push({ icon: Users, label: "Live Viewers", value: platformStats.live_viewers.toLocaleString(), desc: "Watching right now" });
-    }
-    if (platformStats.total_channels !== undefined) {
-      stats.push({ icon: Layers, label: "Total Channels", value: String(platformStats.total_channels), desc: "Indexed broadcast links" });
-    }
-    if (totalMatches && totalMatches !== "...") {
-      stats.push({ icon: Globe, label: "Matches Covered", value: totalMatches, desc: "Leagues & World Cup" });
-    }
+  if (totalMatches && totalMatches !== "...") {
+    stats.push({ icon: Globe, label: "Stream Sources", value: totalMatches, desc: "Indexed broadcasts" });
+  }
+  if (goalMatches > 0) {
+    stats.push({ icon: BarChart3, label: "Live Scores", value: String(goalMatches), desc: "Real-time telemetry" });
   }
 
   const features = [
@@ -52,8 +42,8 @@ export default async function AboutPage() {
   },
   {
     icon: Layers,
-    title: "Unified Interface",
-    desc: "Browse matches, live channels, and league schedules from a single, searchable dashboard.",
+    title: "Live Scores & Match Details",
+    desc: "Real-time global football scores, fixtures, results, lineups, match stats, and player profiles via edge telemetry.",
   },
   {
     icon: Globe,
@@ -79,8 +69,9 @@ export default async function AboutPage() {
                 About<span className="text-red-500">.</span> Us
               </h1>
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
-                KhelaDekho is a real-time sports streaming aggregation platform. We index publicly
-                available broadcast links and present them in a clean, fast, searchable interface.
+                KhelaDekho is a real-time sports streaming aggregation platform and live score hub. We index publicly
+                available broadcast links, aggregate live match data from global providers, and present everything in a clean,
+                fast, searchable interface.
               </p>
             </div>
             <Link

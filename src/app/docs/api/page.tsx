@@ -35,7 +35,7 @@ export default function DecryptionApiPage() {
                 KhelaDekho<span className="text-red-500">.</span> API
               </h1>
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
-                Technical reference for KhelaDekho proxy aggregation, stream proxying, and API endpoints.
+                Technical reference for KhelaDekho proxy aggregation, live scores, match telemetry, stream proxying, and API endpoints.
               </p>
             </div>
             <Link
@@ -151,8 +151,23 @@ export default function DecryptionApiPage() {
                     <td className="py-3 text-fg-faint">Anonymous</td>
                   </tr>
                   <tr className="border-b border-border-alt">
-                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/stats</td>
-                    <td className="py-3 pr-4">Platform transmission analytics</td>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/goal/scores</td>
+                    <td className="py-3 pr-4">Live scores, fixtures, results with match telemetry</td>
+                    <td className="py-3 text-fg-faint">Anonymous</td>
+                  </tr>
+                  <tr className="border-b border-border-alt">
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/goal/matches/:id</td>
+                    <td className="py-3 pr-4">Match details, lineups, stats, commentary</td>
+                    <td className="py-3 text-fg-faint">Anonymous</td>
+                  </tr>
+                  <tr className="border-b border-border-alt">
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/goal/player/:id</td>
+                    <td className="py-3 pr-4">Player profile, stats, national team info</td>
+                    <td className="py-3 text-fg-faint">Anonymous</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 text-red-500 font-bold">GET /api/goal/team/:id</td>
+                    <td className="py-3 pr-4">Team info, recent matches, squad overview</td>
                     <td className="py-3 text-fg-faint">Anonymous</td>
                   </tr>
                   <tr>

@@ -7,8 +7,6 @@ import Tv from "lucide-react/dist/esm/icons/tv";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import CornerDownLeft from "lucide-react/dist/esm/icons/corner-down-left";
 import Activity from "lucide-react/dist/esm/icons/activity";
-import Users from "lucide-react/dist/esm/icons/users";
-import User from "lucide-react/dist/esm/icons/user";
 import { getApiBaseUrl, getXKey, type ChannelInfo, type Match } from "@/lib/api";
 import { event } from "@/lib/analytics";
 
@@ -16,47 +14,12 @@ interface SearchItem {
   title: string;
   description: string;
   href: string;
-  category: "Matches" | "Live Channels" | "Navigation" | "Teams" | "Players" | "Events";
-}
-
-interface SportsDBTeam {
-  id: string;
-  name: string;
-  badge: string | null;
-  country: string | null;
-  league: string | null;
-}
-
-interface SportsDBPlayer {
-  id: string;
-  name: string;
-  thumb: string | null;
-  team: string | null;
-  nationality: string | null;
-  position: string | null;
-}
-
-interface SportsDBEvent {
-  id: string;
-  name: string;
-  homeTeam: string;
-  awayTeam: string;
-  league: string | null;
-  date: string | null;
-  homeBadge: string | null;
-  awayBadge: string | null;
-}
-
-interface SportsDBResults {
-  teams: SportsDBTeam[];
-  players: SportsDBPlayer[];
-  events: SportsDBEvent[];
+  category: "Matches" | "Live Channels" | "Navigation";
 }
 
 const defaultItems: SearchItem[] = [
   { title: "Home", description: "Return to the featured media lobby", href: "/", category: "Navigation" },
   { title: "Live Matches", description: "Browse all channels and start watching live", href: "/live-matches", category: "Navigation" },
-  { title: "Football Hub", description: "Live matches, standings, top scorers, teams and players", href: "/football", category: "Navigation" },
   { title: "Search Finder", description: "Search matches and channels across the platform", href: "/search", category: "Navigation" },
   { title: "About Us", description: "Learn about KhelaDekho and our mission", href: "/about", category: "Navigation" },
   { title: "Contact Us", description: "Get in touch with the team", href: "/contact", category: "Navigation" },
@@ -73,8 +36,6 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [dynamicItems, setDynamicItems] = useState<SearchItem[]>([]);
-  const [sportsDB, setSportsDB] = useState<SportsDBResults>({ teams: [], players: [], events: [] });
-  const [sportsDBLoading, setSportsDBLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -118,7 +79,7 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
                 title: `${m.team1.name} vs ${m.team2.name}`,
                 description: `Stage: ${m.stage} • Status: ${m.status.toUpperCase()} ${m.group ? `(${m.group})` : ""
                   }`,
-                href: `/football?search=${encodeURIComponent(m.team1.name)}`,
+                href: `/scores`,
                 category: "Matches",
               });
             });
@@ -137,36 +98,6 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
     fetchSearchData();
     return () => controller.abort();
   }, [open]);
-
-  // Debounced SportsDB search
-  useEffect(() => {
-    const trimmed = query.trim();
-    if (trimmed.length < 2) {
-      const id = setTimeout(() => {
-        setSportsDBLoading(false);
-        setSportsDB({ teams: [], players: [], events: [] });
-      }, 0);
-      return () => clearTimeout(id);
-    }
-
-    const timer = setTimeout(async () => {
-      setSportsDBLoading(true);
-      try {
-        const res = await fetch(`/api/sportsdb/search?q=${encodeURIComponent(trimmed)}`);
-        if (res.ok) {
-          const data: SportsDBResults = await res.json();
-          setSportsDB(data);
-        }
-      } catch {
-        setSportsDB({ teams: [], players: [], events: [] });
-      }
-      setSportsDBLoading(false);
-    }, 300);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [query]);
 
   // Keyboard shortcut: Escape to close
   useEffect(() => {
@@ -187,7 +118,6 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
       setSelectedIndex(0);
-      setSportsDB({ teams: [], players: [], events: [] });
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -198,59 +128,13 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
     if (!query.trim()) return source;
 
     const q = query.toLowerCase();
-    const matched = source.filter(
+    return source.filter(
       item =>
         item.title.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
         item.category.toLowerCase().includes(q)
     );
-
-    if (query.trim().length < 2) return matched;
-
-    const seenTitles = new Set(matched.map(i => i.title.toLowerCase()));
-
-    const addIfNotDup = (items: SearchItem[], item: SearchItem) => {
-      if (!seenTitles.has(item.title.toLowerCase())) {
-        seenTitles.add(item.title.toLowerCase());
-        items.push(item);
-      }
-    };
-
-    const results = [...matched];
-
-    const qLower = query.trim().toLowerCase();
-
-    for (const team of sportsDB.teams.slice(0, 5)) {
-      addIfNotDup(results, {
-        title: team.name,
-        description: `Team • ${[team.country, team.league].filter(Boolean).join(" • ")}`,
-        href: `/football?team=${team.id}`,
-        category: "Teams",
-      });
-    }
-
-    for (const player of sportsDB.players.slice(0, 5)) {
-      addIfNotDup(results, {
-        title: player.name,
-        description: `Player • ${[player.team, player.position, player.nationality].filter(Boolean).join(" • ")}`,
-        href: `/football?player=${player.id}`,
-        category: "Players",
-      });
-    }
-
-    if (qLower.includes("match") || qLower.includes("vs") || qLower.includes("game")) {
-      for (const event of sportsDB.events.slice(0, 5)) {
-        addIfNotDup(results, {
-          title: event.name,
-          description: `Match • ${[event.league, event.date].filter(Boolean).join(" • ")}`,
-          href: `/football?match=${event.id}`,
-          category: "Events",
-        });
-      }
-    }
-
-    return results;
-  }, [query, dynamicItems, sportsDB]);
+  }, [query, dynamicItems]);
 
   // Reset selection when results change
   useEffect(() => {
@@ -296,7 +180,7 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search live channels, matches, teams, players..."
+              placeholder="Search live channels, matches..."
               className="flex-1 bg-transparent text-sm text-fg font-mono placeholder:text-fg-dim outline-none"
             />
             <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-fg-dim bg-hover border border-border-alt rounded">
@@ -309,7 +193,7 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
             {filtered.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <p className="text-sm font-mono text-fg-dim">
-                  {sportsDBLoading ? "Searching..." : "No matching indexes found."}
+                  No matching indexes found.
                 </p>
               </div>
             ) : (
@@ -326,12 +210,6 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
                       <Tv className="w-3.5 h-3.5 text-red-500 animate-pulse" />
                     ) : item.category === "Matches" ? (
                       <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : item.category === "Teams" ? (
-                      <Users className="w-3.5 h-3.5 text-blue-400" />
-                    ) : item.category === "Players" ? (
-                      <User className="w-3.5 h-3.5 text-amber-400" />
-                    ) : item.category === "Events" ? (
-                      <Calendar className="w-3.5 h-3.5 text-purple-400" />
                     ) : (
                       <Activity className="w-3.5 h-3.5 text-fg-dim" />
                     )}

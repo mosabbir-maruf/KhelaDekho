@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { getMatches, getChannels, Match, ChannelInfo } from "@/lib/api";
+import { getMatches, getChannels, getGoalScores, Match, ChannelInfo, GoalMatch } from "@/lib/api";
 import Search from "lucide-react/dist/esm/icons/search";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -15,6 +15,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<Match[]>([]);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
+  const [goalMatches, setGoalMatches] = useState<(GoalMatch & { comp_name?: string })[]>([]);
 
   // Load search databases on mount
   useEffect(() => {
@@ -22,10 +23,35 @@ export default function SearchPage() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [mResult, chResult] = await Promise.all([getMatches({}, { signal: controller.signal }), getChannels({}, { signal: controller.signal })]);
+        const [mResult, chResult] = await Promise.all([
+          getMatches({}, { signal: controller.signal }),
+          getChannels({}, { signal: controller.signal }),
+        ]);
         if (controller.signal.aborted) return;
         setMatches(mResult?.matches || []);
         setChannels(chResult?.channels || []);
+
+        // Fetch goal scores across multiple dates for broader search
+        const goalAll: (GoalMatch & { comp_name?: string })[] = [];
+        const seen = new Set<string>();
+        const today = new Date();
+        for (let i = -3; i <= 5; i++) {
+          const d = new Date(today);
+          d.setDate(d.getDate() + i);
+          const dateStr = d.toISOString().split("T")[0];
+          try {
+            const gr = await getGoalScores({ date: dateStr });
+            for (const c of gr?.competitions || []) {
+              for (const m of c.matches) {
+                if (!seen.has(m.id)) {
+                  seen.add(m.id);
+                  goalAll.push({ ...m, comp_name: c.name });
+                }
+              }
+            }
+          } catch {}
+        }
+        setGoalMatches(goalAll);
       } catch (err) {
         if ((err as Error)?.name === "AbortError") return;
         console.error("Failed to load search directory databases:", err);
@@ -62,7 +88,19 @@ export default function SearchPage() {
     );
   }, [query, matches]);
 
-  const totalResults = filteredChannels.length + filteredMatches.length;
+  // Filter goal matches
+  const filteredGoalMatches = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return goalMatches.filter(
+      (m) =>
+        m.team_a.name.toLowerCase().includes(q) ||
+        m.team_b.name.toLowerCase().includes(q) ||
+        (m.comp_name || "").toLowerCase().includes(q)
+    );
+  }, [query, goalMatches]);
+
+  const totalResults = filteredChannels.length + filteredMatches.length + filteredGoalMatches.length;
 
   useEffect(() => {
     if (!query.trim()) return;
@@ -168,7 +206,7 @@ export default function SearchPage() {
                 {filteredMatches.map((m) => (
                   <Link
                     key={m.match_id}
-                    href={`/football?search=${encodeURIComponent(m.team1.name)}`}
+                    href={`/scores`}
                     className="border border-border-alt bg-card p-4 flex flex-col justify-between hover:border-white/20 transition-all"
                   >
                     <div className="flex justify-between items-center text-[9px] font-mono text-fg-dim uppercase mb-2">
@@ -193,10 +231,44 @@ export default function SearchPage() {
             </div>
           )}
 
+          {/* Goal Matches Section */}
+          {filteredGoalMatches.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold text-fg-dim uppercase tracking-widest flex items-center gap-2 font-mono">
+                <Calendar className="w-4 h-4 text-red-400 shrink-0" />
+                Live Scores ({filteredGoalMatches.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredGoalMatches.map((m) => (
+                  <Link
+                    key={m.id}
+                    href={m.slug ? `/scores/${m.slug}/${m.id}` : "/scores"}
+                    className="border border-border-alt bg-card p-4 flex items-center justify-between hover:border-red-500/20 transition-all"
+                  >
+                    <div className="flex-1 min-w-0">
+                      {m.comp_name && <div className="text-[9px] font-mono text-fg-faint uppercase tracking-wider mb-1 truncate">{m.comp_name}</div>}
+                      <div className="text-xs font-mono text-fg font-semibold truncate">{m.team_a.name}</div>
+                      <div className="text-xs font-mono text-fg font-semibold truncate">{m.team_b.name}</div>
+                    </div>
+                    <div className="text-right shrink-0 ml-3">
+                      <div className="text-sm font-mono font-bold text-fg tabular-nums">
+                        {m.score_team_a ?? "-"}:{m.score_team_b ?? "-"}
+                      </div>
+                      <span className={`text-[10px] font-mono ${m.status === "LIVE" ? "text-red-400" : "text-fg-faint"}`}>
+                        {m.status === "LIVE" ? "LIVE" : m.status === "RESULT" ? "FT" : "SCHEDULED"}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* No results fallback */}
-          {totalResults === 0 && (
+          {query.trim() && totalResults === 0 && (
             <div className="border border-border bg-card p-8 sm:p-16 text-center font-mono text-xs text-fg-dim uppercase tracking-widest">
-              [ NO_SEARCH_RESULTS_MATCHED ]
+              <div className="mb-2">[ NO_SEARCH_RESULTS_MATCHED ]</div>
+              <div className="text-fg-faint text-[10px] normal-case">Try searching for a team, league, or channel name.</div>
             </div>
           )}
         </div>

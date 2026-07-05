@@ -4,7 +4,6 @@ const baseUrl = "https://kheladekho.pages.dev";
 
 const staticRoutes = [
     { url: baseUrl, changeFrequency: "weekly" as const, priority: 1 },
-    { url: `${baseUrl}/football`, changeFrequency: "hourly" as const, priority: 0.9 },
     { url: `${baseUrl}/live-matches`, changeFrequency: "hourly" as const, priority: 0.9 },
     { url: `${baseUrl}/search`, changeFrequency: "weekly" as const, priority: 0.7 },
     { url: `${baseUrl}/about`, changeFrequency: "monthly" as const, priority: 0.5 },

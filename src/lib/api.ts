@@ -30,14 +30,6 @@ export interface ChannelInfo {
   source_types: string[];
 }
 
-interface PlatformStats {
-  live_viewers: number;
-  all_views: number;
-  active_channels: number;
-  total_channels: number;
-  fetched_at: string;
-}
-
 export interface StreamSource {
   index: number;
   url: string;
@@ -115,7 +107,7 @@ async function fetchAPI<T>(path: string, options: RequestInit = {}): Promise<T |
     const baseUrl = rawBaseUrl.replace(/\/+$/, "");
     const xkey = getXKey();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     const res = await fetch(`${baseUrl}${path}`, {
       signal: controller.signal,
       ...options,
@@ -174,11 +166,6 @@ export async function getLiveChannels(options?: RequestInit): Promise<{ channels
   return fetchAPI<{ channels: ChannelInfo[]; total: number; cached_at: string }>("/api/v1/channels/live", options);
 }
 
-// Fetch platform transmission stats
-export async function getPlatformStats(options?: RequestInit): Promise<{ stats: PlatformStats; cached_at: string } | null> {
-  return fetchAPI<{ stats: PlatformStats; cached_at: string }>("/api/v1/stats", options);
-}
-
 // V4: Proxybdix channel types
 export interface V4Channel {
   id: string;
@@ -192,35 +179,6 @@ export interface V4Channel {
   cached_at: string;
 }
 
-export interface FootballMatch {
-  idEvent: string;
-  strEvent: string;
-  strHomeTeam: string;
-  strAwayTeam: string;
-  intHomeScore: string | null;
-  intAwayScore: string | null;
-  strStatus: string;
-  strLeague: string;
-  strSeason: string;
-  strVenue: string | null;
-  strCity: string | null;
-  strCountry: string | null;
-  dateEvent: string;
-  strTime: string;
-  strTimestamp: string;
-  strHomeTeamBadge: string | null;
-  strAwayTeamBadge: string | null;
-  strThumb: string | null;
-  strBanner: string | null;
-  strPoster: string | null;
-  strVideo: string | null;
-  strGroup: string | null;
-  intRound: string | null;
-  strFilename: string | null;
-  idLeague: string | null;
-  idHomeTeam: string | null;
-  idAwayTeam: string | null;
-}
 
 // Fetch v4 channels
 export async function getV4Channels(params: {
@@ -234,114 +192,325 @@ export async function getV4Channels(params: {
   );
 }
 
-async function fetchFootballMatches(date: string, options?: RequestInit): Promise<{ matches: FootballMatch[]; total: number; cached_at: string } | null> {
-  const apiKey = process.env.NEXT_PUBLIC_SPORTSDB_API_KEY;
-  if (!apiKey) return null;
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(
-      `https://www.thesportsdb.com/api/v1/json/${apiKey}/eventsday.php?d=${date}&s=Soccer`,
-      {
-        signal: controller.signal,
-        ...options,
-        headers: { Accept: "application/json" },
-        next: { revalidate: 60 },
-      }
-    );
-    clearTimeout(timeoutId);
-    if (!res.ok) {
-      await res.text().catch(() => {}); // Consume body to release socket
-      return null;
-    }
-    const data = await res.json();
-    if (!data?.events) return { matches: [], total: 0, cached_at: new Date().toISOString() };
 
-    const seen = new Set<string>();
-    const deduped = data.events.filter((e: FootballMatch) => {
-      const uid = e.idEvent;
-      if (!uid || seen.has(uid)) return false;
-      seen.add(uid);
-      return true;
-    });
+// --- Goal.com Scores (v5) ---
 
-    return { matches: deduped, total: deduped.length, cached_at: new Date().toISOString() };
-  } catch {
-    return null;
-  }
-}
-
-export async function getFootballLiveMatches(options?: RequestInit): Promise<{ matches: FootballMatch[]; total: number; cached_at: string } | null> {
-  const d = new Date();
-  d.setUTCHours(d.getUTCHours() + 6); // BD Time
-  const today = d.toISOString().split('T')[0];
-  d.setDate(d.getDate() - 1);
-  const yesterday = d.toISOString().split('T')[0];
-
-  const [res1, res2] = await Promise.all([
-    fetchFootballMatches(yesterday, options),
-    fetchFootballMatches(today, options)
-  ]);
-
-  const allMatches = [...(res1?.matches || []), ...(res2?.matches || [])];
-  
-  const seen = new Set<string>();
-  const deduped = allMatches.filter((e) => {
-    const uid = e.idEvent;
-    if (!uid || seen.has(uid)) return false;
-    seen.add(uid);
-    return true;
-  });
-
-  return { matches: deduped, total: deduped.length, cached_at: new Date().toISOString() };
-}
-
-export async function getFootballMatchesByDate(date: string, options?: RequestInit) {
-  return fetchFootballMatches(date, options);
-}
-
-// --- Live Now (V2 Kickbd) ---
-
-export interface LiveNowTeam {
-  name: string;
-  logo: string | null;
-}
-
-export interface LiveNowMatch {
+export interface GoalTeamInfo {
   id: string;
-  league: string;
-  sport_emoji: string;
-  team_a: LiveNowTeam;
-  team_b: LiveNowTeam;
-  starts_at: string | null;
-  match_url: string;
-  is_live: boolean;
+  name: string;
+  code: string;
+  short: string;
+  image_url: string | null;
+}
+
+export interface GoalPeriod {
+  type: string;
+  minute: number;
+  extra: number;
+}
+
+export interface GoalRound {
+  name: string;
+  display: boolean;
+}
+
+export interface GoalMatch {
+  id: string;
+  start_date: string;
+  status: "LIVE" | "RESULT" | "FIXTURE" | "POSTPONED";
+  score_team_a: number | null;
+  score_team_b: number | null;
+  agg_team_a: number | null;
+  agg_team_b: number | null;
+  penalty_team_a: number | null;
+  penalty_team_b: number | null;
+  team_a: GoalTeamInfo;
+  team_b: GoalTeamInfo;
+  round: GoalRound | null;
+  period: GoalPeriod | null;
+  red_cards_team_a: number;
+  red_cards_team_b: number;
+  venue: string | null;
+  slug: string;
+  last_updated_at: string | null;
+}
+
+export interface GoalCompetition {
+  id: string;
+  name: string;
+  area: string;
+  image_url: string | null;
+  matches: GoalMatch[];
+}
+
+export interface GoalScoresData {
+  competitions: GoalCompetition[];
+  total_matches: number;
   cached_at: string;
 }
 
-export interface LiveNowChannel {
-  name: string;
-  stream_type: string;
-  stream_url: string | null;
-  drm_kid: string | null;
-  drm_key: string | null;
-  is_alive: boolean;
+export async function getGoalScores(params: {
+  date?: string;
+  competition?: string;
+  status?: "live" | "result" | "fixture";
+} = {}, options?: RequestInit): Promise<GoalScoresData | null> {
+  const query = buildQuery(params as Record<string, string | number | undefined>);
+  return fetchAPI<GoalScoresData>(
+    `/api/goal/scores${query ? `?${query}` : ""}`,
+    options
+  );
 }
 
-export interface LiveNowMatchWithChannels {
-  match: LiveNowMatch;
-  channels: LiveNowChannel[];
+export async function getGoalLiveScores(date?: string, options?: RequestInit): Promise<GoalScoresData | null> {
+  const q = date ? `?date=${date}` : "";
+  return fetchAPI<GoalScoresData>(`/api/goal/scores/live${q}`, options);
 }
 
-export interface LiveNowData {
-  matches: LiveNowMatchWithChannels[];
+export async function getGoalFixtures(date?: string, options?: RequestInit): Promise<GoalScoresData | null> {
+  const q = date ? `?date=${date}` : "";
+  return fetchAPI<GoalScoresData>(`/api/goal/scores/fixtures${q}`, options);
+}
+
+export async function getGoalResults(date?: string, options?: RequestInit): Promise<GoalScoresData | null> {
+  const q = date ? `?date=${date}` : "";
+  return fetchAPI<GoalScoresData>(`/api/goal/scores/results${q}`, options);
+}
+
+export async function getGoalCompetitions(date?: string, options?: RequestInit): Promise<{
+  competitions: { id: string; name: string; area: string; image_url: string | null; match_count: number }[];
   total: number;
   cached_at: string;
+} | null> {
+  const q = date ? `?date=${date}` : "";
+  return fetchAPI(`/api/goal/competitions${q}`, options);
 }
 
-export async function getLiveNow(options?: RequestInit): Promise<LiveNowData | null> {
-  return fetchAPI<LiveNowData>("/api/v2/live", options);
+// --- Match Detail ---
+
+export interface GoalPlayerInfo {
+  id: string;
+  name: string;
+  image_url: string | null;
+}
+
+export interface GoalMatchEvent {
+  type: string;
+  side: string | null;
+  period: GoalPeriod | null;
+  player: GoalPlayerInfo | null;
+  scorer: GoalPlayerInfo | null;
+  assist: GoalPlayerInfo | null;
+  in_player: GoalPlayerInfo | null;
+  out_player: GoalPlayerInfo | null;
+  outcome: string | null;
+  decision: string | null;
+}
+
+export interface GoalLineupPlayer {
+  player: GoalPlayerInfo | null;
+  position: string | null;
+  shirt_number: number | null;
+  score: number | null;
+  is_substitute: boolean;
+  formation_position: string | null;
+}
+
+export interface GoalTeamLineup {
+  formation: string | null;
+  starting_xi: GoalLineupPlayer[];
+  substitutes: GoalLineupPlayer[];
+}
+
+export interface GoalLineups {
+  team_a: GoalTeamLineup | null;
+  team_b: GoalTeamLineup | null;
+}
+
+export interface GoalCommentaryItem {
+  type: string;
+  period: GoalPeriod | null;
+  text: string;
+  player: GoalPlayerInfo | null;
+  side: string | null;
+}
+
+export interface GoalTopPlayer {
+  player: GoalPlayerInfo;
+  score: number;
+  team_side: string;
+}
+
+export interface GoalH2HStats {
+  team_a_goals: number;
+  team_a_wins: number;
+  team_b_goals: number;
+  team_b_wins: number;
+  draws: number;
+  games_over_two_and_half: number;
+  games_both_teams_scored: number;
+}
+
+export interface GoalMatchDetail {
+  id: string;
+  status: string;
+  competition_name: string;
+  competition_area: string;
+  competition_image_url: string | null;
+  start_date: string;
+  venue: string | null;
+  venue_lat: number | null;
+  venue_lng: number | null;
+  score_team_a: number | null;
+  score_team_b: number | null;
+  half_time_team_a: number | null;
+  half_time_team_b: number | null;
+  full_time_team_a: number | null;
+  full_time_team_b: number | null;
+  extra_time_team_a: number | null;
+  extra_time_team_b: number | null;
+  agg_team_a: number | null;
+  agg_team_b: number | null;
+  penalty_team_a: number | null;
+  penalty_team_b: number | null;
+  team_a: GoalTeamInfo;
+  team_b: GoalTeamInfo;
+  team_a_colors: string[] | null;
+  team_b_colors: string[] | null;
+  round: GoalRound | null;
+  period: GoalPeriod | null;
+  events: GoalMatchEvent[];
+  lineups: GoalLineups | null;
+  commentary: GoalCommentaryItem[];
+  top_players: GoalTopPlayer[];
+  h2h: GoalH2HStats | null;
+  h2h_matches: GoalMatch[];
+  stats: GoalMatchStats | null;
+  scorers_team_a: GoalMatchEvent[];
+  scorers_team_b: GoalMatchEvent[];
+  red_cards_team_a: number;
+  red_cards_team_b: number;
+  last_updated_at: string | null;
+}
+
+export interface GoalStatItem {
+  type: string;
+  team_a: number;
+  team_b: number;
+}
+
+export interface GoalMatchStats {
+  summary: GoalStatItem[];
+  attacking: GoalStatItem[];
+  passing: GoalStatItem[];
+  duels: GoalStatItem[];
+  defence: GoalStatItem[];
+  discipline: GoalStatItem[];
+}
+
+export interface GoalMatchDetailResponse {
+  match: GoalMatchDetail;
+  cached_at: string;
+}
+
+export async function getGoalMatchDetail(matchId: string, slug: string, options?: RequestInit): Promise<GoalMatchDetail | null> {
+  return fetchAPI<GoalMatchDetailResponse>(
+    `/api/goal/matches/${matchId}?slug=${slug}`,
+    options
+  ).then(r => r?.match ?? null);
+}
+
+// --- Player Detail ---
+
+export interface GoalPlayerSeasonStats {
+  competition_name: string;
+  competition_image_url: string | null;
+  season_name: string;
+  team_image_url: string | null;
+  appearances: number;
+  starting_eleven: number;
+  minutes_played: number;
+  goals: number;
+  minutes_per_goal: number | null;
+  assists: number;
+  own_goals: number;
+  penalty_goals: number;
+  penalties_missed: number;
+  shots_on_target: number;
+  shots_off_target: number;
+  blocked_shots: number;
+  goals_outside_box: number;
+  hit_woodwork: number;
+  freekick_goals: number;
+  offsides: number;
+  corners: number;
+  crosses: number;
+  successful_crosses: number;
+  tackles: number;
+  clearances: number;
+  yellow_cards: number;
+  red_cards: number;
+  fouls_committed: number;
+  fouls_suffered: number;
+  goals_conceded: number;
+  clean_sheets: number;
+  saves: number;
+  penalty_saves: number;
+}
+
+export interface GoalPlayerDetail {
+  id: string;
+  name: string;
+  first_name: string;
+  last_name: string;
+  shirt_number: number | null;
+  position: string | null;
+  age: number | null;
+  date_of_birth: string | null;
+  nationality_name: string | null;
+  nationality_image_url: string | null;
+  image_url: string | null;
+  current_team_name: string | null;
+  current_team_id: string | null;
+  current_team_image_url: string | null;
+  stats: GoalPlayerSeasonStats[];
+}
+
+export interface GoalPlayerDetailResponse {
+  player: GoalPlayerDetail;
+  cached_at: string;
+}
+
+export async function getGoalPlayerDetail(playerId: string, playerName?: string, options?: RequestInit): Promise<GoalPlayerDetail | null> {
+  const q = playerName ? `?player_name=${encodeURIComponent(playerName)}` : "";
+  return fetchAPI<GoalPlayerDetailResponse>(
+    `/api/goal/player/${playerId}${q}`,
+    options
+  ).then(r => r?.player ?? null);
+}
+
+// --- Team Detail ---
+
+export interface GoalTeamDetail {
+  id: string;
+  name: string;
+  long_name: string;
+  short_name: string;
+  image_url: string | null;
+  recent_matches: GoalMatch[];
+}
+
+export interface GoalTeamDetailResponse {
+  team: GoalTeamDetail;
+  cached_at: string;
+}
+
+export async function getGoalTeamDetail(teamId: string, teamName?: string, options?: RequestInit): Promise<GoalTeamDetail | null> {
+  const q = teamName ? `?team_name=${encodeURIComponent(teamName)}` : "";
+  return fetchAPI<GoalTeamDetailResponse>(
+    `/api/goal/team/${teamId}${q}`,
+    options
+  ).then(r => r?.team ?? null);
 }
 
 

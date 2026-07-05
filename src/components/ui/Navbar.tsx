@@ -16,9 +16,9 @@ import Info from "lucide-react/dist/esm/icons/info";
 import Mail from "lucide-react/dist/esm/icons/mail";
 import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
+import Trophy from "lucide-react/dist/esm/icons/trophy";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CommandSearch, useIsMac } from "@/components/ui/CommandSearch";
-import { LiveScoreTicker } from "@/components/ui/LiveScoreTicker";
 import { event } from "@/lib/analytics";
 
 export function Navbar() {
@@ -87,14 +87,6 @@ export function Navbar() {
                 Live TV
               </Link>
               <Link
-                href="/live-now"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-now") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
-                  }`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse mr-2 shrink-0" />
-                Live Now
-              </Link>
-              <Link
                 href="/live-matches"
                 className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
@@ -102,11 +94,11 @@ export function Navbar() {
                 Live Matches
               </Link>
               <Link
-                href="/football"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/football") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                href="/scores"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/scores") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
-                Football
+                Scores
               </Link>
               <Link
                 href="/about"
@@ -129,15 +121,14 @@ export function Navbar() {
               >
                 Docs
               </Link>
-              <LiveScoreTicker isNavbar={true} />
             </nav>
           </div>
 
-          {/* Right Side: Search & Social & Mobile Toggle */}
-          <div className="flex items-center h-full">
+          {/* Right Side: Search, Theme, GitHub, Mobile Toggle */}
+          <div className="flex items-center h-full flex-1 justify-end">
             <button
               onClick={() => setSearchOpen(true)}
-              className="hidden lg:flex items-center h-full border-l border-border px-4 bg-transparent cursor-pointer group w-[280px] hover:bg-hover transition-colors"
+              className="hidden lg:flex items-center h-full border-l border-border px-4 bg-transparent cursor-pointer group flex-1 max-w-[300px] hover:bg-hover transition-colors"
             >
               <span className="text-red-500 font-mono text-xs mr-2">{`>`}</span>
               <span className="text-xs text-fg-dim font-mono flex-1 text-left group-hover:text-fg-dim transition-colors">
@@ -153,20 +144,22 @@ export function Navbar() {
               </div>
             </button>
 
-            {/* Theme Toggle */}
-            <ThemeToggle />
+            {/* Theme Toggle & GitHub Wrapper (Shifted slightly rightward) */}
+            <div className="flex items-center h-full lg:-mr-4 sm:-mr-2">
+              <ThemeToggle />
 
-            {/* GitHub */}
-            <Link
-              href="https://github.com/mosabbir-maruf/kheladekho"
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => event("external_link_click", { link_url: "https://github.com/mosabbir-maruf/kheladekho", link_text: "GitHub" })}
-              className="flex items-center justify-center border-l border-border h-full px-4 hover:bg-hover transition-colors text-fg-dim hover:text-fg"
-            >
-              <Github className="w-4 h-4" />
-              <span className="sr-only">GitHub</span>
-            </Link>
+              {/* GitHub */}
+              <Link
+                href="https://github.com/mosabbir-maruf/kheladekho"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => event("external_link_click", { link_url: "https://github.com/mosabbir-maruf/kheladekho", link_text: "GitHub" })}
+                className="flex items-center justify-center border-l border-border h-full px-4 hover:bg-hover transition-colors text-fg-dim hover:text-fg"
+              >
+                <Github className="w-4 h-4" />
+                <span className="sr-only">GitHub</span>
+              </Link>
+            </div>
 
             {/* Mobile Menu Toggle */}
             <button
@@ -200,12 +193,12 @@ export function Navbar() {
                   Home
                 </Link>
                 <Link
-                  href="/football"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/football") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
+                  href="/scores"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/scores") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                     }`}
                 >
-                  <Calendar className="w-4 h-4" />
-                  Football
+                  <Trophy className="w-4 h-4" />
+                  Scores
                 </Link>
               </div>
 
@@ -222,13 +215,7 @@ export function Navbar() {
                     <Tv className="w-4 h-4 text-red-500" />
                     Live TV
                   </Link>
-                  <Link
-                    href="/live-now"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
-                  >
-                    <Radio className="w-4 h-4 text-red-500" />
-                    Live Now
-                  </Link>
+
                   <Link
                     href="/live-matches"
                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"

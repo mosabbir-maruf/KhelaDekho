@@ -13,6 +13,7 @@ import Info from "lucide-react/dist/esm/icons/info";
 import Mail from "lucide-react/dist/esm/icons/mail";
 import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
+import Trophy from "lucide-react/dist/esm/icons/trophy";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -46,20 +47,20 @@ export function Sidebar() {
             </li>
             <li>
               <Link
-                href="/football"
-                className={`${baseLinkClass} ${isActive("/football") ? activeLinkClass : inactiveLinkClass}`}
+                href="/live-matches"
+                className={`${baseLinkClass} ${isActive("/live-matches") ? activeLinkClass : inactiveLinkClass}`}
               >
-                <Calendar className="w-4 h-4" />
-                Football
+                <Tv className="w-4 h-4 text-red-500 animate-pulse" />
+                Live Matches
               </Link>
             </li>
             <li>
               <Link
-                href="/football"
-                className={`${baseLinkClass} ${isActive("/football") ? activeLinkClass : inactiveLinkClass}`}
+                href="/scores"
+                className={`${baseLinkClass} ${isActive("/scores") ? activeLinkClass : inactiveLinkClass}`}
               >
-                <Tv className="w-4 h-4 text-red-500 animate-pulse" />
-                Matches
+                <Trophy className="w-4 h-4" />
+                Match Scores
               </Link>
             </li>
           </ul>

@@ -1,7 +1,6 @@
 export const runtime = 'edge';
 
 import LiveMatchesClient from './LiveMatchesClient';
-import { getFootballLiveMatches, FootballMatch } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,17 +21,5 @@ export default async function Page() {
     console.error("Failed to read default version from KV:", error);
   }
 
-  let liveMatches: FootballMatch[] = [];
-  try {
-    const sportsRes = await getFootballLiveMatches();
-    if (sportsRes?.matches) {
-      liveMatches = sportsRes.matches;
-    }
-  } catch (error) {
-    console.error("Failed to fetch SportsDB live matches:", error);
-  }
-
-  return <LiveMatchesClient initialVersion={defaultVersion as "v1" | "v2" | "v3" | "v4"} initialLiveMatches={liveMatches} />;
+  return <LiveMatchesClient initialVersion={defaultVersion as "v1" | "v2" | "v3" | "v4"} />;
 }
-
-
