@@ -1,6 +1,7 @@
 import MatchDetailClient from "./MatchDetailClient";
 import { getGoalMatchDetail } from "@/lib/api";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
