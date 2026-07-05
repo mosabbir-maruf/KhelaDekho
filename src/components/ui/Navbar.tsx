@@ -62,11 +62,10 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-page/90 backdrop-blur-md">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center justify-center">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center justify-between">
 
-          {/* Right Side: Search & Social & Mobile Toggle */}
+          {/* Left Side: Logo & Nav Links */}
           <div className="flex items-center h-full">
-
             {/* Logo */}
             <Link
               href="/"
@@ -82,7 +81,7 @@ export function Navbar() {
             <nav className="hidden md:flex items-center h-full">
               <Link
                 href="/live-tv"
-                className={`px-3 lg:px-4 flex items-center h-full border-x border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
                 Live TV
@@ -132,8 +131,10 @@ export function Navbar() {
               </Link>
               <LiveScoreTicker isNavbar={true} />
             </nav>
+          </div>
 
-
+          {/* Right Side: Search & Social & Mobile Toggle */}
+          <div className="flex items-center h-full">
             <button
               onClick={() => setSearchOpen(true)}
               className="hidden lg:flex items-center h-full border-l border-border px-4 bg-transparent cursor-pointer group w-[280px] hover:bg-hover transition-colors"
@@ -170,7 +171,7 @@ export function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(prev => !prev)}
-              className="md:hidden flex items-center justify-center border-l border-border h-full px-4 hover:bg-hover transition-colors text-fg-dim hover:text-fg"
+              className="md:hidden flex items-center justify-center border-l border-border h-full px-4 -mr-4 sm:-mr-6 hover:bg-hover transition-colors text-fg-dim hover:text-fg"
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
