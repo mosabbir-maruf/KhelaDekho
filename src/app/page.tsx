@@ -12,7 +12,8 @@ import { CopyButton } from "@/components/ui/CopyButton";
 import { getGoalScores } from "@/lib/api";
 import type { GoalMatch } from "@/lib/api";
 
-export const revalidate = 10;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function formatMatchTimeBD(ts: string): string {
   const d = new Date(ts);
