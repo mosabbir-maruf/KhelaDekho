@@ -69,6 +69,15 @@ export function Footer() {
         </div>
       </div>
 
+      {/* Disclaimer */}
+      <div className="border-t border-border-alt/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <p className="text-[10px] sm:text-[11px] font-mono text-fg-faint leading-relaxed text-center max-w-3xl mx-auto">
+            KhelaDekho is an indexing platform that aggregates publicly available streaming links from third-party sources and organizes them for convenience, similar to how search engines index web content. We do not host, store, or transmit any copyrighted content. All streams are sourced from publicly accessible third-party providers. If you believe any content infringes your rights, please contact the respective source provider directly.
+          </p>
+        </div>
+      </div>
+
       <div className="border-t border-border">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-4 pt-4 flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-3">
           <div className="flex items-center gap-4 text-[10px] font-mono text-fg-faint uppercase tracking-widest">
