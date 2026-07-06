@@ -419,7 +419,7 @@ export default async function Home() {
                     Lobby.Lounge
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-fg-faint tracking-widest">beta-1.1.0</span>
+                <span className="text-[10px] font-mono text-fg-faint tracking-widest">beta-2.1.1</span>
               </div>
 
               {/* CTA Content */}

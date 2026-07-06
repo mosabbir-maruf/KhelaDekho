@@ -82,7 +82,7 @@ export function Footer() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-4 pt-4 flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-3">
           <div className="flex items-center gap-4 text-[10px] font-mono text-fg-faint uppercase tracking-widest">
             <span className="flex items-center gap-2">
-              <span className="text-fg-dim">VERSION:</span> beta-1.1.0
+              <span className="text-fg-dim">VERSION:</span> beta-2.1.1
             </span>
             <span className="inline-flex items-center gap-2 border-l border-border-alt pl-4">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
