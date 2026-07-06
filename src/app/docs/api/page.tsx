@@ -190,6 +190,16 @@ export default function DecryptionApiPage() {
                     <td className="py-3 pr-4">Resolve one channel/substream + proxy</td>
                     <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
+                  <tr>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v5/tv/channels</td>
+                    <td className="py-3 pr-4">DLHD 24/7 TV channel list (878+ channels)</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v5/tv/channel/:id/stream</td>
+                    <td className="py-3 pr-4">Resolve a DLHD channel + proxy (no rate limit)</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -314,6 +324,27 @@ export default function DecryptionApiPage() {
     "stream_type": "hls",
     "drm_kid": null,
     "drm_key": null
+  },
+  "error": null
+}`} />
+            </div>
+            <div className="border border-border-alt bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V5 TV</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET /api/v5/tv/channels</h3>
+              </div>
+              <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "channels": [{
+      "id": "dlhd-521",
+      "name": "Sports Channel HD",
+      "image": "https://cdn.provider.example/logo.png",
+      "country": "us",
+      "category": "Sports"
+    }],
+    "total": 878,
+    "cached_at": "2026-07-06T17:13:07Z"
   },
   "error": null
 }`} />

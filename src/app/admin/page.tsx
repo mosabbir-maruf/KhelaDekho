@@ -325,7 +325,8 @@ export default function AdminPage() {
                   <span className={`w-1.5 h-1.5 rounded-full ${
                     version === "v2" ? "bg-green-500" :
                     version === "v3" ? "bg-cyan-500" :
-                    "bg-purple-500"
+                    version === "v4" ? "bg-purple-500" :
+                    "bg-rose-500"
                   }`} />
                   <span>Active Default: <strong className="text-fg">{version.toUpperCase()}</strong></span>
                 </div>
@@ -358,14 +359,15 @@ export default function AdminPage() {
               <form onSubmit={handleUpdateSettings} className="space-y-6">
                 
                 {/* Compact Version Selectors */}
-                <div className="grid grid-cols-3 gap-2.5">
-                  {(["v2", "v3", "v4"] as const).map((v) => {
-                    const labels = { v2: "V2", v3: "V3", v4: "V4" };
-                    const dotColors = { v2: "bg-green-500", v3: "bg-cyan-500", v4: "bg-purple-500" };
+                <div className="grid grid-cols-4 gap-2.5">
+                  {(["v2", "v3", "v4", "v5"] as const).map((v) => {
+                    const labels = { v2: "V2", v3: "V3", v4: "V4", v5: "V5" };
+                    const dotColors = { v2: "bg-green-500", v3: "bg-cyan-500", v4: "bg-purple-500", v5: "bg-rose-500" };
                     const activeBorders = {
                       v2: "border-green-500/50 text-green-400 bg-green-500/[0.03]",
                       v3: "border-cyan-500/50 text-cyan-400 bg-cyan-500/[0.03]",
-                      v4: "border-purple-500/50 text-purple-400 bg-purple-500/[0.03]"
+                      v4: "border-purple-500/50 text-purple-400 bg-purple-500/[0.03]",
+                      v5: "border-rose-500/50 text-rose-400 bg-rose-500/[0.03]"
                     };
                     return (
                       <button

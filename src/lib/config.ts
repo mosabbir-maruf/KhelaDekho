@@ -1,7 +1,7 @@
 // Single source of truth for shared frontend configuration.
 
 // Streaming server versions offered on the live-matches page.
-export const STREAM_VERSIONS = ["v2", "v3", "v4"] as const;
+export const STREAM_VERSIONS = ["v2", "v3", "v4", "v5"] as const;
 export type StreamVersion = (typeof STREAM_VERSIONS)[number];
 
 export function isStreamVersion(value: unknown): value is StreamVersion {

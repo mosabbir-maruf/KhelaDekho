@@ -149,11 +149,11 @@ const scores = await getGoalScores();          // GET /api/v1/scores
                         </li>
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
-                            <span><strong>V5</strong> — match-first API with TV channels and substreams (<code>/api/v5/*</code>). Lists live/upcoming matches, then resolves channel or substream HLS on demand.</span>
+                            <span><strong>V5</strong> — match-first API (<code>/api/v5/matches/*</code>) and DLHD 24/7 TV channel list (<code>/api/v5/tv/channels</code> and <code>/api/v5/tv/channel/:id/stream</code>). The Live TV page now sources from the V5 DLHD channel list (878+ channels with auto-categorization). On channel selection, the stream URL is resolved on demand and proxied through <code>/api/v5/proxy</code>.</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
-                            <span><strong>V3</strong> — a self-hosted playlist (M3U8 or JSON) stored in Cloudflare KV and managed from the admin panel. Served by the frontend route <code>/api/playlist</code>, which merges sources, de-duplicates channels, and applies per-channel overrides. The Live TV page uses the same V3 playlist source.</span>
+                            <span><strong>V3</strong> — a self-hosted playlist (M3U8 or JSON) stored in Cloudflare KV and managed from the admin panel. Served by the frontend route <code>/api/playlist</code>, which merges sources, de-duplicates channels, and applies per-channel overrides. Used as a fallback data source for the Live TV page when V5 is unavailable.</span>
                         </li>
                     </ul>
                 </div>

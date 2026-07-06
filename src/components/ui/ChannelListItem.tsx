@@ -39,9 +39,9 @@ export function ChannelListItem({ item, selected, onClick, showGroup, showExtra 
           {showLogo ? (
             <img src={item.logo!} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" onError={() => setLogoError(true)} />
           ) : (
-            <Tv className={`w-3.5 h-3.5 transition-colors ${
-              selected ? "text-red-400" : "text-fg-dim group-hover:text-red-400"
-            }`} />
+            <div className="w-full h-full flex items-center justify-center bg-[#181818]">
+              <Tv className="w-6 h-6 text-fg-faint/20" />
+            </div>
           )}
         </div>
         <div className="min-w-0 flex-1">
