@@ -209,22 +209,24 @@ export default function DecryptionApiPage() {
             <div className="border border-border-alt bg-card p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V1</span>
-                <h3 className="text-sm font-mono font-semibold text-fg">Scores</h3>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET /api/v1/scores</h3>
               </div>
               <CodeBlock code={`{
   "success": true,
   "data": {
     "competitions": [{
-      "id": "premier-league",
-      "name": "Premier League",
-      "area": "England",
+      "id": "70exc...",
+      "name": "World Cup",
+      "area": "International",
+      "image_url": "https://...",
       "matches": [{
-        "id": "abc123",
-        "status": "LIVE",
-        "team_a": { "name": "Arsenal" },
-        "team_b": { "name": "Chelsea" },
-        "score_team_a": 2,
-        "score_team_b": 1
+        "id": "1bS5L...",
+        "start_date": "2026-07-05T20:00:00Z",
+        "status": "RESULT",
+        "score_team_a": 1,
+        "score_team_b": 2,
+        "team_a": { "id": "...", "name": "Brazil", "code": "BRA" },
+        "team_b": { "id": "...", "name": "Germany", "code": "GER" }
       }]
     }],
     "total_matches": 1
@@ -235,16 +237,23 @@ export default function DecryptionApiPage() {
             <div className="border border-border-alt bg-card p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V2</span>
-                <h3 className="text-sm font-mono font-semibold text-fg">Match List</h3>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET /api/v2/matches</h3>
               </div>
               <CodeBlock code={`{
   "success": true,
   "data": {
     "matches": [{
-      "slug": "match-slug",
-      "name": "Arsenal vs Chelsea",
-      "sport": "football",
-      "is_live": true
+      "id": "fifa-world-cup-2026-...",
+      "slug": "fifa-world-cup-2026-...",
+      "name": "Fifa World Cup 2026- Round of 16",
+      "sport": "",
+      "status": "live",
+      "is_live": true,
+      "start_date": "2026-07-07T01:00:00+06:00",
+      "end_date": "2026-07-07T05:00:00+06:00",
+      "poster": "https://.../match-sliders/...jpeg",
+      "team_a": { "name": "Spain", "logo": "https://..." },
+      "team_b": { "name": "Germany", "logo": "https://..." }
     }]
   },
   "error": null
@@ -252,18 +261,18 @@ export default function DecryptionApiPage() {
             </div>
             <div className="border border-border-alt bg-card p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V4</span>
-                <h3 className="text-sm font-mono font-semibold text-fg">Channel List</h3>
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V2 / V5</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET .../matches/:slug/channels</h3>
               </div>
               <CodeBlock code={`{
   "success": true,
   "data": {
+    "slug": "fifa-world-cup-2026-...",
     "channels": [{
-      "id": "ch-1",
-      "name": "Sky Sports",
-      "stream_type": "hls"
-    }],
-    "total": 1
+      "id": "dlhd-54",
+      "name": "FOX USA",
+      "server": "TV"
+    }]
   },
   "error": null
 }`} />
@@ -271,13 +280,37 @@ export default function DecryptionApiPage() {
             <div className="border border-border-alt bg-card p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V5</span>
-                <h3 className="text-sm font-mono font-semibold text-fg">Match Stream</h3>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET /api/v5/matches</h3>
               </div>
               <CodeBlock code={`{
   "success": true,
   "data": {
-    "name": "FOX USA",
-    "stream_url": "/api/v5/proxy?...",
+    "matches": [{
+      "id": "portugal-vs-spain",
+      "slug": "portugal-vs-spain",
+      "name": "Portugal vs. Spain",
+      "sport": "football",
+      "status": "upcoming",
+      "is_live": false,
+      "start_date": 1783364400000,
+      "poster": "https://.../thumb/xb1fyz....jpg",
+      "team_a": { "name": "Portugal", "logo": "https://..." },
+      "team_b": { "name": "Spain", "logo": "https://..." }
+    }]
+  },
+  "error": null
+}`} />
+            </div>
+            <div className="border border-border-alt bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V5</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET .../matches/:slug/stream?ch=</h3>
+              </div>
+              <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "name": "Peacock 4K (HEVC)",
+    "stream_url": "/api/v5/proxy?url=https%3A%2F%2F...",
     "stream_type": "hls",
     "drm_kid": null,
     "drm_key": null
@@ -287,8 +320,31 @@ export default function DecryptionApiPage() {
             </div>
             <div className="border border-border-alt bg-card p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V4</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET /api/v4/channels</h3>
+              </div>
+              <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "channels": [{
+      "id": "sport1",
+      "name": "Iphone-2",
+      "stream_url": "https://.../sport.m3u8",
+      "stream_type": "hls",
+      "drm_kid": null,
+      "drm_key": null,
+      "cached_at": "2026-07-06T17:13:07Z"
+    }],
+    "total": 120,
+    "cached_at": "2026-07-06T17:13:07Z"
+  },
+  "error": null
+}`} />
+            </div>
+            <div className="border border-border-alt bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">Error</span>
-                <h3 className="text-sm font-mono font-semibold text-fg">Standard Error</h3>
+                <h3 className="text-sm font-mono font-semibold text-fg">Standard Error Shape</h3>
               </div>
               <CodeBlock code={`{
   "success": false,
