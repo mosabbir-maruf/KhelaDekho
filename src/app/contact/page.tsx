@@ -7,6 +7,7 @@ import MessageSquare from "lucide-react/dist/esm/icons/message-square";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Clock from "lucide-react/dist/esm/icons/clock";
+import Bug from "lucide-react/dist/esm/icons/bug";
 import Github from "lucide-react/dist/esm/icons/github";
 import Link from "next/link";
 import { event } from "@/lib/analytics";
@@ -232,15 +233,17 @@ export default function ContactPage() {
               </h3>
               <div className="space-y-4">
                 <a
-                  href="mailto:contact@kheladekho.com"
+                  href="https://github.com/mosabbir-maruf/KhelaDekho/issues"
+                  target="_blank"
+                  rel="noreferrer"
                   className="flex items-start gap-4 p-4 border border-border bg-input hover:border-red-500/20 hover:bg-red-500/[0.03] transition-all group"
                 >
                   <div className="w-10 h-10 rounded-lg bg-hover border border-border-alt flex items-center justify-center shrink-0 group-hover:border-red-500/20 group-hover:bg-red-500/10 transition-all">
-                    <Mail className="w-4 h-4 text-fg-dim group-hover:text-red-400 transition-colors" />
+                    <Bug className="w-4 h-4 text-fg-dim group-hover:text-red-400 transition-colors" />
                   </div>
                   <div>
-                    <p className="text-xs font-mono text-fg font-semibold">Email</p>
-                    <p className="text-[11px] font-mono text-fg-dim mt-0.5">contact@kheladekho.com</p>
+                    <p className="text-xs font-mono text-fg font-semibold">Report an Issue</p>
+                    <p className="text-[11px] font-mono text-fg-dim mt-0.5">Open a GitHub issue for bug reports or feature requests</p>
                   </div>
                 </a>
 

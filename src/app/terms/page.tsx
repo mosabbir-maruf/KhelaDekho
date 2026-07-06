@@ -141,9 +141,9 @@ export default function TermsPage() {
             Last updated: June 2026
           </p>
           <p className="text-[10px] font-mono text-fg-faint">
-            For questions, contact us at{" "}
-            <a href="mailto:contact@kheladekho.com" className="text-fg-dim hover:text-fg transition-colors">
-              contact@kheladekho.com
+            For questions,{" "}
+            <a href="https://github.com/mosabbir-maruf/KhelaDekho/issues" target="_blank" rel="noopener noreferrer" className="text-fg-dim hover:text-fg transition-colors">
+              open a GitHub issue
             </a>
           </p>
         </div>
