@@ -7,7 +7,7 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-10 md:gap-8">
           <div className="col-span-2 md:col-span-1 space-y-4">
-            <Link href="/" className="flex items-center gap-3 font-mono text-sm tracking-widest text-fg uppercase hover:text-red-400 transition-colors">
+            <Link prefetch={false} href="/" className="flex items-center gap-3 font-mono text-sm tracking-widest text-fg uppercase hover:text-red-400 transition-colors">
               <Tv className="w-5 h-5 text-red-500" />
               [ KhelaDekho ]
             </Link>
@@ -22,17 +22,17 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/live-matches" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link prefetch={false} href="/live-matches" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Live Matches
                 </Link>
               </li>
               <li>
-                <Link href="/scores" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link prefetch={false} href="/scores" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Match Scores
                 </Link>
               </li>
               <li>
-                <Link href="/search" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link prefetch={false} href="/search" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Search Finder
                 </Link>
               </li>
@@ -45,22 +45,22 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/about" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link prefetch={false} href="/about" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link prefetch={false} href="/contact" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link prefetch={false} href="/terms" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                <Link prefetch={false} href="/privacy" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Privacy Policy
                 </Link>
               </li>
@@ -91,12 +91,12 @@ export function Footer() {
           </div>
           <div className="text-[10px] font-mono text-fg-faint uppercase tracking-widest flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-3">
             <div className="flex items-center gap-3">
-              <Link href="/docs/api" className="hover:text-fg transition-colors flex items-center gap-1.5">
+              <Link prefetch={false} href="/docs/api" className="hover:text-fg transition-colors flex items-center gap-1.5">
                 <span className="w-1 h-1 rounded-full bg-red-500/50" />
                 API Docs
               </Link>
               <span className="border-l border-border-alt h-3" />
-              <span>© {new Date().getFullYear()} </span><Link href="/" className="hover:text-fg transition-colors">KhelaDekho</Link>
+              <span>© {new Date().getFullYear()} </span><Link prefetch={false} href="/" className="hover:text-fg transition-colors">KhelaDekho</Link>
             </div>
             <span className="hidden sm:block border-l border-border-alt h-3" />
             <span className="mt-1 sm:mt-0 text-fg-dim">A sideproject by </span><Link href="https://github.com/mosabbir-maruf" target="_blank" rel="noopener noreferrer" className="text-fg-dim hover:text-fg transition-colors">Mosabbir Maruf</Link>
