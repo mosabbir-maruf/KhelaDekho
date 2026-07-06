@@ -548,6 +548,7 @@ function SubList({ team, label, marks, teamColor }: { team: GoalTeamLineup; labe
           const m = p.player?.id ? marks[p.player.id] : undefined;
           return (
             <Link
+              prefetch={false}
               key={i}
               href={p.player?.id ? `/scores/player/${p.player.id}?name=${encodeURIComponent(p.player?.name || "")}` : "#"}
               className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-hover border border-transparent hover:border-border transition-all duration-200"
@@ -703,7 +704,7 @@ function Commentary({ items }: { items: GoalCommentaryItem[] }) {
             {/* Text details */}
             <div className="flex-1 text-[13px] leading-relaxed">
               {c.player && (
-                <Link
+                <Link prefetch={false}
                   href={`/scores/player/${c.player.id}?name=${encodeURIComponent(c.player.name)}`}
                   className="font-bold text-fg hover:text-red-500 transition-colors mr-1.5 underline decoration-dotted"
                 >
@@ -740,7 +741,7 @@ function Ratings({ match }: { match: GoalMatchDetail }) {
             </span>
             <div className="flex-1 min-w-0">
               <div className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Player of the Match</div>
-              <Link
+              <Link prefetch={false}
                 href={`/scores/player/${best.player.id}?name=${encodeURIComponent(best.player.name)}`}
                 className="text-base font-extrabold text-fg hover:text-amber-500 transition-colors truncate block leading-snug"
               >
@@ -765,7 +766,7 @@ function Ratings({ match }: { match: GoalMatchDetail }) {
             "bg-input text-fg-faint border-transparent";
 
           return (
-            <Link
+            <Link prefetch={false}
               key={i}
               href={`/scores/player/${tp.player.id}?name=${encodeURIComponent(tp.player.name)}`}
               className="flex items-center gap-3.5 py-2.5 px-3 rounded-xl hover:bg-hover border border-transparent hover:border-border transition-all duration-200"
@@ -862,7 +863,7 @@ function TeamBlock({ team, align, glowColor }: { team: GoalMatchDetail["team_a"]
   );
 
   return (
-    <Link
+    <Link prefetch={false}
       href={`/scores/team/${team.id}?name=${encodeURIComponent(team.name)}`}
       className={`group flex flex-col items-center gap-3 flex-1 min-w-0 ${align === "left" ? "sm:items-end" : "sm:items-start"}`}
     >
