@@ -269,8 +269,8 @@ export default function DecryptionApiPage() {
   "data": {
     "slug": "match-slug-1",
     "channels": [{
-      "id": "dlhd-54",
-      "name": "FOX Sports",
+      "id": "channel-1",
+      "name": "Sports HD",
       "server": "TV"
     }]
   },
@@ -309,7 +309,7 @@ export default function DecryptionApiPage() {
               <CodeBlock code={`{
   "success": true,
   "data": {
-    "name": "FOX Sports 4K",
+    "name": "Sports 4K",
     "stream_url": "/api/v5/proxy?url=https%3A%2F%2Fprovider.example.com%2Fplaylist.m3u8%3Ftk%3Dabc123",
     "stream_type": "hls",
     "drm_kid": null,
@@ -328,7 +328,7 @@ export default function DecryptionApiPage() {
   "data": {
     "channels": [{
       "id": "sport1",
-      "name": "Sky Sports HD",
+      "name": "Sports Channel HD",
       "stream_url": "https://cdn.provider.example/hls/sky-sports.m3u8",
       "stream_type": "hls",
       "drm_kid": null,
