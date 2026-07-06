@@ -166,8 +166,8 @@ export default function DecryptionApiPage() {
                     <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr className="border-b border-border-alt">
-                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v2/channels</td>
-                    <td className="py-3 pr-4">Channel list, highlights, live matches</td>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v2/matches</td>
+                    <td className="py-3 pr-4">Live matches; then /matches/:slug/channels and /matches/:slug/stream</td>
                     <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr>

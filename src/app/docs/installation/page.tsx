@@ -178,6 +178,17 @@ uvicorn app.main:app --reload --port 8000`} />
 npm run dev`} />
                             </div>
                         </div>
+
+                        <p className="text-fg-dim font-mono text-sm leading-relaxed pt-2">
+                            {`> The backend also ships as a Cloudflare Worker (the production API). To run it instead of FastAPI, start the Wrangler dev server and point the frontend at it via `}<code>KHELADEKHO_API_URL=http://localhost:8787</code>.
+                        </p>
+                        <div className="space-y-2">
+                            <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Alternative Backend (Cloudflare Worker)</div>
+                            <CodeBlock code={`cd KhelaDekho-API/worker
+npm install
+npm run dev        # http://localhost:8787
+# deploy: npm run deploy  (set XKEY via: wrangler secret put XKEY)`} />
+                        </div>
                     </div>
                 </section>
 
