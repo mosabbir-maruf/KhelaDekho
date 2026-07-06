@@ -345,6 +345,43 @@ function DayStrip({ currentDate, onDateChange }: { currentDate: string; onDateCh
   );
 }
 
+/* ---------------- Loading skeleton ---------------- */
+
+function ScoresSkeleton() {
+  // Pure-CSS placeholder (animate-pulse) shown only while the first fetch is
+  // in flight. No timers or artificial delays.
+  return (
+    <div className="flex flex-col gap-4" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="bg-card/40 border border-border-alt rounded-xl overflow-hidden shadow-lg">
+          <div className="flex items-center gap-3 px-4 h-12 bg-white/[0.01] border-b border-border/80">
+            <div className="w-6 h-6 rounded bg-hover animate-pulse" />
+            <div className="h-3 w-14 rounded bg-hover animate-pulse" />
+            <div className="h-3.5 w-40 rounded bg-hover animate-pulse" />
+          </div>
+          <div className="divide-y divide-border/60">
+            {[0, 1].map((r) => (
+              <div key={r} className="flex items-center gap-6 p-4">
+                <div className="w-12 h-3 rounded bg-hover animate-pulse shrink-0" />
+                <div className="flex-1 space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded bg-hover animate-pulse" />
+                    <div className="h-3 w-32 rounded bg-hover animate-pulse" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded bg-hover animate-pulse" />
+                    <div className="h-3 w-28 rounded bg-hover animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ---------------- Main ---------------- */
 
 export default function ScoresClient({ initialData, currentDate }: Props) {
@@ -355,6 +392,9 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
   const [query, setQuery] = useState("");
   const [data, setData] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
+  // False until the first fetch settles (success OR failure) so we show a
+  // skeleton on initial load instead of a premature "no matches" state.
+  const [hasLoaded, setHasLoaded] = useState(!!initialData);
 
   const fetchData = useCallback(async (dateStr?: string) => {
     setRefreshing(true);
@@ -363,6 +403,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
       if (next) setData(next);
     } finally {
       setRefreshing(false);
+      setHasLoaded(true);
     }
   }, []);
 
@@ -509,7 +550,9 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
             </div>
 
             {/* Competitions / Match Rows */}
-            {competitions.length === 0 ? (
+            {!hasLoaded ? (
+              <ScoresSkeleton />
+            ) : competitions.length === 0 ? (
               <div className="rounded-xl border border-border-alt bg-card p-16 text-center font-mono shadow-xl">
                 <Calendar className="w-8 h-8 mx-auto mb-4 text-fg-faint" />
                 <div className="text-sm font-bold text-fg-dim uppercase tracking-wider mb-2">No matches found</div>
@@ -530,9 +573,11 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
             )}
             
             {/* Feed metadata */}
-            <div className="text-center text-[10px] font-mono uppercase tracking-widest text-fg-faint pt-4">
-              [ {totalMatches} {totalMatches === 1 ? "match" : "matches"} found across {competitions.length} {competitions.length === 1 ? "competition" : "competitions"} ]
-            </div>
+            {hasLoaded && (
+              <div className="text-center text-[10px] font-mono uppercase tracking-widest text-fg-faint pt-4">
+                [ {totalMatches} {totalMatches === 1 ? "match" : "matches"} found across {competitions.length} {competitions.length === 1 ? "competition" : "competitions"} ]
+              </div>
+            )}
           </div>
 
           {/* Right Side: Sidebar Widgets */}
