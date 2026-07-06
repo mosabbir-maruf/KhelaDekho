@@ -193,9 +193,9 @@ function CompetitionGroup({ competition }: { competition: GoalCompetition }) {
         ) : (
           <span className="w-6 h-6 shrink-0 rounded bg-border-alt" />
         )}
-        <div className="min-w-0 flex-1 flex flex-wrap items-baseline gap-2">
+        <div className="min-w-0 flex-1 flex items-center gap-2">
           {competition.area && (
-            <span className="text-[9px] font-mono bg-input/80 border border-border-alt px-1.5 py-0.5 rounded text-fg-dim tracking-widest font-semibold">{competition.area.toUpperCase()}</span>
+            <span className="shrink-0 text-[9px] font-mono bg-input/80 border border-border-alt px-1.5 py-0.5 rounded text-fg-dim tracking-widest font-semibold leading-none">{competition.area.toUpperCase()}</span>
           )}
           <span className="text-sm font-mono font-semibold text-fg truncate">{competition.name}</span>
         </div>
