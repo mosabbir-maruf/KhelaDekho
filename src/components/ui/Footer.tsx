@@ -7,10 +7,10 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-10 md:gap-8">
           <div className="col-span-2 md:col-span-1 space-y-4">
-            <div className="flex items-center gap-3 font-mono text-sm tracking-widest text-fg uppercase">
+            <Link href="/" className="flex items-center gap-3 font-mono text-sm tracking-widest text-fg uppercase hover:text-red-400 transition-colors">
               <Tv className="w-5 h-5 text-red-500" />
               [ KhelaDekho ]
-            </div>
+            </Link>
             <p className="text-sm text-fg-dim font-mono leading-relaxed max-w-sm">
               Aggregating, decrypting, and rendering live sports streaming feeds at the edge.
             </p>
