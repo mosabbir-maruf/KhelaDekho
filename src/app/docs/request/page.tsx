@@ -87,7 +87,7 @@ export default function RequestAccessPage() {
                     </div>
                 </Link>
 
-                <Link href="/" className="flex items-center justify-end gap-3 text-sm font-mono text-fg border border-border-alt bg-hover hover:bg-hover-alt px-4 py-3 rounded-lg transition-colors w-full sm:w-auto ml-auto group">
+                <Link prefetch={false} href="/" className="flex items-center justify-end gap-3 text-sm font-mono text-fg border border-border-alt bg-hover hover:bg-hover-alt px-4 py-3 rounded-lg transition-colors w-full sm:w-auto ml-auto group">
                     <div className="flex flex-col text-right">
                         <span className="text-[10px] text-fg-faint uppercase tracking-widest group-hover:text-fg-dim transition-colors">Finish</span>
                         <span>Go to Home</span>
