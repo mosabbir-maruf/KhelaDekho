@@ -195,6 +195,8 @@ export default function LiveTvPage() {
   // -------- Resolve stream when channel selected --------
   useEffect(() => {
     if (!selectedChannel) return;
+    const controller = new AbortController();
+    const signal = controller.signal;
 
     if (selectedChannel.source === 'v5') {
       setIsResolving(true);
@@ -204,26 +206,21 @@ export default function LiveTvPage() {
       const headers: Record<string, string> = { 'Accept': 'application/json' };
       if (xkey) headers['xkey'] = xkey;
 
-      (async () => {
-        try {
-          const res = await fetch(`${apiBase}/api/v5/tv/channel/${selectedChannel.v5Id}/stream`, { headers });
-          if (!res.ok) throw new Error('Resolution failed');
-          const body = await res.json();
+      fetch(`${apiBase}/api/v5/tv/channel/${selectedChannel.v5Id}/stream`, { signal, headers })
+        .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+        .then(body => {
           const streamUrl = body?.data?.stream_url;
-          if (streamUrl) {
-            setResolvedStreamUrl(streamUrl.startsWith('http') ? streamUrl : apiBase + streamUrl);
-          }
-        } catch {
-          setResolvedStreamUrl(null);
-        } finally {
-          setIsResolving(false);
-        }
-      })();
+          if (streamUrl) setResolvedStreamUrl(streamUrl.startsWith('http') ? streamUrl : apiBase + streamUrl);
+        })
+        .catch(() => setResolvedStreamUrl(null))
+        .finally(() => setIsResolving(false));
     } else if (selectedChannel.source === 'kv' && selectedChannel.directUrl) {
       const url = selectedChannel.directUrl;
       setResolvedStreamUrl(url.startsWith("http://") ? `/api/iptv/proxy?url=${encodeURIComponent(url)}` : url);
       setIsResolving(false);
     }
+
+    return () => controller.abort();
   }, [selectedChannel]);
 
   // -------- Derived data --------
