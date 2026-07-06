@@ -917,6 +917,7 @@ export default function MatchDetailClient({ initialDetail, slug, matchId }: Prop
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("summary");
   const [match, setMatch] = useState(initialDetail);
+  const [initialLoading, setInitialLoading] = useState(!initialDetail);
 
   // Sync tab from URL on mount/update
   useEffect(() => {
@@ -942,6 +943,7 @@ export default function MatchDetailClient({ initialDetail, slug, matchId }: Prop
   }, [matchId, slug]);
 
   useEffect(() => {
+    refreshMatch().then(() => setInitialLoading(false));
     const interval = setInterval(refreshMatch, 30000);
     return () => clearInterval(interval);
   }, [refreshMatch]);
@@ -951,20 +953,29 @@ export default function MatchDetailClient({ initialDetail, slug, matchId }: Prop
       <div className="flex min-h-dvh flex-col bg-page text-fg">
         <main className="flex-1 w-full container mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-16">
           <div className="rounded-2xl border border-border-alt bg-card p-14 text-center max-w-lg mx-auto shadow-sm">
-            <SoccerBall className="w-12 h-12 mx-auto mb-4 text-fg-faint animate-pulse" />
-            <div className="text-base font-bold text-fg-muted mb-4">Match details could not be found.</div>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined" && window.history.length > 1) {
-                  router.back();
-                } else {
-                  router.push("/scores");
-                }
-              }}
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-fg text-page font-bold rounded-xl text-sm transition-transform hover:scale-102 cursor-pointer"
-            >
-              Back to Scores
-            </button>
+            {initialLoading ? (
+              <div>
+                <SoccerBall className="w-12 h-12 mx-auto mb-4 text-fg-dim animate-spin" />
+                <div className="text-base font-bold text-fg-muted mb-4">Loading match details...</div>
+              </div>
+            ) : (
+              <div>
+                <SoccerBall className="w-12 h-12 mx-auto mb-4 text-fg-faint animate-pulse" />
+                <div className="text-base font-bold text-fg-muted mb-4">Match details could not be found.</div>
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined" && window.history.length > 1) {
+                      router.back();
+                    } else {
+                      router.push("/scores");
+                    }
+                  }}
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-fg text-page font-bold rounded-xl text-sm transition-transform hover:scale-102 cursor-pointer"
+                >
+                  Back to Scores
+                </button>
+              </div>
+            )}
           </div>
         </main>
       </div>
