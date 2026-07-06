@@ -126,7 +126,7 @@ export default function LiveTvPage() {
 
       if (active && useV5) {
         try {
-          const apiBase = getApiBaseUrl();
+          const apiBase = getApiBaseUrl().replace(/\/+$/, '');
           const xkey = getXKey();
           const headers: Record<string, string> = { 'Accept': 'application/json' };
           if (xkey) headers['xkey'] = xkey;
@@ -201,7 +201,7 @@ export default function LiveTvPage() {
     if (selectedChannel.source === 'v5') {
       setIsResolving(true);
       setResolvedStreamUrl(null);
-      const apiBase = getApiBaseUrl();
+      const apiBase = getApiBaseUrl().replace(/\/+$/, '');
       const xkey = getXKey();
       const headers: Record<string, string> = { 'Accept': 'application/json' };
       if (xkey) headers['xkey'] = xkey;
