@@ -135,11 +135,24 @@ const scores = await getGoalScores();          // GET /api/v1/scores
             <section className="space-y-6">
                 <div className="space-y-2">
                     <div className="text-xs font-mono text-fg-faint tracking-widest uppercase">Layer 03</div>
-                    <h2 className="text-xl font-mono tracking-widest uppercase text-fg">Edge Proxy (V2 / V4)</h2>
+                    <h2 className="text-xl font-mono tracking-widest uppercase text-fg">Streaming Servers (V2 / V3 / V4)</h2>
                 </div>
                 <p className="text-fg-dim font-mono text-sm leading-relaxed">
                     For channel streams, Cloudflare Workers proxy HLS/DASH segments from source CDNs and rewrite manifests to bypass CORS and Referer checks. ClearKey DRM parameters are passed through to the player for supported channels.
                 </p>
+                <div className="border border-border-alt bg-card p-5 space-y-3">
+                    <div className="text-xs font-mono text-fg-faint uppercase tracking-widest">The Live Matches page offers three servers</div>
+                    <ul className="space-y-2 text-sm font-mono text-fg-dim">
+                        <li className="flex gap-3">
+                            <span className="text-red-500 mt-0.5">▸</span>
+                            <span><strong>V2 &amp; V4</strong> — channel providers proxied through the backend API (<code>/api/v2/*</code>, <code>/api/v4/*</code>).</span>
+                        </li>
+                        <li className="flex gap-3">
+                            <span className="text-red-500 mt-0.5">▸</span>
+                            <span><strong>V3</strong> — a self-hosted playlist (M3U8 or JSON) stored in Cloudflare KV and managed from the admin panel. Served by the frontend route <code>/api/playlist</code>, which merges sources, de-duplicates channels, and applies per-channel overrides. The Live TV page uses the same V3 playlist source.</span>
+                        </li>
+                    </ul>
+                </div>
             </section>
 
             {/* Docs Pagination */}
