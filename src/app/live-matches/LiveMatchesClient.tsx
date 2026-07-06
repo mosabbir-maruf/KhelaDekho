@@ -735,7 +735,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                   </div>
                 </div>
               ) : apiVersion === "v2" && v2StreamLoading ? (
-                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
+                <div className="flex items-center justify-center border border-border-alt bg-card aspect-video w-full">
                   <div className="flex flex-col items-center gap-3">
                     <svg className="w-8 h-8 text-red-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -745,7 +745,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                   </div>
                 </div>
               ) : !playerConfig ? (
-                <div className="flex items-center justify-center py-20 border border-red-500/20 bg-red-500/[0.02] rounded-xl">
+                <div className="flex items-center justify-center border border-red-500/20 bg-red-500/[0.02] rounded-xl aspect-video w-full">
                   <div className="text-center space-y-4 px-6">
                     <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto text-red-500">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
