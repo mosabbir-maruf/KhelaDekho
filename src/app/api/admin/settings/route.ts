@@ -2,7 +2,27 @@ export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { isStreamVersion } from '@/lib/config';
+import { DEFAULT_STREAM_VERSION, isStreamVersion } from '@/lib/config';
+
+// Public read: returns the admin-configured default streaming server so the
+// (static) live-matches page can honor it client-side. No secret required.
+export async function GET() {
+  let defaultVersion: string = DEFAULT_STREAM_VERSION;
+  try {
+    const processEnv = process.env as Record<string, unknown>;
+    const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (key: string, type?: string) => Promise<unknown> } | undefined;
+    if (KHELA_SETTINGS) {
+      const saved = await KHELA_SETTINGS.get("defaultVersion");
+      if (isStreamVersion(saved)) defaultVersion = saved;
+    }
+  } catch (error) {
+    logger.error("Failed to read default version from KV:", error);
+  }
+  return NextResponse.json(
+    { defaultVersion },
+    { headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } }
+  );
+}
 
 export async function POST(req: NextRequest) {
   try {

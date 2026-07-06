@@ -106,6 +106,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   const pathname = usePathname();
 
   const [apiVersion, setApiVersion] = useState<ApiVersion>(initialVersion);
+  const [versionResolved, setVersionResolved] = useState(false);
   const [channels, setChannels] = useState<ChannelData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,12 +127,36 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
   }, [apiVersion, pathname, router, cfg]);
 
+  // Resolve the initial server: a `?v=` URL param wins; otherwise honor the
+  // admin-configured default read from KV via the public settings endpoint.
   useEffect(() => {
+    let active = true;
     const { v } = getUrlParams();
-    if (v && ["v2", "v3", "v4"].includes(v)) setApiVersion(v as ApiVersion);
+    if (v && ["v2", "v3", "v4"].includes(v)) {
+      setApiVersion(v as ApiVersion);
+      setVersionResolved(true);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/settings", { headers: { Accept: "application/json" } });
+        if (res.ok) {
+          const body = await res.json();
+          if (active && ["v2", "v3", "v4"].includes(body?.defaultVersion)) {
+            setApiVersion(body.defaultVersion as ApiVersion);
+          }
+        }
+      } catch {
+        /* fall back to initialVersion */
+      } finally {
+        if (active) setVersionResolved(true);
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
+    if (!versionResolved) return;
     let active = true;
     const controller = new AbortController();
     const rawBaseUrl = getApiBaseUrl();
@@ -206,7 +231,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
       }
     })();
     return () => { active = false; controller.abort(); };
-  }, [apiVersion, cfg, selectAndReplaceUrl]);
+  }, [apiVersion, cfg, selectAndReplaceUrl, versionResolved]);
 
   const filteredChannels = useMemo(() => {
     if (!searchQuery.trim()) return channels;
