@@ -192,7 +192,14 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
             const v4Res = await fetch(`${baseUrl}/api/v4/channels?alive=true`, { signal: controller.signal, headers: authHeaders() });
             if (v4Res.ok) {
               const v4Body = await v4Res.json();
-              const v4Channels: any[] = v4Body?.data?.channels || [];
+              const v4Channels: Array<{
+                id: string | number;
+                name: string;
+                stream_url?: string;
+                stream_type?: string;
+                drm_kid?: string;
+                drm_key?: string;
+              }> = v4Body?.data?.channels || [];
               const toInject = v4Channels.filter(ch => ch.name === "🏆 Iphone-2" || ch.name === "🏆 Android-windows-TV-1");
               const existingNames = new Set(fetched.map(c => c.name));
               const uniqueInjects = toInject
