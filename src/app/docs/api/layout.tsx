@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 const title = "KhelaDekho API";
-const description = "Technical reference for KhelaDekho proxy aggregation, stream proxying, and API endpoints.";
+const description = "Technical reference for the KhelaDekho API — live scores, match telemetry, channel proxying, and endpoints.";
 const url = "https://kheladekho.pages.dev/docs/api";
 
 export const metadata: Metadata = {
     title,
     description,
-    keywords: ["kheladekho api", "decryption api", "stream decryption", "sports scraper api", "signature authentication", "fastapi endpoints", "cloudflare edge worker"],
+    keywords: ["kheladekho api", "live scores api", "football scores", "sports api", "xkey authentication", "fastapi endpoints", "cloudflare edge worker"],
     openGraph: {
         title: `${title} | KhelaDekho`,
         description,

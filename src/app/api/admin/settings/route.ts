@@ -1,6 +1,8 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
+import { isStreamVersion } from '@/lib/config';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!['v1', 'v2', 'v3', 'v4'].includes(defaultVersion)) {
+    if (!isStreamVersion(defaultVersion)) {
       return NextResponse.json({ error: 'Invalid version' }, { status: 400 });
     }
 
@@ -22,13 +24,13 @@ export async function POST(req: NextRequest) {
         await KHELA_SETTINGS.put("defaultVersion", defaultVersion);
       }
     } catch (kvError) {
-      console.error("Failed to update KV storage:", kvError);
+      logger.error("Failed to update KV storage:", kvError);
       return NextResponse.json({ error: 'Failed to persist settings in KV Database' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, defaultVersion });
   } catch (error) {
-    console.error('Error updating settings:', error);
+    logger.error('Error updating settings:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

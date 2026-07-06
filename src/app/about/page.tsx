@@ -7,7 +7,7 @@ import Cpu from "lucide-react/dist/esm/icons/cpu";
 import Layers from "lucide-react/dist/esm/icons/layers";
 import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import Link from "next/link";
-import { getMatches, getGoalScores } from "@/lib/api";
+import { getGoalScores } from "@/lib/api";
 
 export const metadata: Metadata = {
     title: "About",
@@ -15,18 +15,20 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  const matchesData = await getMatches();
-  const totalMatches = matchesData?.total?.toLocaleString() || "...";
   const goalData = await getGoalScores();
   const goalMatches = goalData?.total_matches || 0;
+  const liveMatches = (goalData?.competitions || []).reduce(
+    (s, c) => s + c.matches.filter((m) => m.status === "LIVE").length,
+    0
+  );
 
   const stats = [];
 
-  if (totalMatches && totalMatches !== "...") {
-    stats.push({ icon: Globe, label: "Stream Sources", value: totalMatches, desc: "Indexed broadcasts" });
-  }
   if (goalMatches > 0) {
-    stats.push({ icon: BarChart3, label: "Live Scores", value: String(goalMatches), desc: "Real-time telemetry" });
+    stats.push({ icon: Globe, label: "Matches Tracked", value: String(goalMatches), desc: "Indexed today" });
+  }
+  if (liveMatches > 0) {
+    stats.push({ icon: BarChart3, label: "Live Scores", value: String(liveMatches), desc: "Real-time telemetry" });
   }
 
   const features = [

@@ -6,23 +6,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { GoalTeamDetail, GoalMatch } from "@/lib/api";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
-import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
 
 interface Props {
   initialTeam?: GoalTeamDetail;
   teamName?: string;
-}
-
-function formatDateDisplay(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const diffDays = Math.floor((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "Today";
-  if (diffDays === -1) return "Yesterday";
-  if (diffDays === 1) return "Tomorrow";
-  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
 function formatTime(iso: string): string {

@@ -12,10 +12,10 @@ import { CodeBlock } from "@/components/ui/CodeBlock";
 
 export default function DecryptionApiPage() {
   const stats = [
-    { icon: Cpu, label: "FastAPI Backend", value: "Port 8000", desc: "Local server runner" },
-    { icon: Zap, label: "Cloudflare Edge", value: "Edge Worker", desc: "Serverless V8 routes" },
-    { icon: Key, label: "Authentication", value: "Token Auth", desc: "Edge validation" },
-    { icon: Shield, label: "Stream Decoding", value: "AES-GCM", desc: "Stream parser" },
+    { icon: Cpu, label: "FastAPI + Worker", value: "Edge API", desc: "Same routes, two runtimes" },
+    { icon: Zap, label: "V1 Scores", value: "Score Provider", desc: "Live scores & match data" },
+    { icon: Key, label: "Authentication", value: "X-Key", desc: "Single shared key" },
+    { icon: Shield, label: "V2 / V4 Channels", value: "Proxied", desc: "Public channel metadata" },
   ];
 
   return (
@@ -69,7 +69,7 @@ export default function DecryptionApiPage() {
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-hover" />
             <span className="text-[10px] font-mono uppercase tracking-widest text-fg-faint">
-              Cryptographic Authentication
+              Authentication
             </span>
             <div className="h-px flex-1 bg-hover" />
           </div>
@@ -79,20 +79,20 @@ export default function DecryptionApiPage() {
                 <Key className="w-5 h-5 text-red-400" />
               </div>
               <h2 className="text-lg font-mono font-bold text-fg tracking-tight">
-                Token Verification
+                Single Shared Key
               </h2>
               <p className="text-xs font-mono text-fg-dim leading-relaxed">
-                The stream extraction endpoint is validated at the Cloudflare edge. 
-                Requests are processed through the proxy layer for secure delivery.
+                Every API endpoint expects the shared <code>xkey</code> header. The same key is
+                used across the FastAPI app and the Cloudflare Worker. Proxy routes are exempt.
               </p>
               <div className="pt-2 text-xs font-mono text-fg-dim">
-                <span className="text-red-400">Status:</span>
+                <span className="text-red-400">Header:</span>
                 <ul className="list-disc pl-5 mt-1.5 space-y-1">
-                  <li><code>Open Access — No signature required</code></li>
+                  <li><code>xkey: &lt;your-shared-key&gt;</code></li>
                 </ul>
               </div>
             </div>
-            
+
             <div className="border border-border-alt bg-card p-8 space-y-4">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                 <Terminal className="w-5 h-5 text-amber-400" />
@@ -101,11 +101,11 @@ export default function DecryptionApiPage() {
                 Request Format
               </h2>
               <p className="text-xs font-mono text-fg-dim leading-relaxed">
-                Stream requests use a standard REST format. No additional signature payload is required.
+                Requests use a standard REST format returning the shared JSON envelope.
               </p>
-              <CodeBlock code="GET /api/v1/channels/{key}/stream" />
+              <CodeBlock code="GET /api/v1/scores?date=2026-07-06" />
               <p className="text-[10px] font-mono text-fg-faint">
-                Example: <code>/api/v1/channels/wctveng/stream</code>
+                Header: <code>xkey: &lt;your-shared-key&gt;</code>
               </p>
             </div>
           </div>
@@ -137,43 +137,43 @@ export default function DecryptionApiPage() {
                 <tbody className="text-fg-dim">
                   <tr className="border-b border-border-alt">
                     <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/health</td>
-                    <td className="py-3 pr-4">App metrics and diagnostic health</td>
-                    <td className="py-3 text-fg-faint">Anonymous</td>
+                    <td className="py-3 pr-4">Health check</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr className="border-b border-border-alt">
-                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/matches</td>
-                    <td className="py-3 pr-4">Upcoming and live matches list</td>
-                    <td className="py-3 text-fg-faint">Anonymous</td>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/scores</td>
+                    <td className="py-3 pr-4">Scores + telemetry. Filters: ?status=live|result|fixture, ?competition=, ?date=</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr className="border-b border-border-alt">
-                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/channels</td>
-                    <td className="py-3 pr-4">Active channel details & metadata</td>
-                    <td className="py-3 text-fg-faint">Anonymous</td>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/competitions</td>
+                    <td className="py-3 pr-4">Competition list with match counts</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr className="border-b border-border-alt">
-                    <td className="py-3 pr-4 text-fg font-bold">GET /api/goal/scores</td>
-                    <td className="py-3 pr-4">Live scores, fixtures, results with match telemetry</td>
-                    <td className="py-3 text-fg-faint">Anonymous</td>
-                  </tr>
-                  <tr className="border-b border-border-alt">
-                    <td className="py-3 pr-4 text-fg font-bold">GET /api/goal/matches/:id</td>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/matches/:id?slug=</td>
                     <td className="py-3 pr-4">Match details, lineups, stats, commentary</td>
-                    <td className="py-3 text-fg-faint">Anonymous</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr className="border-b border-border-alt">
-                    <td className="py-3 pr-4 text-fg font-bold">GET /api/goal/player/:id</td>
-                    <td className="py-3 pr-4">Player profile, stats, national team info</td>
-                    <td className="py-3 text-fg-faint">Anonymous</td>
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/player/:id</td>
+                    <td className="py-3 pr-4">Player profile, stats, nationality</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
+                  </tr>
+                  <tr className="border-b border-border-alt">
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v1/team/:id</td>
+                    <td className="py-3 pr-4">Team info, recent matches</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
+                  </tr>
+                  <tr className="border-b border-border-alt">
+                    <td className="py-3 pr-4 text-fg font-bold">GET /api/v2/channels</td>
+                    <td className="py-3 pr-4">Channel list, highlights, live matches</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr>
-                    <td className="py-3 pr-4 text-red-500 font-bold">GET /api/goal/team/:id</td>
-                    <td className="py-3 pr-4">Team info, recent matches, squad overview</td>
-                    <td className="py-3 text-fg-faint">Anonymous</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 pr-4 text-red-500 font-bold">GET /api/v1/channels/:key/stream</td>
-                    <td className="py-3 pr-4">Get decrypted manifest and decryption keys</td>
-                    <td className="py-3 text-fg-faint">Open</td>
+                    <td className="py-3 pr-4 text-red-500 font-bold">GET /api/v4/channels</td>
+                    <td className="py-3 pr-4">V4 channel list, stream, stats</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                 </tbody>
               </table>
@@ -196,16 +196,24 @@ export default function DecryptionApiPage() {
               <CodeBlock code={`{
   "success": true,
   "data": {
-    "key": "fifatv",
-    "name": "FIFA CTV",
-    "url": "https://example.com/stream.mpd",
-    "type": "dash",
-    "drm": "clearkey",
-    "clearkey": {
-      "keys": {
-        "834fae2345ef01a88bb3d2345eaf12bc": "a12d34bf56ea7890bcde12345fae9812"
+    "competitions": [
+      {
+        "id": "premier-league",
+        "name": "Premier League",
+        "area": "England",
+        "matches": [
+          {
+            "id": "abc123",
+            "status": "LIVE",
+            "team_a": { "name": "Arsenal" },
+            "team_b": { "name": "Chelsea" },
+            "score_team_a": 2,
+            "score_team_b": 1
+          }
+        ]
       }
-    }
+    ],
+    "total_matches": 1
   },
   "error": null
 }`} />
@@ -218,7 +226,7 @@ export default function DecryptionApiPage() {
   "data": null,
   "error": {
     "code": "HTTP_401",
-    "message": "Secure session credentials missing"
+    "message": "Invalid or missing xkey."
   }
 }`} />
             </div>
@@ -244,11 +252,10 @@ export default function DecryptionApiPage() {
               </div>
               <CodeBlock code={`import requests
 
-channel_key = "wctveng"
-path = f"/api/v1/channels/{channel_key}/stream"
 base_url = "http://localhost:8000"
+headers = {"xkey": "your-shared-key"}
 
-response = requests.get(f"{base_url}{path}")
+response = requests.get(f"{base_url}/api/v1/scores", headers=headers)
 print(response.json())`} />
             </div>
 
@@ -261,13 +268,11 @@ print(response.json())`} />
               </div>
               <CodeBlock code={`const axios = require('axios');
 
-const channelKey = "wctveng";
-const path = \`/api/v1/channels/\${channelKey}/stream\`;
 const baseUrl = "http://localhost:8000";
 
-axios.get(\`\${baseUrl}\${path}\`)
-.then(res => console.log("Decrypted stream:", res.data))
-.catch(err => console.error("Error:", err.message));`} />
+axios.get(\`\${baseUrl}/api/v1/scores\`, { headers: { xkey: "your-shared-key" } })
+  .then(res => console.log("Scores:", res.data))
+  .catch(err => console.error("Error:", err.message));`} />
             </div>
           </div>
         </div>

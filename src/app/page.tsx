@@ -107,32 +107,17 @@ function MatchCard({ item }: { item: FeedMatch }) {
   );
 }
 
-async function LiveScoresSection() {
-  const data = await getGoalScores();
-  const feed: FeedMatch[] = [];
-  for (const c of data?.competitions || []) {
-    for (const m of c.matches) {
-      feed.push({ match: m, competition: c.name, competitionImage: c.image_url });
-    }
-  }
-  const live = feed.filter(f => f.match.status === "LIVE");
-  const fixtures = feed.filter(f => f.match.status === "FIXTURE");
-  const results = feed.filter(f => f.match.status === "RESULT");
-  const display = live.length > 0 ? live : fixtures.length > 0 ? fixtures : results;
-  const label = live.length > 0
-    ? `${live.length} match${live.length > 1 ? "es" : ""} in play right now`
-    : fixtures.length > 0 ? "Upcoming fixtures" : "Recent results";
-
+function LiveScoresSection({ display, liveCount, label }: { display: FeedMatch[]; liveCount: number; label: string }) {
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24 border-t border-border-alt">
       <div className="flex flex-col items-center text-center mb-14">
         <span className="inline-flex items-center gap-2 border border-border-alt bg-card px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-fg-dim mb-5">
-          {live.length > 0 ? (
+          {liveCount > 0 ? (
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
           ) : (
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           )}
-          {live.length > 0 ? "Live Now" : "Match Feed"}
+          {liveCount > 0 ? "Live Now" : "Match Feed"}
         </span>
         <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-fg mb-3">Live Scores</h2>
         <p className="text-fg-dim text-sm font-mono max-w-[500px]">{label}</p>
@@ -165,7 +150,53 @@ async function LiveScoresSection() {
   );
 }
 
-export default function Home() {
+function HeroStatusBadge({ liveMatch }: { liveMatch: GoalMatch | null }) {
+  // A live match links through to the live-matches page; the idle fallback is
+  // a plain, non-clickable status banner.
+  if (liveMatch) {
+    return (
+      <Link
+        href="/live-matches"
+        className="inline-flex items-center border border-border-alt bg-card px-3 py-1.5 text-xs font-mono text-fg-dim mb-6 shadow-2xl hover:border-red-500/30 hover:text-fg transition-colors"
+      >
+        <span className="flex items-center gap-2 tracking-widest uppercase">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+          <span className="text-red-400 font-bold">Live</span>
+          <span className="text-fg truncate max-w-[220px] sm:max-w-none normal-case tracking-normal">
+            {liveMatch.team_a.name} vs {liveMatch.team_b.name}
+          </span>
+        </span>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="inline-flex items-center border border-border-alt bg-card px-3 py-1.5 text-xs font-mono text-fg-dim mb-6 shadow-2xl">
+      <span className="flex items-center gap-2 tracking-widest uppercase">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+        {`> Edge Proxy Connection Status: Nominal`}
+      </span>
+    </div>
+  );
+}
+
+export default async function Home() {
+  const data = await getGoalScores();
+  const feed: FeedMatch[] = [];
+  for (const c of data?.competitions || []) {
+    for (const m of c.matches) {
+      feed.push({ match: m, competition: c.name, competitionImage: c.image_url });
+    }
+  }
+  const live = feed.filter(f => f.match.status === "LIVE");
+  const fixtures = feed.filter(f => f.match.status === "FIXTURE");
+  const results = feed.filter(f => f.match.status === "RESULT");
+  const display = live.length > 0 ? live : fixtures.length > 0 ? fixtures : results;
+  const label = live.length > 0
+    ? `${live.length} match${live.length > 1 ? "es" : ""} in play right now`
+    : fixtures.length > 0 ? "Upcoming fixtures" : "Recent results";
+  const liveMatch = live[0]?.match ?? null;
+
   return (
     <div className="relative flex min-h-dvh flex-col bg-input text-fg selection:bg-white/20">
       {/* Ultra-subtle, clean background grid */}
@@ -174,12 +205,7 @@ export default function Home() {
       <main className="flex-1 w-full relative z-10">
         {/* Deep Tech IDE-style Hero Section */}
         <section className="mx-auto flex flex-col items-center gap-2 py-8 md:py-12 md:pb-8 lg:py-24 lg:pb-20 pt-28 lg:pt-28 px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center border border-border-alt bg-card px-3 py-1.5 text-xs font-mono text-fg-dim mb-6 shadow-2xl">
-            <span className="flex items-center gap-2 tracking-widest uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-              {`> Edge Proxy Connection Status: Nominal`}
-            </span>
-          </div>
+          <HeroStatusBadge liveMatch={liveMatch} />
 
           <h1 className="text-center text-4xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1] mt-2 mb-4 max-w-[800px]">
             Watch Live Matches & TV Channels <br className="hidden sm:block" />
@@ -219,7 +245,7 @@ export default function Home() {
           </div>
         </section>
 
-        <LiveScoresSection />
+        <LiveScoresSection display={display} liveCount={live.length} label={label} />
 
         {/* Why KhelaDekho? */}
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-8">

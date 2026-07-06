@@ -49,7 +49,7 @@ interface V3Channel {
   'user-agent'?: string;
 }
 
-type ApiVersion = "v1" | "v2" | "v3" | "v4";
+type ApiVersion = "v2" | "v3" | "v4";
 
 interface ChannelData {
   name: string;
@@ -75,12 +75,6 @@ interface VersionMeta {
 }
 
 const VERSION_CONFIG: Record<ApiVersion, VersionMeta> = {
-  v1: {
-    color: "bg-yellow-500", label: "V1 Streams",
-    alive: (ch) => ch.status === "live",
-    id: (ch) => String(ch.key),
-    extra: (ch) => (ch.category || "").toUpperCase(),
-  },
   v2: {
     color: "bg-green-500", label: "V2 Streams",
     alive: (ch) => !!ch.stream_url,
@@ -118,8 +112,6 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   const [selectedChannel, setSelectedChannel] = useState<ChannelData | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<ApiVersion | null>(null);
   const apiBaseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
-  const [v1StreamData, setV1StreamData] = useState<{ url: string; type: string; clearkey: Record<string, string> | null } | null>(null);
-  const [v1Error, setV1Error] = useState<string | null>(null);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
   const { copied, copy: handleShare } = useCopyButton();
@@ -130,15 +122,13 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   const selectAndReplaceUrl = useCallback((ch: ChannelData) => {
     setSelectedChannel(ch);
     setSelectedVersion(apiVersion);
-    setV1StreamData(null);
-    setV1Error(null);
     const id = cfg.id(ch);
     router.replace(`${pathname}?v=${apiVersion}&ch=${encodeURIComponent(id)}`, { scroll: false });
   }, [apiVersion, pathname, router, cfg]);
 
   useEffect(() => {
     const { v } = getUrlParams();
-    if (v && ["v1", "v2", "v3", "v4"].includes(v)) setApiVersion(v as ApiVersion);
+    if (v && ["v2", "v3", "v4"].includes(v)) setApiVersion(v as ApiVersion);
   }, []);
 
   useEffect(() => {
@@ -150,8 +140,6 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
       setLoading(true);
       setSelectedChannel(null);
       setSelectedVersion(null);
-      setV1StreamData(null);
-      setV1Error(null);
       try {
         const cached = channelsCache.current.get(apiVersion);
         let fetched: ChannelData[];
@@ -191,7 +179,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
               }
             } catch {}
           } else {
-            const url = `${baseUrl}/api/${apiVersion}/channels${apiVersion === "v1" || apiVersion === "v2" ? "?limit=200" : "?alive=true"}`;
+            const url = `${baseUrl}/api/${apiVersion}/channels${apiVersion === "v2" ? "?limit=200" : "?alive=true"}`;
             const hdrs: Record<string, string> = { Accept: "application/json" };
             const xkey = getXKey();
             if (xkey) hdrs["xkey"] = xkey;
@@ -231,54 +219,8 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     [channels, cfg],
   );
 
-  useEffect(() => {
-    if (!selectedChannel || selectedVersion !== "v1") return;
-    const key = selectedChannel.key;
-    if (!key) { setV1Error("No key for this channel"); return; }
-    let active = true;
-    const controller = new AbortController();
-    const fallbackTimer = setTimeout(() => {
-      if (active) setV1Error("Stream request timed out — the server may be unavailable.");
-    }, 10000);
-    (async () => {
-      try {
-        const res = await fetch(`/api/v1/stream?key=${encodeURIComponent(key)}`, {
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-        });
-        clearTimeout(fallbackTimer);
-        if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
-        const data = await res.json();
-        if (!active) return;
-        if (!data.stream_url) throw new Error(data.error || "No stream URL");
-        setV1StreamData({ url: data.stream_url, type: data.stream_type || "hls", clearkey: data.drm_kid && data.drm_key ? { [data.drm_kid]: data.drm_key } : null });
-      } catch (e: unknown) {
-        clearTimeout(fallbackTimer);
-        if (e instanceof DOMException && e.name === "AbortError") {
-          if (active) setV1Error("Stream request timed out — the server may be unavailable.");
-          return;
-        }
-        if (active) setV1Error(e instanceof Error ? e.message : "Failed to load stream");
-      }
-    })();
-    return () => { active = false; controller.abort(); clearTimeout(fallbackTimer); };
-  }, [selectedChannel, selectedVersion]);
-
   const playerConfig = useMemo(() => {
     if (!selectedChannel || selectedVersion !== apiVersion) return null;
-    if (selectedVersion === "v1") {
-      if (!v1StreamData?.url) return null;
-      return {
-        streamUrl: v1StreamData.url,
-        streamType: v1StreamData.type,
-        clearKeys: v1StreamData.clearkey,
-        stats: [
-          { label: "Server", value: "V1", icon: "zap" as const },
-          { label: "Type", value: (v1StreamData.type || "HLS").toUpperCase(), icon: "shield" as const },
-          { label: "Status", value: "LIVE", highlight: true as const, icon: "monitor" as const },
-        ],
-      };
-    }
     if (selectedVersion === "v2" || selectedVersion === "v4") {
       const ch = selectedChannel as StreamingChannel;
       if (!ch.stream_url) return null;
@@ -333,7 +275,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
       };
     }
     return null;
-  }, [selectedChannel, selectedVersion, apiVersion, v1StreamData, apiBaseUrl]);
+  }, [selectedChannel, selectedVersion, apiVersion, apiBaseUrl]);
 
   return (
     <div className="min-h-dvh">
@@ -365,7 +307,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
               </button>
               {isServerDropdownOpen && (
                 <div className="absolute top-full right-0 mt-2 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
-                  {(["v1", "v2", "v3", "v4"] as ApiVersion[]).map((v) => (
+                  {(["v2", "v3", "v4"] as ApiVersion[]).map((v) => (
                     <button
                       key={v}
                       onClick={() => { setApiVersion(v); setIsServerDropdownOpen(false); }}
@@ -496,20 +438,6 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                     <Tv className="w-8 h-8 text-fg-dim mx-auto" />
                     <p className="font-mono text-sm text-fg-dim font-semibold">Select a channel</p>
                     <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">Choose from the left panel</p>
-                  </div>
-                </div>
-              ) : selectedVersion === "v1" && v1Error ? (
-                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
-                  <p className="font-mono text-xs text-red-500">{v1Error}</p>
-                </div>
-              ) : selectedVersion === "v1" && !v1StreamData ? (
-                <div className="flex items-center justify-center py-32 border border-border-alt bg-card">
-                  <div className="flex flex-col items-center gap-3">
-                    <svg className="w-8 h-8 text-red-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    <span className="font-mono text-xs text-fg-dim uppercase tracking-widest">Decrypting stream...</span>
                   </div>
                 </div>
               ) : !playerConfig ? (

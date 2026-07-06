@@ -5,13 +5,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { GoalScoresData, GoalCompetition, GoalMatch } from "@/lib/api";
-import { getGoalScores, getGoalLiveScores, getGoalFixtures, getGoalResults } from "@/lib/api";
+import { getGoalScores } from "@/lib/api";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Search from "lucide-react/dist/esm/icons/search";
-import Star from "lucide-react/dist/esm/icons/star";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Activity from "lucide-react/dist/esm/icons/activity";
@@ -20,10 +19,7 @@ import Filter from "lucide-react/dist/esm/icons/filter";
 type Tab = "all" | "live" | "fixtures" | "results";
 
 interface Props {
-  initialAll?: GoalScoresData;
-  initialLive?: GoalScoresData;
-  initialFixtures?: GoalScoresData;
-  initialResults?: GoalScoresData;
+  initialData?: GoalScoresData;
   currentDate?: string;
 }
 
@@ -33,6 +29,20 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "fixtures", label: "Scheduled" },
   { key: "results", label: "Finished" },
 ];
+
+const TAB_STATUS: Record<Exclude<Tab, "all">, GoalMatch["status"]> = {
+  live: "LIVE",
+  fixtures: "FIXTURE",
+  results: "RESULT",
+};
+
+// Filter a dataset down to competitions/matches with a given status.
+function filterByStatus(data: GoalScoresData | undefined, status: GoalMatch["status"]): GoalCompetition[] {
+  if (!data) return [];
+  return data.competitions
+    .map((c) => ({ ...c, matches: c.matches.filter((m) => m.status === status) }))
+    .filter((c) => c.matches.length > 0);
+}
 
 function fmt(d: Date): string {
   return d.toISOString().split("T")[0];
@@ -235,6 +245,7 @@ function DayStrip({ currentDate, onDateChange }: { currentDate: string; onDateCh
       d.setDate(d.getDate() + i);
       list.push(fmt(d));
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDays(list);
   }, [currentDate, days]);
 
@@ -336,37 +347,20 @@ function DayStrip({ currentDate, onDateChange }: { currentDate: string; onDateCh
 
 /* ---------------- Main ---------------- */
 
-export default function ScoresClient({
-  initialAll,
-  initialLive,
-  initialFixtures,
-  initialResults,
-  currentDate,
-}: Props) {
+export default function ScoresClient({ initialData, currentDate }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [date, setDate] = useState(currentDate || todayStr());
   const [query, setQuery] = useState("");
-  const [allData, setAllData] = useState(initialAll);
-  const [liveData, setLiveData] = useState(initialLive);
-  const [fixtureData, setFixtureData] = useState(initialFixtures);
-  const [resultData, setResultData] = useState(initialResults);
+  const [data, setData] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async (dateStr?: string) => {
     setRefreshing(true);
     try {
-      const [all, live, fixtures, results] = await Promise.all([
-        getGoalScores({ date: dateStr }),
-        getGoalLiveScores(dateStr),
-        getGoalFixtures(dateStr),
-        getGoalResults(dateStr),
-      ]);
-      if (all) setAllData(all);
-      if (live) setLiveData(live);
-      if (fixtures) setFixtureData(fixtures);
-      if (results) setResultData(results);
+      const next = await getGoalScores({ date: dateStr });
+      if (next) setData(next);
     } finally {
       setRefreshing(false);
     }
@@ -388,24 +382,16 @@ export default function ScoresClient({
     [router, searchParams, fetchData]
   );
 
-  const currentData = useMemo(() => {
-    switch (activeTab) {
-      case "live":
-        return liveData;
-      case "fixtures":
-        return fixtureData;
-      case "results":
-        return resultData;
-      default:
-        return allData;
-    }
-  }, [activeTab, allData, liveData, fixtureData, resultData]);
+  // Tab views are derived from the single dataset (no extra requests).
+  const tabCompetitions = useMemo(() => {
+    if (activeTab === "all") return data?.competitions || [];
+    return filterByStatus(data, TAB_STATUS[activeTab]);
+  }, [activeTab, data]);
 
   const competitions = useMemo(() => {
-    const comps = currentData?.competitions || [];
     const q = query.trim().toLowerCase();
-    if (!q) return comps;
-    return comps
+    if (!q) return tabCompetitions;
+    return tabCompetitions
       .map((c) => {
         const compMatch = c.name.toLowerCase().includes(q) || c.area.toLowerCase().includes(q);
         const matches = compMatch
@@ -416,10 +402,17 @@ export default function ScoresClient({
         return { ...c, matches };
       })
       .filter((c) => c.matches.length > 0);
-  }, [currentData, query]);
+  }, [tabCompetitions, query]);
 
   const totalMatches = competitions.reduce((s, c) => s + c.matches.length, 0);
-  const totalLive = liveData?.total_matches || 0;
+  const totalLive = useMemo(
+    () =>
+      (data?.competitions || []).reduce(
+        (s, c) => s + c.matches.filter((m) => m.status === "LIVE").length,
+        0
+      ),
+    [data]
+  );
 
   return (
     <div className="min-h-dvh bg-page text-fg">
@@ -506,7 +499,7 @@ export default function ScoresClient({
                     ) : (
                       <>
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        {currentData?.cached_at ? `Updated ${formatUpdated(currentData.cached_at)}` : "Nominal State"}
+                        {data?.cached_at ? `Updated ${formatUpdated(data.cached_at)}` : "Nominal State"}
                       </>
                     )}
                   </div>
@@ -569,7 +562,7 @@ export default function ScoresClient({
                 Quick Shortcuts
               </h3>
               <div className="flex flex-wrap gap-2">
-                {(currentData?.competitions || []).map((comp) => (
+                {(data?.competitions || []).map((comp) => (
                   <button
                     key={comp.id}
                     onClick={() => setQuery(comp.name)}

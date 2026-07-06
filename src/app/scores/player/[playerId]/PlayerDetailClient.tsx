@@ -9,7 +9,6 @@ import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Shirt from "lucide-react/dist/esm/icons/shirt";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
-import Flag from "lucide-react/dist/esm/icons/flag";
 import Goal from "lucide-react/dist/esm/icons/goal";
 import Target from "lucide-react/dist/esm/icons/target";
 import Shield from "lucide-react/dist/esm/icons/shield";

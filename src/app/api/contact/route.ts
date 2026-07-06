@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export const runtime = "edge";
 
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!telegramRes.ok) {
-      console.error("Telegram send failed:", await telegramRes.text());
+      logger.error("Telegram send failed:", await telegramRes.text());
       return NextResponse.json(
         { error: "Failed to send message. Please try again later." },
         { status: 500 }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Telegram error:", error);
+    logger.error("Telegram error:", error);
     return NextResponse.json(
       { error: "Failed to send message. Please try again later." },
       { status: 500 }

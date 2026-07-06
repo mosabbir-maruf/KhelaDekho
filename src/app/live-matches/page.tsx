@@ -1,11 +1,13 @@
 export const runtime = 'edge';
 
 import LiveMatchesClient from './LiveMatchesClient';
+import { logger } from '@/lib/logger';
+import { DEFAULT_STREAM_VERSION, isStreamVersion, type StreamVersion } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  let defaultVersion = "v4";
+  let defaultVersion: StreamVersion = DEFAULT_STREAM_VERSION;
 
   try {
     // Cloudflare Edge binding lookup
@@ -13,13 +15,13 @@ export default async function Page() {
     const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (key: string, type?: string) => Promise<unknown> } | undefined;
     if (KHELA_SETTINGS) {
       const savedVersion = await KHELA_SETTINGS.get("defaultVersion");
-      if (typeof savedVersion === "string" && ["v1", "v2", "v3", "v4"].includes(savedVersion)) {
+      if (isStreamVersion(savedVersion)) {
         defaultVersion = savedVersion;
       }
     }
   } catch (error) {
-    console.error("Failed to read default version from KV:", error);
+    logger.error("Failed to read default version from KV:", error);
   }
 
-  return <LiveMatchesClient initialVersion={defaultVersion as "v1" | "v2" | "v3" | "v4"} />;
+  return <LiveMatchesClient initialVersion={defaultVersion} />;
 }

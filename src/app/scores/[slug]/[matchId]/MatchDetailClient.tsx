@@ -922,6 +922,7 @@ export default function MatchDetailClient({ initialDetail, slug, matchId }: Prop
   useEffect(() => {
     const tabParam = searchParams.get("tab") as Tab;
     if (tabParam && ["summary", "events", "stats", "lineups", "commentary", "ratings"].includes(tabParam)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(tabParam);
     }
   }, [searchParams]);

@@ -1,34 +1,4 @@
-interface TeamInfo {
-  name: string;
-  flag_url: string | null;
-}
-
-export interface Match {
-  match_id: string;
-  group: string;
-  stage: string;
-  team1: TeamInfo;
-  team2: TeamInfo;
-  start_time: string | null;
-  end_time: string | null;
-  status: "live" | "upcoming" | "finished";
-  score1?: number;
-  score2?: number;
-}
-
-export interface ChannelInfo {
-  key: string;
-  name: string;
-  image_url: string | null;
-  category: string;
-  quality: string;
-  status: string;
-  sort_order: number;
-  total_views: number;
-  live_viewers: number;
-  resolution: string;
-  source_types: string[];
-}
+import { logger } from "@/lib/logger";
 
 export interface StreamSource {
   index: number;
@@ -37,23 +7,6 @@ export interface StreamSource {
   is_primary: boolean;
   name?: string;
   platform?: string;
-}
-
-interface ClearKeyData {
-  kid?: string;
-  key?: string;
-  keys?: Record<string, string>;
-}
-
-export interface StreamResponse {
-  key: string;
-  name: string;
-  url: string;
-  type: "dash" | "hls" | string;
-  drm: string | null;
-  clearkey: ClearKeyData | null;
-  sources?: StreamSource[];
-  expires_at: string | null;
 }
 
 interface Envelope<T> {
@@ -120,50 +73,16 @@ async function fetchAPI<T>(path: string, options: RequestInit = {}): Promise<T |
     });
     clearTimeout(timeoutId);
     if (!res.ok) {
-      console.error(`API Fetch Error: Status ${res.status} for path ${path}`);
+      logger.error(`API Fetch Error: Status ${res.status} for path ${path}`);
       await res.text().catch(() => {}); // Consume body to release socket
       return null;
     }
     const body: Envelope<T> = await res.json();
     return body.success ? body.data : null;
   } catch (err) {
-    console.error(`Fetch exception for ${path}:`, err);
+    logger.error(`Fetch exception for ${path}:`, err);
     return null;
   }
-}
-
-// Fetch all matches
-export async function getMatches(params: {
-  status?: string;
-  group?: string;
-  stage?: string;
-  limit?: number;
-  offset?: number;
-} = {}, options?: RequestInit): Promise<{ matches: Match[]; total: number; cached_at: string } | null> {
-  const query = buildQuery(params as Record<string, string | number | undefined>);
-  return fetchAPI<{ matches: Match[]; total: number; cached_at: string }>(
-    `/api/v1/matches${query ? `?${query}` : ""}`,
-    options
-  );
-}
-
-// Fetch channels list
-export async function getChannels(params: {
-  status?: string;
-  category?: string;
-  limit?: number;
-  offset?: number;
-} = {}, options?: RequestInit): Promise<{ channels: ChannelInfo[]; total: number; cached_at: string } | null> {
-  const query = buildQuery(params as Record<string, string | number | undefined>);
-  return fetchAPI<{ channels: ChannelInfo[]; total: number; cached_at: string }>(
-    `/api/v1/channels${query ? `?${query}` : ""}`,
-    options
-  );
-}
-
-// Fetch live channels list
-export async function getLiveChannels(options?: RequestInit): Promise<{ channels: ChannelInfo[]; total: number; cached_at: string } | null> {
-  return fetchAPI<{ channels: ChannelInfo[]; total: number; cached_at: string }>("/api/v1/channels/live", options);
 }
 
 // V4: Proxybdix channel types
@@ -194,7 +113,7 @@ export async function getV4Channels(params: {
 
 
 
-// --- Goal.com Scores (v5) ---
+// --- V1: Score Provider (live scores, fixtures, results, match/player/team) ---
 
 export interface GoalTeamInfo {
   id: string;
@@ -257,33 +176,9 @@ export async function getGoalScores(params: {
 } = {}, options?: RequestInit): Promise<GoalScoresData | null> {
   const query = buildQuery(params as Record<string, string | number | undefined>);
   return fetchAPI<GoalScoresData>(
-    `/api/goal/scores${query ? `?${query}` : ""}`,
+    `/api/v1/scores${query ? `?${query}` : ""}`,
     options
   );
-}
-
-export async function getGoalLiveScores(date?: string, options?: RequestInit): Promise<GoalScoresData | null> {
-  const q = date ? `?date=${date}` : "";
-  return fetchAPI<GoalScoresData>(`/api/goal/scores/live${q}`, options);
-}
-
-export async function getGoalFixtures(date?: string, options?: RequestInit): Promise<GoalScoresData | null> {
-  const q = date ? `?date=${date}` : "";
-  return fetchAPI<GoalScoresData>(`/api/goal/scores/fixtures${q}`, options);
-}
-
-export async function getGoalResults(date?: string, options?: RequestInit): Promise<GoalScoresData | null> {
-  const q = date ? `?date=${date}` : "";
-  return fetchAPI<GoalScoresData>(`/api/goal/scores/results${q}`, options);
-}
-
-export async function getGoalCompetitions(date?: string, options?: RequestInit): Promise<{
-  competitions: { id: string; name: string; area: string; image_url: string | null; match_count: number }[];
-  total: number;
-  cached_at: string;
-} | null> {
-  const q = date ? `?date=${date}` : "";
-  return fetchAPI(`/api/goal/competitions${q}`, options);
 }
 
 // --- Match Detail ---
@@ -415,7 +310,7 @@ export interface GoalMatchDetailResponse {
 
 export async function getGoalMatchDetail(matchId: string, slug: string, options?: RequestInit): Promise<GoalMatchDetail | null> {
   return fetchAPI<GoalMatchDetailResponse>(
-    `/api/goal/matches/${matchId}?slug=${slug}`,
+    `/api/v1/matches/${matchId}?slug=${slug}`,
     options
   ).then(r => r?.match ?? null);
 }
@@ -484,7 +379,7 @@ export interface GoalPlayerDetailResponse {
 export async function getGoalPlayerDetail(playerId: string, playerName?: string, options?: RequestInit): Promise<GoalPlayerDetail | null> {
   const q = playerName ? `?player_name=${encodeURIComponent(playerName)}` : "";
   return fetchAPI<GoalPlayerDetailResponse>(
-    `/api/goal/player/${playerId}${q}`,
+    `/api/v1/player/${playerId}${q}`,
     options
   ).then(r => r?.player ?? null);
 }
@@ -508,7 +403,7 @@ export interface GoalTeamDetailResponse {
 export async function getGoalTeamDetail(teamId: string, teamName?: string, options?: RequestInit): Promise<GoalTeamDetail | null> {
   const q = teamName ? `?team_name=${encodeURIComponent(teamName)}` : "";
   return fetchAPI<GoalTeamDetailResponse>(
-    `/api/goal/team/${teamId}${q}`,
+    `/api/v1/team/${teamId}${q}`,
     options
   ).then(r => r?.team ?? null);
 }

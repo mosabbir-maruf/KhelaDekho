@@ -5,6 +5,7 @@ import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import CheckCircle2 from "lucide-react/dist/esm/icons/check-circle-2";
 import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
+import { logger } from "@/lib/logger";
 
 export function RequestAccessForm() {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
@@ -41,7 +42,7 @@ export function RequestAccessForm() {
       setStatus("success");
       setFormData({ name: "", email: "", message: "" });
     } catch (err: unknown) {
-      console.error("Form submission error:", err);
+      logger.error("Form submission error:", err);
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "An unexpected error occurred.");
     }

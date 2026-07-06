@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Search from "lucide-react/dist/esm/icons/search";
 import Home from "lucide-react/dist/esm/icons/home";

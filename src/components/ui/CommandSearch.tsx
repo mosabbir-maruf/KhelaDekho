@@ -3,18 +3,18 @@
 import { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Search from "lucide-react/dist/esm/icons/search";
-import Tv from "lucide-react/dist/esm/icons/tv";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import CornerDownLeft from "lucide-react/dist/esm/icons/corner-down-left";
 import Activity from "lucide-react/dist/esm/icons/activity";
-import { getApiBaseUrl, getXKey, type ChannelInfo, type Match } from "@/lib/api";
+import { getGoalScores } from "@/lib/api";
 import { event } from "@/lib/analytics";
+import { logger } from "@/lib/logger";
 
 interface SearchItem {
   title: string;
   description: string;
   href: string;
-  category: "Matches" | "Live Channels" | "Navigation";
+  category: "Matches" | "Navigation";
 }
 
 const defaultItems: SearchItem[] = [
@@ -46,42 +46,16 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
     const controller = new AbortController();
     const fetchSearchData = async () => {
       try {
-        const baseUrl = getApiBaseUrl();
-        const xkey = getXKey();
-        const headers: Record<string, string> = { Accept: "application/json" };
-        if (xkey) headers["xkey"] = xkey;
-        const [resMatches, resChannels] = await Promise.all([
-          fetch(`${baseUrl}/api/v1/matches`, { signal: controller.signal, headers }),
-          fetch(`${baseUrl}/api/v1/channels`, { signal: controller.signal, headers }),
-        ]);
-
+        const data = await getGoalScores({}, { signal: controller.signal });
         const itemsList: SearchItem[] = [...defaultItems];
 
-        if (resChannels.ok) {
-          const chData = await resChannels.json();
-          if (chData.success && chData.data?.channels) {
-            chData.data.channels.forEach((ch: ChannelInfo) => {
-              itemsList.push({
-                title: ch.name,
-                description: `Quality: ${ch.quality} • Category: ${ch.category} • Viewers: ${ch.live_viewers}`,
-                href: `/live/${ch.key}`,
-                category: "Live Channels",
-              });
-            });
-          }
-        }
-
-        if (resMatches.ok) {
-          const matchData = await resMatches.json();
-          if (matchData.success && matchData.data?.matches) {
-            matchData.data.matches.forEach((m: Match) => {
-              itemsList.push({
-                title: `${m.team1.name} vs ${m.team2.name}`,
-                description: `Stage: ${m.stage} • Status: ${m.status.toUpperCase()} ${m.group ? `(${m.group})` : ""
-                  }`,
-                href: `/scores`,
-                category: "Matches",
-              });
+        for (const comp of data?.competitions || []) {
+          for (const m of comp.matches) {
+            itemsList.push({
+              title: `${m.team_a.name} vs ${m.team_b.name}`,
+              description: `${comp.name} • ${m.status}`,
+              href: m.slug ? `/scores/${m.slug}/${m.id}` : "/scores",
+              category: "Matches",
             });
           }
         }
@@ -90,7 +64,7 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
         setDynamicItems(itemsList);
       } catch (err) {
         if ((err as Error)?.name === "AbortError") return;
-        console.error("Failed to load search index components:", err);
+        logger.error("Failed to load search index components:", err);
         setDynamicItems(defaultItems);
       }
     };
@@ -206,9 +180,7 @@ export function CommandSearch({ open, onClose }: CommandSearchProps) {
                     }`}
                 >
                   <div className="w-8 h-8 rounded bg-hover border border-border-alt flex items-center justify-center shrink-0">
-                    {item.category === "Live Channels" ? (
-                      <Tv className="w-3.5 h-3.5 text-red-500 animate-pulse" />
-                    ) : item.category === "Matches" ? (
+                    {item.category === "Matches" ? (
                       <Calendar className="w-3.5 h-3.5 text-emerald-400" />
                     ) : (
                       <Activity className="w-3.5 h-3.5 text-fg-dim" />

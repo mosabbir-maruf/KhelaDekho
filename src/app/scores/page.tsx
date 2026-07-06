@@ -1,5 +1,5 @@
 import ScoresClient from "./ScoresClient";
-import { getGoalScores, getGoalLiveScores, getGoalFixtures, getGoalResults } from "@/lib/api";
+import { getGoalScores } from "@/lib/api";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -9,20 +9,9 @@ export default async function ScoresPage(props: { searchParams?: Promise<{ date?
   const searchParams = await props.searchParams;
   const date = searchParams?.date;
 
-  const [allData, liveData, fixtureData, resultData] = await Promise.all([
-    getGoalScores({ date }),
-    getGoalLiveScores(date),
-    getGoalFixtures(date),
-    getGoalResults(date),
-  ]);
+  // A single fetch returns every match with its status; live / fixtures /
+  // results are derived client-side, so no extra round-trips are needed.
+  const data = await getGoalScores({ date });
 
-  return (
-    <ScoresClient
-      initialAll={allData ?? undefined}
-      initialLive={liveData ?? undefined}
-      initialFixtures={fixtureData ?? undefined}
-      initialResults={resultData ?? undefined}
-      currentDate={date}
-    />
-  );
+  return <ScoresClient initialData={data ?? undefined} currentDate={date} />;
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export const runtime = "edge";
 
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     const KHELA_SETTINGS = processEnv.KHELA_SETTINGS as { get: (key: string, type?: string) => Promise<unknown>, put: (key: string, value: unknown) => Promise<void> } | undefined;
 
     if (!KHELA_SETTINGS) {
-       console.error("KV Database not bound. Falling back.");
+       logger.error("KV Database not bound. Falling back.");
        return NextResponse.json({ channels: FALLBACK_DATA[source], fallback: true }, { headers: { "Access-Control-Allow-Origin": "*" } });
     }
 
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
             return parseM3u8(src.content);
           }
         } catch (err) {
-          console.error(`Error parsing source ${src.id}:`, err);
+          logger.error(`Error parsing source ${src.id}:`, err);
         }
         return [];
       })
@@ -146,7 +147,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error fetching playlists dynamically from KV:", error);
+    logger.error("Error fetching playlists dynamically from KV:", error);
     return NextResponse.json({ channels: FALLBACK_DATA[source], fallback: true }, {
       headers: { "Access-Control-Allow-Origin": "*" },
     });

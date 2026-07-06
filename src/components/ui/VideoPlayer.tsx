@@ -16,6 +16,7 @@ import { useDevicePlatform } from "@/hooks/useDevicePlatform";
 import { getFallbackSource } from "@/lib/streamSelector";
 import { getApiBaseUrl } from "@/lib/api";
 import type { StreamSource } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let shakaModule: any = null;
@@ -340,9 +341,9 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
           const hasDetail = err && typeof err === "object" && Object.keys(err).length > 0;
           if (hasDetail) {
             const category = err?.category;
-            console.error("Shaka Player Error:", { code, category, message: err.message, data: err.data }, "URL:", effectiveUrl);
+            logger.error("Shaka Player Error:", { code, category, message: err.message, data: err.data }, "URL:", effectiveUrl);
           } else {
-            console.warn("Shaka Player Error (empty detail) URL:", effectiveUrl);
+            logger.warn("Shaka Player Error (empty detail) URL:", effectiveUrl);
           }
           setIsLoading(false);
           if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }

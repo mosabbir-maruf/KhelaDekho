@@ -78,7 +78,7 @@ export default function InstallationPage() {
                             Clone the backend repository, create a virtual environment, and install the Python dependencies.
                         </p>
                         <CodeBlock code={`# Navigate to backend directory
-cd kheladekho-api
+cd KhelaDekho-API
 
 # Create and activate virtual environment
 python -m venv venv
@@ -127,10 +127,11 @@ cp .env.example .env.local`} />
                         <div className="space-y-6 mt-4">
                             <div className="border border-border-alt bg-card p-4 space-y-2">
                                 <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Worker (wrangler.toml / Cloudflare Dashboard)</div>
-                                <CodeBlock code={`# Home URLs are set in wrangler.toml under [vars]:
-V1_HOME_URL=https://example.com
-V2_HOME_URL=https://example.com
-V4_HOME_URL=https://example.com`} />
+                                <CodeBlock code={`# Set in wrangler.toml under [vars]:
+V1_HOME_URL=https://your-v1-provider.example
+V2_HOME_URL=https://your-v2-provider.example
+V4_HOME_URL=https://your-v4-provider.example
+# XKEY is a secret: wrangler secret put XKEY`} />
                             </div>
 
                                 <div className="border border-border-alt bg-card p-4 space-y-2">
@@ -167,7 +168,7 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=`} />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <div className="text-xs font-mono text-fg-dim tracking-widest uppercase">Terminal 1 (Backend)</div>
-                                <CodeBlock code={`cd kheladekho-api
+                                <CodeBlock code={`cd KhelaDekho-API
 source venv/bin/activate
 uvicorn app.main:app --reload --port 8000`} />
                             </div>

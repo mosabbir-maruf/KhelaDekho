@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export const runtime = "edge";
 
@@ -43,7 +44,7 @@ export async function GET() {
         const data = await res.json();
         return NextResponse.json({ stars: data.stargazers_count ?? 0 });
     } catch (error) {
-        console.error("Error fetching stars:", error);
+        logger.error("Error fetching stars:", error);
         return NextResponse.json({ stars: null });
     }
 }

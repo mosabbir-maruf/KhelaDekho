@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Error in admin playlists route:', error);
+    logger.error('Error in admin playlists route:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

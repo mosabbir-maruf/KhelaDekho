@@ -77,13 +77,13 @@ export default function ArchitecturePage() {
                         <div className="flex flex-wrap items-center gap-3 text-fg-dim">
                             <span className="px-3 py-1.5 border border-blue-500/20 bg-blue-500/5 text-blue-400">Client Request</span>
                             <span className="text-fg-faint">→</span>
-                            <span className="px-3 py-1.5 border border-purple-500/20 bg-purple-500/5 text-purple-400">Edge Validation</span>
+                            <span className="px-3 py-1.5 border border-purple-500/20 bg-purple-500/5 text-purple-400">X-Key Auth</span>
                             <span className="text-fg-faint">→</span>
-                            <span className="px-3 py-1.5 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400">Cloudflare Edge Proxy</span>
+                            <span className="px-3 py-1.5 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400">Provider Scrape / Edge Proxy</span>
                             <span className="text-fg-faint">→</span>
-                            <span className="px-3 py-1.5 border border-orange-500/20 bg-orange-500/5 text-orange-400">AES-GCM Decryption</span>
+                            <span className="px-3 py-1.5 border border-orange-500/20 bg-orange-500/5 text-orange-400">Cached JSON</span>
                             <span className="text-fg-faint">→</span>
-                            <span className="px-3 py-1.5 border border-red-500/20 bg-red-500/5 text-red-400">HLS/DASH Playback</span>
+                            <span className="px-3 py-1.5 border border-red-500/20 bg-red-500/5 text-red-400">Scores / HLS / DASH</span>
                         </div>
                     </div>
                 </div>
@@ -96,13 +96,11 @@ export default function ArchitecturePage() {
                     <h2 className="text-xl font-mono tracking-widest uppercase text-fg">Frontend UI (Next.js)</h2>
                 </div>
                 <p className="text-fg-dim font-mono text-sm leading-relaxed">
-                    The presentation layer is built with Next.js 14 and Tailwind CSS. It focuses on a premium, glassmorphic aesthetic while dynamically rendering live sports channels. All API requests to the proxy backend are authenticated securely.
+                    The presentation layer is built with Next.js and Tailwind CSS. It focuses on a premium, glassmorphic aesthetic while rendering live scores and sports channels. API requests carry the shared xkey, injected server-side so it never ships in client bundles.
                 </p>
-                <CodeBlock code={`// Stream fetching is proxied through Next.js, which signs the request server-side
-// The secret key never reaches the browser
-const response = await fetch('/api/stream?key=wctveng');
-const stream = await response.json();
-// stream.url / stream.sources / stream.clearkey are now available for the player`} />
+                <CodeBlock code={`// V1 serves live scores from the configured provider
+const scores = await getGoalScores();          // GET /api/v1/scores
+// competitions[].matches[] -> teams, score, status, period`} />
             </section>
 
             {/* Layer 2: API Gateway */}
@@ -112,22 +110,22 @@ const stream = await response.json();
                     <h2 className="text-xl font-mono tracking-widest uppercase text-fg">FastAPI Gateway</h2>
                 </div>
                 <p className="text-fg-dim font-mono text-sm leading-relaxed">
-                    The Python FastAPI backend acts as a highly concurrent gateway. It validates cryptographic signatures, manages Redis caching for frequently accessed streams, and utilizes HTTPX connection pooling for fast proxy resolution.
+                    The same API is available as a Python FastAPI app and a Cloudflare Worker. Both validate the shared xkey, use an in-memory TTL cache with stampede protection, and fetch upstream data concurrently over HTTPX / fetch.
                 </p>
                 <div className="border border-border-alt bg-card p-5 space-y-3">
                     <div className="text-xs font-mono text-fg-faint uppercase tracking-widest">Key Features</div>
                     <ul className="space-y-2 text-sm font-mono text-fg-dim">
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
-                            <span><strong>Connection Pooling</strong> — Async connections are pooled and maintained for minimal latency.</span>
+                            <span><strong>Single X-Key Auth</strong> — One shared key guards every endpoint (proxy routes exempt).</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
-                            <span><strong>Redis Caching</strong> — Stream manifests and decrypted keys are cached to reduce upstream load.</span>
+                            <span><strong>TTL Caching</strong> — Provider responses are cached briefly to reduce upstream load.</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
-                            <span><strong>Strict Rate Limiting</strong> — Prevents abuse using sliding window IP-based tracking.</span>
+                            <span><strong>Strict Rate Limiting</strong> — Sliding-window IP-based tracking prevents abuse.</span>
                         </li>
                     </ul>
                 </div>
@@ -137,10 +135,10 @@ const stream = await response.json();
             <section className="space-y-6">
                 <div className="space-y-2">
                     <div className="text-xs font-mono text-fg-faint tracking-widest uppercase">Layer 03</div>
-                    <h2 className="text-xl font-mono tracking-widest uppercase text-fg">Edge Proxy & Decryption</h2>
+                    <h2 className="text-xl font-mono tracking-widest uppercase text-fg">Edge Proxy (V2 / V4)</h2>
                 </div>
                 <p className="text-fg-dim font-mono text-sm leading-relaxed">
-                    KhelaDekho uses Cloudflare Workers to proxy streaming segments directly from source CDNs. The backend performs AES-GCM (A256GCM) decryption to extract ClearKey DRM parameters.
+                    For channel streams, Cloudflare Workers proxy HLS/DASH segments from source CDNs and rewrite manifests to bypass CORS and Referer checks. ClearKey DRM parameters are passed through to the player for supported channels.
                 </p>
             </section>
 
