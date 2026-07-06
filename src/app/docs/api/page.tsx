@@ -242,8 +242,20 @@ export default function DecryptionApiPage() {
             </span>
             <div className="h-px flex-1 bg-hover" />
           </div>
+          <div className="border border-border-alt bg-card p-6 rounded-xl space-y-4">
+            <h3 className="text-sm font-mono font-semibold text-fg flex items-center gap-2">
+              <Zap className="w-4 h-4 text-red-500" /> V1 Live Scores Integration
+            </h3>
+            <p className="text-xs font-mono text-fg-dim leading-relaxed">
+              KhelaDekho V1 API exposes live scores and match statistics sourced directly from the configured provider. 
+              The response envelope formats teams, current live scores, match period/telemetry, and referee logs.
+            </p>
+            <CodeBlock code={`// V1 serves live scores from the configured provider
+const scores = await getGoalScores();          // GET /api/v1/scores
+// competitions[].matches[] -> teams, score, status, period`} />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border border-border-alt bg-card p-6 space-y-4 hover:border-red-500/10 transition-all group">
+            <div className="border border-border-alt bg-card p-6 space-y-4 hover:border-red-500/10 transition-all group rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-hover border border-border-alt flex items-center justify-center shrink-0 group-hover:border-red-500/20 group-hover:bg-red-500/10 transition-all">
                   <Code2 className="w-4 h-4 text-fg-dim group-hover:text-red-400 transition-colors" />

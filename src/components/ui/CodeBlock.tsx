@@ -20,10 +20,10 @@ export function CodeBlock({ code }: CodeBlockProps) {
             </div>
 
             {/* Code Content */}
-            <div className="p-4 overflow-x-auto text-fg-muted bg-transparent flex items-start gap-3">
-                <span className="text-emerald-500 select-none mr-1">{`$`}</span>
-                <pre className="whitespace-pre min-w-0">
-                    <code>{code}</code>
+            <div className="p-4 overflow-x-auto text-fg-muted bg-transparent flex items-start gap-3 w-full scrollbar-red">
+                <span className="text-emerald-500 select-none mr-1 shrink-0">{`$`}</span>
+                <pre className="whitespace-pre overflow-x-auto w-full min-w-0">
+                    <code className="block w-full">{code}</code>
                 </pre>
             </div>
 
