@@ -85,7 +85,7 @@ function Logo({ src, name, className }: { src: string | null; name: string; clas
       </div>
     );
   }
-  return <img src={src} alt="" className={`w-full h-full object-contain ${className || ''}`} onError={() => setErr(true)} />;
+  return <img src={src} alt="" loading="lazy" className={`w-full h-full object-contain ${className || ''}`} onError={() => setErr(true)} />;
 }
 
 export default function LiveTvPage() {
