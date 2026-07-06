@@ -96,7 +96,7 @@ export function Footer() {
                 API Docs
               </Link>
               <span className="border-l border-border-alt h-3" />
-              <Link href="/" className="hover:text-fg transition-colors">© {new Date().getFullYear()} KhelaDekho</Link>
+              <span>© {new Date().getFullYear()} </span><Link href="/" className="hover:text-fg transition-colors">KhelaDekho</Link>
             </div>
             <span className="hidden sm:block border-l border-border-alt h-3" />
             <span className="mt-1 sm:mt-0 text-fg-dim">A sideproject by Mosabbir Maruf</span>
