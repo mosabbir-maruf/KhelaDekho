@@ -56,7 +56,7 @@ export default function ArchitecturePage() {
                             How KhelaDekho works under the hood — the streaming pipeline from source aggregation to decryption to playback.
                         </p>
                     </div>
-                    <Link
+                    <Link prefetch={false}
                         href="/"
                         className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] transition-all shrink-0"
                     >
