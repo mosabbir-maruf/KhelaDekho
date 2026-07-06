@@ -81,7 +81,7 @@ function Logo({ src, name, className }: { src: string | null; name: string; clas
   if (!src || err) {
     return (
       <div className={`w-full h-full flex items-center justify-center bg-[#181818] ${className || ''}`}>
-        <Tv className="w-3/5 h-3/5 text-red-500/25" />
+        <Tv className="w-1/2 h-1/2 text-red-500/40" />
       </div>
     );
   }
