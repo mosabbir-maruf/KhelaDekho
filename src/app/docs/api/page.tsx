@@ -197,7 +197,7 @@ export default function DecryptionApiPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-4 text-fg font-bold">GET /api/v5/tv/channel/:id/stream</td>
-                    <td className="py-3 pr-4">Resolve a DLHD channel + proxy (no rate limit)</td>
+                    <td className="py-3 pr-4">Resolve a DLHD channel + proxy</td>
                     <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                 </tbody>
