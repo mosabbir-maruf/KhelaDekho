@@ -28,7 +28,7 @@ KhelaDekho-Frontend/
 │   │   │   ├── [slug]/[matchId]/ # Match detail (events, lineups, stats)
 │   │   │   ├── player/[playerId]/# Player detail
 │   │   │   └── team/[teamId]/    # Team detail
-│   │   ├── live-matches/         # Multi-server match streaming (V2/V3/V4)
+│   │   ├── live-matches/         # Multi-server match streaming (V2/V3/V4/V5)
 │   │   ├── live-tv/              # Live TV (V3 KV playlist)
 │   │   ├── v2/channel/[id]/      # V2 channel player
 │   │   ├── v4/channel/[id]/      # V4 channel player
@@ -56,7 +56,7 @@ KhelaDekho-Frontend/
 
 The **Live Matches** page can play from multiple sources ("servers"):
 
-- **V2 / V4** — channel providers served through the backend API (`/api/v2/*`, `/api/v4/*`).
+- **V2 / V4 / V5** — channel providers served through the backend API (`/api/v2/*`, `/api/v4/*`, `/api/v5/*`).
 - **V3** — a **self-hosted playlist** (M3U8 or JSON) stored in **Cloudflare KV** and
   managed from the **admin panel**. It is served by the frontend edge route
   `GET /api/playlist?source=live-matches`, which fetches/merges the configured sources,
@@ -75,7 +75,7 @@ Consumes the KhelaDekho API:
 
 - **V1** — live scores, fixtures, results, and match/player/team detail from the
   configured score provider (`/api/v1/*`).
-- **V2 / V4** — channel streams for the Live Matches page (`/api/v2/*`, `/api/v4/*`).
+- **V2 / V4 / V5** — channel streams for the Live Matches page (`/api/v2/*`, `/api/v4/*`, `/api/v5/*`).
 - **V3** — self-hosted KV playlist served by the frontend (`/api/playlist`), see above.
 
 The backend URL and shared key are the single source of truth in `src/lib/api.ts`

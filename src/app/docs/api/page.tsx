@@ -15,7 +15,7 @@ export default function DecryptionApiPage() {
     { icon: Cpu, label: "FastAPI + Worker", value: "Edge API", desc: "Same routes, two runtimes" },
     { icon: Zap, label: "V1 Scores", value: "Score Provider", desc: "Live scores & match data" },
     { icon: Key, label: "Authentication", value: "X-Key", desc: "Single shared key" },
-    { icon: Shield, label: "V2 / V4 Channels", value: "Proxied", desc: "Public channel metadata" },
+    { icon: Shield, label: "V2 / V4 / V5", value: "Proxied", desc: "Channel & match streams" },
   ];
 
   return (
@@ -173,6 +173,21 @@ export default function DecryptionApiPage() {
                   <tr>
                     <td className="py-3 pr-4 text-red-500 font-bold">GET /api/v4/channels</td>
                     <td className="py-3 pr-4">V4 channel list, stream, stats</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
+                  </tr>
+                  <tr className="border-b border-border-alt">
+                    <td className="py-3 pr-4 text-emerald-500 font-bold">GET /api/v5/matches</td>
+                    <td className="py-3 pr-4">V5 match list (football live/upcoming)</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
+                  </tr>
+                  <tr className="border-b border-border-alt">
+                    <td className="py-3 pr-4 text-emerald-500 font-bold">GET /api/v5/matches/:slug/channels</td>
+                    <td className="py-3 pr-4">Channels &amp; substreams for a match</td>
+                    <td className="py-3 text-fg-faint">X-Key</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 text-emerald-500 font-bold">GET /api/v5/matches/:slug/stream?ch=</td>
+                    <td className="py-3 pr-4">Resolve one channel/substream + proxy</td>
                     <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                 </tbody>
