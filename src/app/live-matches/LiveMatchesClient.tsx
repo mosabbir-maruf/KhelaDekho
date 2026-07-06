@@ -518,7 +518,59 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
         </div>
 
         {loading ? (
-          <LoadingSpinner label={apiVersion === "v2" ? "Loading matches..." : "Indexing streams..."} />
+          <div className="flex flex-col lg:flex-row gap-6 items-stretch animate-pulse">
+            {/* Sidebar list skeleton (only visible when not in V2 match selection view) */}
+            {!inMatchList && (
+              <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0 space-y-4">
+                <div className="h-10 bg-hover border border-border-alt rounded" />
+                <div className="h-4 w-20 bg-hover rounded" />
+                <div className="space-y-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-12 bg-hover rounded border border-border-alt/50" />
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Main Area Skeleton */}
+            <div className="flex-1 min-w-0 space-y-4 w-full">
+              {inMatchList ? (
+                /* Matches selection grid skeleton */
+                <div className="border border-border-alt bg-card p-6 md:p-8 space-y-6 rounded-xl">
+                  <div className="flex items-center gap-3 border-b border-border-alt pb-4">
+                    <div className="w-8 h-8 rounded-lg bg-hover border border-border-alt" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 bg-hover rounded" />
+                      <div className="h-3 w-56 bg-hover rounded" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="h-36 border border-border-alt bg-input rounded-xl p-5 flex flex-col justify-between" />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Player view skeleton */
+                <>
+                  <div className="flex items-center justify-between border border-border-alt bg-card p-4 rounded-xl">
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-10 h-10 rounded-xl bg-hover border border-border-alt" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-5 w-48 bg-hover rounded" />
+                        {apiVersion === "v2" && <div className="h-3.5 w-32 bg-hover rounded" />}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="aspect-video bg-hover border border-border-alt rounded-xl w-full" />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="h-20 bg-card border border-border-alt rounded-xl" />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             {/* Desktop list panel */}
