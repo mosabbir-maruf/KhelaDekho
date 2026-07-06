@@ -62,7 +62,7 @@ export function RequestAccessForm() {
         </div>
         <button
           onClick={() => setStatus("idle")}
-          className="mt-4 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-border-alt transition-all"
+          className="mt-4 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] transition-all"
         >
           Submit Another Request
         </button>

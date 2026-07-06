@@ -81,7 +81,7 @@ export default function V4ChannelPage() {
               </div>
               <button
                 onClick={() => handleShare(window.location.href)}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] text-xs font-mono transition-all cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5" />
                 {copied ? "Copied!" : "Share"}

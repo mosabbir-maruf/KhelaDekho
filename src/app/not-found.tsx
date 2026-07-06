@@ -18,7 +18,7 @@ export default function NotFound() {
                 </div>
                 <Link
                     href="/"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-border-alt bg-card text-xs font-mono text-fg-dim hover:text-fg hover:border-border-alt transition-all"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-border-alt bg-card text-xs font-mono text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] transition-all"
                 >
                     <ArrowLeft className="w-3.5 h-3.5" /> Return to Lobby
                 </Link>

@@ -492,7 +492,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
             <div className="relative">
               <button
                 onClick={() => setIsServerDropdownOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-4 py-2 border text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-border-alt"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03]"
               >
                 <span className={`w-2 h-2 rounded-full ${meta.color}`} />
                 Switch Server
@@ -836,7 +836,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                     </div>
                     <button
                       onClick={() => handleShare(window.location.href)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0"
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] text-xs font-mono transition-all cursor-pointer shrink-0"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       {copied ? "Copied!" : "Share"}

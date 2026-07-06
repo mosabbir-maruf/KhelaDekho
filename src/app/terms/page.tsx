@@ -77,7 +77,7 @@ export default function TermsPage() {
             </div>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-border-alt transition-all shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] transition-all shrink-0"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Lobby Lounge
             </Link>

@@ -325,7 +325,7 @@ export default function LiveTvPage() {
             {!isBrowseMode && (
               <button
                 onClick={backToBrowse}
-                className="flex items-center gap-2 px-4 py-2 border border-red-500 bg-red-500/10 text-xs font-mono font-bold text-red-500 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt bg-input text-xs font-mono text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] transition-all cursor-pointer shrink-0"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Browse Channels
@@ -624,7 +624,7 @@ export default function LiveTvPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleShare(window.location.href)}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-border-alt text-[10px] font-mono transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 border border-border-alt bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] text-[10px] font-mono transition-all cursor-pointer"
                   >
                     <Share2 className="w-3 h-3" />
                     {copied ? "Copied!" : "Share"}
