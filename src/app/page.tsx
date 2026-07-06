@@ -12,6 +12,7 @@ import { CopyButton } from "@/components/ui/CopyButton";
 import { getGoalScores } from "@/lib/api";
 import type { GoalMatch } from "@/lib/api";
 
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
