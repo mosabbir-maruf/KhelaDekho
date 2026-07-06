@@ -115,39 +115,50 @@ export default function LiveTvPage() {
     const controller = new AbortController();
 
     (async () => {
+      let useV5 = true;
       try {
-        const apiBase = getApiBaseUrl();
-        const xkey = getXKey();
-        const headers: Record<string, string> = { 'Accept': 'application/json' };
-        if (xkey) headers['xkey'] = xkey;
-
-        const v5Res = await fetch(`${apiBase}/api/v5/tv/channels`, {
-          signal: controller.signal,
-          headers,
-        });
-        if (v5Res.ok) {
-          const body = await v5Res.json();
-          const list: V5Channel[] = body?.data?.channels || [];
-          if (!active) return;
-          if (list.length > 0) {
-            const chs: DisplayChannel[] = list.map(ch => ({
-              id: ch.id,
-              name: ch.name,
-              category: detectCat(ch.name) || ch.category || 'General',
-              country: ch.country || 'intl',
-              logoUrl: ch.image || getLogoUrl(ch.name),
-              source: 'v5' as const,
-              v5Id: ch.id,
-            }));
-            setChannels(chs);
-            const urlCh = getUrlCh();
-            const match = urlCh ? chs.find(c => c.name === urlCh) : null;
-            if (match) setSelectedChannel(match);
-            setLoading(false);
-            return;
-          }
+        const settingsRes = await fetch(`/api/admin/settings`, { signal: controller.signal });
+        if (settingsRes.ok) {
+          const sv = (await settingsRes.json()).defaultVersion;
+          if (sv === 'v3') useV5 = false;
         }
       } catch {}
+
+      if (active && useV5) {
+        try {
+          const apiBase = getApiBaseUrl();
+          const xkey = getXKey();
+          const headers: Record<string, string> = { 'Accept': 'application/json' };
+          if (xkey) headers['xkey'] = xkey;
+
+          const v5Res = await fetch(`${apiBase}/api/v5/tv/channels`, {
+            signal: controller.signal,
+            headers,
+          });
+          if (v5Res.ok) {
+            const body = await v5Res.json();
+            const list: V5Channel[] = body?.data?.channels || [];
+            if (!active) return;
+            if (list.length > 0) {
+              const chs: DisplayChannel[] = list.map(ch => ({
+                id: ch.id,
+                name: ch.name,
+                category: detectCat(ch.name) || ch.category || 'General',
+                country: ch.country || 'intl',
+                logoUrl: ch.image || getLogoUrl(ch.name),
+                source: 'v5' as const,
+                v5Id: ch.id,
+              }));
+              setChannels(chs);
+              const urlCh = getUrlCh();
+              const match = urlCh ? chs.find(c => c.name === urlCh) : null;
+              if (match) setSelectedChannel(match);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {}
+      }
 
       try {
         const res = await fetch(`/api/playlist?source=live-tv`, { signal: controller.signal });

@@ -349,7 +349,7 @@ export default function AdminPage() {
             <div className="p-6 space-y-6">
               <div className="space-y-1">
                 <h2 className="text-sm font-mono font-bold text-fg flex items-center gap-2">
-                  <Server className="w-4 h-4 text-red-500" /> Live Matches Page Routing
+                  <Server className="w-4 h-4 text-red-500" /> Default Streaming Server
                 </h2>
                 <p className="text-xs font-mono text-fg-dim">
                   Select default streaming server version for live football matches.
