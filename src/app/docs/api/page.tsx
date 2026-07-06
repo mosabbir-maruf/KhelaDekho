@@ -196,46 +196,100 @@ export default function DecryptionApiPage() {
           </div>
         </div>
 
-        {/* Responses */}
+        {/* Response Examples */}
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-hover" />
             <span className="text-[10px] font-mono uppercase tracking-widest text-fg-faint">
-              Standard Response Envelopes
+              Response Examples by Version
             </span>
             <div className="h-px flex-1 bg-hover" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="border border-border-alt bg-card p-6 space-y-4">
-              <h3 className="text-sm font-mono font-semibold text-fg">Success Output</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V1</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">Scores</h3>
+              </div>
               <CodeBlock code={`{
   "success": true,
   "data": {
-    "competitions": [
-      {
-        "id": "premier-league",
-        "name": "Premier League",
-        "area": "England",
-        "matches": [
-          {
-            "id": "abc123",
-            "status": "LIVE",
-            "team_a": { "name": "Arsenal" },
-            "team_b": { "name": "Chelsea" },
-            "score_team_a": 2,
-            "score_team_b": 1
-          }
-        ]
-      }
-    ],
+    "competitions": [{
+      "id": "premier-league",
+      "name": "Premier League",
+      "area": "England",
+      "matches": [{
+        "id": "abc123",
+        "status": "LIVE",
+        "team_a": { "name": "Arsenal" },
+        "team_b": { "name": "Chelsea" },
+        "score_team_a": 2,
+        "score_team_b": 1
+      }]
+    }],
     "total_matches": 1
   },
   "error": null
 }`} />
             </div>
-            
             <div className="border border-border-alt bg-card p-6 space-y-4">
-              <h3 className="text-sm font-mono font-semibold text-fg">Error Output</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V2</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">Match List</h3>
+              </div>
+              <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "matches": [{
+      "slug": "match-slug",
+      "name": "Arsenal vs Chelsea",
+      "sport": "football",
+      "is_live": true
+    }]
+  },
+  "error": null
+}`} />
+            </div>
+            <div className="border border-border-alt bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V4</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">Channel List</h3>
+              </div>
+              <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "channels": [{
+      "id": "ch-1",
+      "name": "Sky Sports",
+      "stream_type": "hls"
+    }],
+    "total": 1
+  },
+  "error": null
+}`} />
+            </div>
+            <div className="border border-border-alt bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V5</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">Match Stream</h3>
+              </div>
+              <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "name": "FOX USA",
+    "stream_url": "/api/v5/proxy?...",
+    "stream_type": "hls",
+    "drm_kid": null,
+    "drm_key": null
+  },
+  "error": null
+}`} />
+            </div>
+            <div className="border border-border-alt bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">Error</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">Standard Error</h3>
+              </div>
               <CodeBlock code={`{
   "success": false,
   "data": null,
