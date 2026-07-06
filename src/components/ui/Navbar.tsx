@@ -78,11 +78,11 @@ export function Navbar() {
             {/* Nav Links (desktop only) */}
             <nav className="hidden md:flex items-center h-full">
               <Link
-                href="/live-tv"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                href="/scores"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/scores") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
-                Live TV
+                Scores
               </Link>
               <Link
                 href="/live-matches"
@@ -92,11 +92,18 @@ export function Navbar() {
                 Live Matches
               </Link>
               <Link
-                href="/scores"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/scores") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                href="/live-tv"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
-                Scores
+                Live TV
+              </Link>
+              <Link
+                href="/docs/api"
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/docs/api") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                  }`}
+              >
+                Docs
               </Link>
               <Link
                 href="/about"
@@ -111,13 +118,6 @@ export function Navbar() {
                   }`}
               >
                 Contact
-              </Link>
-              <Link
-                href="/docs/api"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/docs/api") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
-                  }`}
-              >
-                Docs
               </Link>
             </nav>
           </div>
