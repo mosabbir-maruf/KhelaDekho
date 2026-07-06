@@ -23,29 +23,31 @@ KhelaDekho-Frontend/
 │   │   ├── page.tsx              # Home (live scores hero + feed)
 │   │   ├── layout.tsx            # Root layout (injects API URL + XKEY)
 │   │   ├── scores/               # V1 score provider UI
-│   │   │   ├── page.tsx          # Static shell -> ScoresClient
+│   │   │   ├── page.tsx          # Static shell → ScoresClient
 │   │   │   ├── ScoresClient.tsx  # Scores list, tabs, day strip, polling
 │   │   │   ├── [slug]/[matchId]/ # Match detail (events, lineups, stats)
 │   │   │   ├── player/[playerId]/# Player detail
 │   │   │   └── team/[teamId]/    # Team detail
 │   │   ├── live-matches/         # Multi-server match streaming (V2/V3/V4/V5)
-│   │   ├── live-tv/              # Live TV (V5 DLHD channels, falls back to V3 KV)
-│   │   ├── v2/channel/[id]/      # V2 channel player
-│   │   ├── v4/channel/[id]/      # V4 channel player
-│   │   ├── admin/                # Admin panel (default server + V3 playlists)
-│   │   ├── docs/                 # Documentation pages
+│   │   │   ├── page.tsx          # Server shell → LiveMatchesClient
+│   │   │   └── LiveMatchesClient.tsx  # Match list, channels, player, server switch
+│   │   ├── live-tv/              # Live TV (V5 DLHD 878+ channels, falls back V3 KV)
+│   │   │   ├── page.tsx          # Grid/card layout, category+country filters
+│   │   │   └── layout.tsx        # Metadata
+│   │   ├── admin/                # Admin panel (default server, V3 playlists)
+│   │   ├── docs/                 # Documentation pages (API, architecture, etc.)
 │   │   ├── about/ contact/ privacy/ terms/ search/
 │   │   └── api/                  # Frontend edge routes
 │   │       ├── playlist/         # V3: reads self-hosted playlist from KV
 │   │       ├── iptv/proxy/       # M3U8/segment proxy for V3
 │   │       ├── contact/          # Telegram contact form
 │   │       └── admin/            # verify · settings · playlists (KV, admin key)
-│   ├── components/ui/            # Navbar, Sidebar, VideoPlayer, etc.
-│   ├── hooks/                    # useDevicePlatform, useCopyButton
+│   ├── components/ui/            # Navbar, Sidebar, VideoPlayer, ChannelListItem, etc.
+│   ├── hooks/                    # useCopyButton, useDevicePlatform
 │   ├── lib/                      # api.ts, config.ts, logger.ts, streamSelector.ts
-│   ├── data/                     # static data (liveTv)
-│   └── types/                    # global type declarations
-├── public/                       # logo, meta image
+│   ├── data/                     # liveTv.ts (logo maps, category keywords)
+│   └── types/                    # Global type declarations
+├── public/                       # Logo, meta image
 ├── next.config.ts
 └── wrangler.toml                 # Cloudflare Pages config + KV binding
 ```
