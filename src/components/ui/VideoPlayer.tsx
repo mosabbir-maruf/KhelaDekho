@@ -306,11 +306,19 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       if (newType === "dash") {
         // Reuse existing Shaka player or create one
         if (!shakaPlayerRef.current && video) {
-          const shaka = await getShaka();
-          shakaPlayerRef.current = await makeShakaPlayer(video, shaka, clearKeysRef as { current: Record<string, string> | null });
+          try {
+            const shaka = await getShaka();
+            shakaPlayerRef.current = await makeShakaPlayer(video, shaka, clearKeysRef as { current: Record<string, string> | null });
+          } catch (importErr) {
+            logger.error("Failed to load shaka-player compiler chunk", importErr);
+            setIsLoading(false);
+            if (!tryFallback()) {
+              setPlayerError("Failed to load DASH player components. Please reload the page or switch to an alternate channel.");
+            }
+            return;
+          }
         }
         attachedTypeRef.current = "dash";
-
         const player = shakaPlayerRef.current;
         if (!player) return;
 
