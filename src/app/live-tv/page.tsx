@@ -58,7 +58,8 @@ const COUNTRY_NAMES: Record<string, string> = {
   co: 'Colombia', intl: 'International',
 };
 
-function countryName(code: string): string {
+function countryName(code: string | null | undefined): string {
+  if (!code) return 'Unknown';
   return COUNTRY_NAMES[code] || code.toUpperCase();
 }
 
@@ -80,7 +81,7 @@ function Logo({ src, name, className }: { src: string | null; name: string; clas
   if (!src || err) {
     return (
       <div className={`w-full h-full flex items-center justify-center bg-[#181818] ${className || ''}`}>
-        <Tv className="w-3/5 h-3/5 text-fg-faint/20" />
+        <Tv className="w-3/5 h-3/5 text-red-500/25" />
       </div>
     );
   }
@@ -157,6 +158,7 @@ export default function LiveTvPage() {
           id: `kv-${i}`,
           name: ch.name as string,
           category: getCategory(ch.name as string),
+          country: '',
           logoUrl: getLogoUrl(ch.name as string),
           source: 'kv' as const,
           directUrl: ch.url as string,

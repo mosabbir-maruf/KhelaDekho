@@ -40,7 +40,7 @@ export function ChannelListItem({ item, selected, onClick, showGroup, showExtra 
             <img src={item.logo!} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" onError={() => setLogoError(true)} />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-[#181818]">
-              <Tv className="w-6 h-6 text-fg-faint/20" />
+              <Tv className="w-6 h-6 text-red-500/25" />
             </div>
           )}
         </div>
