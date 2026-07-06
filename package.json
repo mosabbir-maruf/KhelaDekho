@@ -1,6 +1,6 @@
 {
   "name": "kheladekho",
-  "version": "beta1.1.0",
+  "version": "beta2.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
