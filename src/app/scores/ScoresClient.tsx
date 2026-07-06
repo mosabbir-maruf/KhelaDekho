@@ -351,7 +351,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("all");
-  const [date, setDate] = useState(currentDate || todayStr());
+  const [date, setDate] = useState(currentDate || searchParams?.get("date") || todayStr());
   const [query, setQuery] = useState("");
   const [data, setData] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
@@ -366,7 +366,9 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
     }
   }, []);
 
+  // Fetch immediately on mount and whenever the date changes, then poll.
   useEffect(() => {
+    fetchData(date);
     const interval = setInterval(() => fetchData(date), 30000);
     return () => clearInterval(interval);
   }, [date, fetchData]);
@@ -374,12 +376,11 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
   const handleDateChange = useCallback(
     (newDate: string) => {
       setDate(newDate);
-      fetchData(newDate);
       const params = new URLSearchParams(searchParams?.toString() || "");
       params.set("date", newDate);
       router.push(`/scores?${params.toString()}`, { scroll: false });
     },
-    [router, searchParams, fetchData]
+    [router, searchParams]
   );
 
   // Tab views are derived from the single dataset (no extra requests).
