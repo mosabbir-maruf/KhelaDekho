@@ -99,6 +99,7 @@ function MatchRow({ match }: { match: GoalMatch }) {
 
   return (
     <Link
+      prefetch={false}
       href={href}
       className={`group flex items-center justify-between p-4 hover:bg-hover transition-all relative overflow-hidden ${
         isLive ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-red-500/70" : ""

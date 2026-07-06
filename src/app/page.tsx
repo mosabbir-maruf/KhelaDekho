@@ -65,6 +65,7 @@ function MatchCard({ item }: { item: FeedMatch }) {
 
   return (
     <Link
+      prefetch={false}
       href={m.slug ? `/scores/${m.slug}/${m.id}` : "#"}
       className="group relative flex flex-col rounded-xl border border-border-alt bg-card overflow-hidden hover:border-red-500/25 hover:bg-red-500/[0.015] transition-all"
     >
