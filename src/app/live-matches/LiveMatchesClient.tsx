@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
-import { LoadingSpinner } from "@/components/ui/PageHero";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
@@ -19,7 +18,7 @@ import Share2 from "lucide-react/dist/esm/icons/share-2";
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
-type ApiVersion = "v2" | "v3" | "v4";
+type ApiVersion = "v2" | "v3" | "v4" | "v5";
 
 interface TeamInfo {
   name: string;
@@ -83,6 +82,7 @@ const VERSION_META: Record<ApiVersion, { color: string; label: string }> = {
   v2: { color: "bg-green-500", label: "V2 Matches" },
   v3: { color: "bg-cyan-500", label: "V3 Streams" },
   v4: { color: "bg-purple-500", label: "V4 Streams" },
+  v5: { color: "bg-rose-500", label: "V5 Streams" },
 };
 
 function channelKey(name: string): string {
@@ -125,7 +125,8 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   const listCache = useRef<Map<string, ChannelData[]>>(new Map());
 
   const meta = VERSION_META[apiVersion];
-  const inMatchList = apiVersion === "v2" && !v2Match;
+  const inMatchList = (apiVersion === "v2" || apiVersion === "v5") && !v2Match;
+  const isMatchCentric = apiVersion === "v2" || apiVersion === "v5";
 
   const authHeaders = useCallback((): Record<string, string> => {
     const h: Record<string, string> = { Accept: "application/json" };
@@ -138,7 +139,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   useEffect(() => {
     let active = true;
     const { v } = getUrlParams();
-    if (v && ["v2", "v3", "v4"].includes(v)) {
+    if (v && ["v2", "v3", "v4", "v5"].includes(v)) {
       setApiVersion(v as ApiVersion);
       setVersionResolved(true);
       return;
@@ -148,7 +149,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
         const res = await fetch("/api/admin/settings", { headers: { Accept: "application/json" } });
         if (res.ok) {
           const body = await res.json();
-          if (active && ["v2", "v3", "v4"].includes(body?.defaultVersion)) {
+          if (active && ["v2", "v3", "v4", "v5"].includes(body?.defaultVersion)) {
             setApiVersion(body.defaultVersion as ApiVersion);
           }
         }
@@ -170,7 +171,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   }, [apiVersion, pathname, router]);
 
   useEffect(() => {
-    if (!versionResolved || apiVersion === "v2") return;
+    if (!versionResolved || apiVersion === "v2" || apiVersion === "v5") return;
     let active = true;
     const controller = new AbortController();
     const rawBaseUrl = getApiBaseUrl();
@@ -234,16 +235,17 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     return () => { active = false; controller.abort(); };
   }, [apiVersion, versionResolved, selectFlatChannel, authHeaders]);
 
-  // -------- V2: match list loading --------
+  // -------- V2 / V5: match list loading --------
   useEffect(() => {
-    if (!versionResolved || apiVersion !== "v2") return;
+    if (!versionResolved || (apiVersion !== "v2" && apiVersion !== "v5")) return;
     let active = true;
     const controller = new AbortController();
     const baseUrl = apiBaseUrl;
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${baseUrl}/api/v2/matches`, { signal: controller.signal, headers: authHeaders() });
+        const versionPath = apiVersion === "v5" ? "v5" : "v2";
+        const res = await fetch(`${baseUrl}/api/${versionPath}/matches`, { signal: controller.signal, headers: authHeaders() });
         const body = res.ok ? await res.json() : {};
         const list: MatchItem[] = body?.data?.matches || [];
         if (!active) return;
@@ -262,7 +264,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     return () => { active = false; controller.abort(); };
   }, [apiVersion, versionResolved, apiBaseUrl, authHeaders]);
 
-  // -------- V2: resolve a channel's stream on demand --------
+  // -------- V2 / V5: resolve a channel's stream on demand --------
   const resolveV2 = useRef<AbortController | null>(null);
   const selectV2Channel = useCallback(async (ch: V2Channel) => {
     if (!v2Match) return;
@@ -274,7 +276,8 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     setV2StreamError(false);
     setV2StreamLoading(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v2/matches/${encodeURIComponent(v2Match.slug)}/stream?ch=${encodeURIComponent(ch.id)}`, { signal: controller.signal, headers: authHeaders() });
+      const versionPath = apiVersion === "v5" ? "v5" : "v2";
+      const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/stream?ch=${encodeURIComponent(ch.id)}`, { signal: controller.signal, headers: authHeaders() });
       const body = res.ok ? await res.json() : {};
       const d = body?.data;
       if (d?.stream_url) {
@@ -292,11 +295,11 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     } finally {
       if (!controller.signal.aborted) setV2StreamLoading(false);
     }
-  }, [apiBaseUrl, v2Match, authHeaders]);
+  }, [apiBaseUrl, apiVersion, v2Match, authHeaders]);
 
-  // -------- V2: channels for the opened match --------
+  // -------- V2 / V5: channels for the opened match --------
   useEffect(() => {
-    if (apiVersion !== "v2" || !v2Match) return;
+    if ((apiVersion !== "v2" && apiVersion !== "v5") || !v2Match) return;
     let active = true;
     const controller = new AbortController();
     (async () => {
@@ -305,7 +308,8 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
       setV2Stream(null);
       setV2StreamError(false);
       try {
-        const res = await fetch(`${apiBaseUrl}/api/v2/matches/${encodeURIComponent(v2Match.slug)}/channels`, { signal: controller.signal, headers: authHeaders() });
+        const versionPath = apiVersion === "v5" ? "v5" : "v2";
+        const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/channels`, { signal: controller.signal, headers: authHeaders() });
         const body = res.ok ? await res.json() : {};
         if (!active) return;
         const channelList = body?.data?.channels || [];
@@ -323,16 +327,16 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   const openMatch = useCallback((m: MatchItem) => {
     setV2Match(m);
     setSearchQuery("");
-    router.replace(`${pathname}?v=v2&m=${encodeURIComponent(m.slug)}`, { scroll: false });
-  }, [pathname, router]);
+    router.replace(`${pathname}?v=${apiVersion}&m=${encodeURIComponent(m.slug)}`, { scroll: false });
+  }, [pathname, router, apiVersion]);
 
   const backToMatches = useCallback(() => {
     setV2Match(null);
     setV2Selected(null);
     setV2Stream(null);
     setSearchQuery("");
-    router.replace(`${pathname}?v=v2`, { scroll: false });
-  }, [pathname, router]);
+    router.replace(`${pathname}?v=${apiVersion}`, { scroll: false });
+  }, [pathname, router, apiVersion]);
 
   const switchServer = useCallback((v: ApiVersion) => {
     setApiVersion(v);
@@ -345,7 +349,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
 
   // -------- Normalized list items for the current view --------
   const listItems: ListItem[] = useMemo(() => {
-    if (apiVersion === "v2") {
+    if (isMatchCentric) {
       if (!v2Match) {
         return matches.map((m) => ({
           key: m.slug,
@@ -362,7 +366,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
       logo: c.image_url || c.logo || null,
       extra: (apiVersion === "v3" ? c.group : c.stream_type)?.toUpperCase() || meta.label,
     }));
-  }, [apiVersion, v2Match, matches, v2Channels, channels, meta.label]);
+  }, [apiVersion, isMatchCentric, v2Match, matches, v2Channels, channels, meta.label]);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return listItems;
@@ -371,13 +375,13 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   }, [listItems, searchQuery]);
 
   const selectedKey = useMemo(() => {
-    if (apiVersion === "v2") return v2Selected?.id ?? null;
+    if (isMatchCentric) return v2Selected?.id ?? null;
     if (!selectedChannel || selectedVersion !== apiVersion) return null;
     return String(selectedChannel.id ?? channelKey(selectedChannel.name));
-  }, [apiVersion, v2Selected, selectedChannel, selectedVersion]);
+  }, [apiVersion, isMatchCentric, v2Selected, selectedChannel, selectedVersion]);
 
   const onItemClick = useCallback((key: string) => {
-    if (apiVersion === "v2") {
+    if (isMatchCentric) {
       if (!v2Match) {
         const m = matches.find((x) => x.slug === key);
         if (m) openMatch(m);
@@ -389,19 +393,21 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     }
     const c = channels.find((x) => String(x.id ?? channelKey(x.name)) === key);
     if (c) selectFlatChannel(c);
-  }, [apiVersion, v2Match, matches, v2Channels, channels, openMatch, selectV2Channel, selectFlatChannel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiVersion, isMatchCentric, v2Match, matches, v2Channels, channels, openMatch, selectV2Channel, selectFlatChannel]);
 
   // -------- Player config --------
   const playerConfig = useMemo(() => {
-    if (apiVersion === "v2") {
+    if (isMatchCentric) {
       if (!v2Selected || !v2Stream) return null;
+      const labelVer = apiVersion === "v5" ? "V5" : "V2";
       return {
         streamUrl: v2Stream.streamUrl,
         streamType: v2Stream.streamType,
         clearKeys: v2Stream.clearKeys,
         title: v2Selected.name,
         stats: [
-          { label: "Server", value: "V2", icon: "zap" as const },
+          { label: "Server", value: labelVer, icon: "zap" as const },
           { label: "Type", value: v2Stream.streamType.toUpperCase(), icon: "shield" as const },
           { label: "Status", value: "ACTIVE", highlight: true as const, icon: "monitor" as const },
         ],
@@ -455,12 +461,12 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
         { label: "Group", value: ch.group || "General", highlight: true as const, icon: "monitor" as const },
       ],
     };
-  }, [apiVersion, v2Selected, v2Stream, selectedChannel, selectedVersion, apiBaseUrl]);
+  }, [apiVersion, isMatchCentric, v2Selected, v2Stream, selectedChannel, selectedVersion, apiBaseUrl]);
 
   const listCount = filteredItems.length;
   const listNoun = inMatchList ? "match" : "channel";
-  const hasActiveSelection = apiVersion === "v2" ? !!v2Selected : (!!selectedChannel && selectedVersion === apiVersion);
-  const activeTitle = apiVersion === "v2" ? v2Selected?.name : selectedChannel?.name;
+  const hasActiveSelection = isMatchCentric ? !!v2Selected : (!!selectedChannel && selectedVersion === apiVersion);
+  const activeTitle = isMatchCentric ? v2Selected?.name : selectedChannel?.name;
 
   return (
     <div className="min-h-dvh">
@@ -494,7 +500,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
               </button>
               {isServerDropdownOpen && (
                 <div className="absolute top-full right-0 mt-2 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
-                  {(["v2", "v3", "v4"] as ApiVersion[]).map((v) => (
+                  {(["v2", "v3", "v4", "v5"] as ApiVersion[]).map((v) => (
                     <button
                       key={v}
                       onClick={() => switchServer(v)}
@@ -576,7 +582,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
             {/* Desktop list panel */}
             {!inMatchList && (
               <div className="hidden lg:flex lg:flex-col lg:w-72 shrink-0 max-h-[calc(100dvh-12rem)]">
-                {apiVersion === "v2" && v2Match && (
+                {isMatchCentric && v2Match && (
                   <button
                     onClick={backToMatches}
                     className="flex items-center gap-2 mb-3 px-3 py-2 border border-red-500 bg-red-500/10 text-xs font-mono font-bold text-red-500 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all cursor-pointer shrink-0 rounded"
@@ -618,7 +624,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
               {/* Mobile picker */}
               {!inMatchList && (
                 <div className="relative lg:hidden w-full shrink-0">
-                  {apiVersion === "v2" && v2Match && (
+                  {isMatchCentric && v2Match && (
                     <button
                       onClick={backToMatches}
                       className="flex items-center gap-2 mb-3 px-3 py-2 border border-red-500 bg-red-500/10 text-xs font-mono font-bold text-red-500 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all cursor-pointer w-full justify-center rounded"
@@ -786,7 +792,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                     <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">Choose from the left panel</p>
                   </div>
                 </div>
-              ) : apiVersion === "v2" && v2StreamLoading ? (
+              ) : isMatchCentric && v2StreamLoading ? (
                 <div className="flex items-center justify-center border border-border-alt bg-card aspect-video w-full">
                   <div className="flex flex-col items-center gap-3">
                     <svg className="w-8 h-8 text-red-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -805,9 +811,9 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-mono text-sm font-bold text-red-500 uppercase tracking-wider">Stream Connection Failed</h3>
+                       <h3 className="font-mono text-sm font-bold text-red-500 uppercase tracking-wider">Stream Connection Failed</h3>
                       <p className="font-mono text-[10px] text-fg-dim mt-1.5 leading-relaxed max-w-sm mx-auto">
-                        {apiVersion === "v2" && v2StreamError 
+                        {isMatchCentric && v2StreamError 
                           ? "This channel is currently offline or unreachable. Please try switching to another server or backup channel." 
                           : "Stream details could not be resolved."}
                       </p>
@@ -823,7 +829,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                       </div>
                       <div className="min-w-0">
                         <h2 className="font-mono text-lg font-bold text-fg tracking-tight truncate">{activeTitle}</h2>
-                        {apiVersion === "v2" && v2Match && (
+                        {isMatchCentric && v2Match && (
                           <p className="font-mono text-[10px] text-fg-dim uppercase tracking-widest truncate">{v2Match.name}</p>
                         )}
                       </div>
