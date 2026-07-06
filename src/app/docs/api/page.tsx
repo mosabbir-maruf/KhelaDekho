@@ -215,18 +215,18 @@ export default function DecryptionApiPage() {
   "success": true,
   "data": {
     "competitions": [{
-      "id": "70excpe1synn9kadnbppahdn7",
-      "name": "World Cup",
-      "area": "International",
-      "image_url": "https://cdn.sportfeeds.io/sdl/images/competition/badge/small/31wzvAi8ZKpEMtfqHdvRl.png",
+      "id": "premier-league",
+      "name": "Premier League",
+      "area": "England",
+      "image_url": "https://cdn.provider.example/competition/badge/abc.png",
       "matches": [{
-        "id": "1bS5LilQ0iNJxMe5pWBXA",
-        "start_date": "2026-07-05T20:00:00Z",
-        "status": "RESULT",
-        "score_team_a": 1,
-        "score_team_b": 2,
-        "team_a": { "id": "ajab3n...", "name": "Brazil", "code": "BRA", "image_url": "https://cdn.sportfeeds.io/sdl/images/team/crest/medium/pbi1_AHDJSppsYVJLSngB.png" },
-        "team_b": { "id": "e1vf7k...", "name": "Norway", "code": "NOR", "image_url": "https://cdn.sportfeeds.io/sdl/images/team/crest/medium/0fmSMr-CdA3m0oQliE26M.png" }
+        "id": "match-123",
+        "start_date": "2026-07-06T20:00:00Z",
+        "status": "LIVE",
+        "score_team_a": 2,
+        "score_team_b": 1,
+        "team_a": { "id": "team-a", "name": "Arsenal", "code": "ARS", "image_url": "https://cdn.provider.example/team/arsenal.png" },
+        "team_b": { "id": "team-b", "name": "Chelsea", "code": "CHE", "image_url": "https://cdn.provider.example/team/chelsea.png" }
       }]
     }],
     "total_matches": 1
@@ -243,17 +243,17 @@ export default function DecryptionApiPage() {
   "success": true,
   "data": {
     "matches": [{
-      "id": "fifa-world-cup-2026-round-of-16",
-      "slug": "fifa-world-cup-2026-round-of-16",
-      "name": "Fifa World Cup 2026- Round of 16",
-      "sport": "",
+      "id": "match-slug-1",
+      "slug": "match-slug-1",
+      "name": "Arsenal vs. Chelsea",
+      "sport": "football",
       "status": "live",
       "is_live": true,
-      "start_date": "2026-07-07T01:00:00+06:00",
-      "end_date": "2026-07-07T05:00:00+06:00",
-      "poster": "https://pub-3b1599daada84535989ad7d8f7f54bb1.r2.dev/match-sliders/01KWVJFBJD99WYTNP2YD3A0XBR.jpeg",
-      "team_a": { "name": "Spain", "logo": "https://pub-3b1599daada84535989ad7d8f7f54bb1.r2.dev/01KTHXZXN5CWKHEJ1ZRH6WHK6B.png" },
-      "team_b": { "name": "Portugal", "logo": "https://pub-3b1599daada84535989ad7d8f7f54bb1.r2.dev/01KTDWSGTP3WQ4X7EWB2XENBX2.jpeg" }
+      "start_date": "2026-07-06T20:00:00+06:00",
+      "end_date": "2026-07-06T22:00:00+06:00",
+      "poster": "https://cdn.provider.example/poster.jpg",
+      "team_a": { "name": "Arsenal", "logo": "https://cdn.provider.example/arsenal.png" },
+      "team_b": { "name": "Chelsea", "logo": "https://cdn.provider.example/chelsea.png" }
     }]
   },
   "error": null
@@ -267,11 +267,11 @@ export default function DecryptionApiPage() {
               <CodeBlock code={`{
   "success": true,
   "data": {
-    "slug": "fifa-world-cup-2026-round-of-16",
+    "slug": "match-slug-1",
     "channels": [{
-      "id": "toffee-server-1",
-      "name": "Toffee",
-      "server": "Server 1"
+      "id": "dlhd-54",
+      "name": "FOX Sports",
+      "server": "TV"
     }]
   },
   "error": null
@@ -286,16 +286,16 @@ export default function DecryptionApiPage() {
   "success": true,
   "data": {
     "matches": [{
-      "id": "portugal-vs-spain",
-      "slug": "portugal-vs-spain",
-      "name": "Portugal vs. Spain",
+      "id": "arsenal-vs-chelsea",
+      "slug": "arsenal-vs-chelsea",
+      "name": "Arsenal vs. Chelsea",
       "sport": "football",
       "status": "upcoming",
       "is_live": false,
       "start_date": 1783364400000,
-      "poster": "https://www.thesportsdb.com/images/media/event/thumb/xb1fyz1783166773.jpg",
-      "team_a": { "name": "Portugal", "logo": "https://r2.thesportsdb.com/images/media/team/badge/swqvpy1455466083.png" },
-      "team_b": { "name": "Spain", "logo": "https://r2.thesportsdb.com/images/media/team/badge/ncgqyr1726166942.png" }
+      "poster": "https://cdn.provider.example/poster.jpg",
+      "team_a": { "name": "Arsenal", "logo": "https://cdn.provider.example/arsenal.png" },
+      "team_b": { "name": "Chelsea", "logo": "https://cdn.provider.example/chelsea.png" }
     }]
   },
   "error": null
@@ -309,8 +309,8 @@ export default function DecryptionApiPage() {
               <CodeBlock code={`{
   "success": true,
   "data": {
-    "name": "Peacock 4K (HEVC)",
-    "stream_url": "/api/v5/proxy?url=https%3A%2F%2Fdami-tv.pro%2Flive-hls%2Fchannel%2Fwc%2F2026-07-06%2Fpor-esp%2Fpeacock-4k-hevc%2Fplaylist.m3u8%3Ftk%3DRoaJuyDOfDORzuH0AlD2Mw%26e%3D1783401243",
+    "name": "FOX Sports 4K",
+    "stream_url": "/api/v5/proxy?url=https%3A%2F%2Fprovider.example.com%2Fplaylist.m3u8%3Ftk%3Dabc123",
     "stream_type": "hls",
     "drm_kid": null,
     "drm_key": null
@@ -328,15 +328,15 @@ export default function DecryptionApiPage() {
   "data": {
     "channels": [{
       "id": "sport1",
-      "name": "🏆 Iphone-2",
-      "stream_url": "https://edge22.776740.ir.cdn.ir/hls2/sport.m3u8",
+      "name": "Sky Sports HD",
+      "stream_url": "https://cdn.provider.example/hls/sky-sports.m3u8",
       "stream_type": "hls",
       "drm_kid": null,
       "drm_key": null,
-      "cached_at": "2026-07-06T17:13:07.246Z"
+      "cached_at": "2026-07-06T17:13:07Z"
     }],
     "total": 120,
-    "cached_at": "2026-07-06T17:13:07.246Z"
+    "cached_at": "2026-07-06T17:13:07Z"
   },
   "error": null
 }`} />
