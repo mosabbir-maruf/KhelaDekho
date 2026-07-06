@@ -54,7 +54,7 @@ async function makeShakaPlayer(video: HTMLVideoElement, shaka: typeof shakaModul
   if (netEngine) {
     netEngine.registerRequestFilter((type: unknown, request: { headers: Record<string, string> }) => {
       if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
-        const apiBase = getApiBaseUrl();
+        const apiBase = getApiBaseUrl().replace(/\/+$/, '');
         if (apiBase) request.headers['Referer'] = `${apiBase}/`;
       }
     });
