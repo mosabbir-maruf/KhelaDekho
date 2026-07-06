@@ -29,7 +29,7 @@ KhelaDekho-Frontend/
 │   │   │   ├── player/[playerId]/# Player detail
 │   │   │   └── team/[teamId]/    # Team detail
 │   │   ├── live-matches/         # Multi-server match streaming (V2/V3/V4/V5)
-│   │   ├── live-tv/              # Live TV (V3 KV playlist)
+│   │   ├── live-tv/              # Live TV (V5 DLHD channels, falls back to V3 KV)
 │   │   ├── v2/channel/[id]/      # V2 channel player
 │   │   ├── v4/channel/[id]/      # V4 channel player
 │   │   ├── admin/                # Admin panel (default server + V3 playlists)
@@ -61,11 +61,15 @@ The **Live Matches** page can play from multiple sources ("servers"):
   managed from the **admin panel**. It is served by the frontend edge route
   `GET /api/playlist?source=live-matches`, which fetches/merges the configured sources,
   de-duplicates channels, and applies per-channel overrides (custom name, order, hidden,
-  default). On Live Matches, V3 also injects the V4 channel list. The same route powers
-  the **Live TV** page (`source=live-tv`).
+  default). On Live Matches, V3 also injects the V4 channel list.
 
 > V3 has no external provider — it is entirely admin-managed content in KV, so add your
 > own playlist sources from the admin panel before it shows channels.
+
+The **Live TV** page uses **V5 DLHD channels** as its primary source (878+ 24/7 channels
+from `GET /api/v5/tv/channels`), with automatic categorization, country detection, and
+on-demand stream resolution through the V5 proxy. Falls back to the V3 KV playlist
+if the V5 backend is unavailable.
 
 ---
 
