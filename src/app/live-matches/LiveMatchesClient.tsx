@@ -305,9 +305,13 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   return (
     <div className="min-h-dvh">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
-        <div className="relative border border-border-alt bg-card overflow-hidden p-8 md:p-12">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        <div className="relative border border-border-alt bg-card p-8 md:p-12">
+          {/* Decorative blurs clipped to the hero box; kept in their own
+              overflow-hidden wrapper so the Switch Server dropdown isn't clipped. */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+          </div>
           <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 z-10">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-border-alt bg-hover text-[10px] font-mono uppercase tracking-widest text-fg-dim">
