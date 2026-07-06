@@ -99,7 +99,7 @@ export function Footer() {
               <span>© {new Date().getFullYear()} </span><Link href="/" className="hover:text-fg transition-colors">KhelaDekho</Link>
             </div>
             <span className="hidden sm:block border-l border-border-alt h-3" />
-            <span className="mt-1 sm:mt-0 text-fg-dim">A sideproject by Mosabbir Maruf</span>
+            <Link href="https://github.com/mosabbir-maruf" target="_blank" rel="noopener noreferrer" className="mt-1 sm:mt-0 text-fg-dim hover:text-fg transition-colors">A sideproject by Mosabbir Maruf</Link>
           </div>
         </div>
       </div>
