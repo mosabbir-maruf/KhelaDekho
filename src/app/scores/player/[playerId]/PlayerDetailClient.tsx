@@ -151,7 +151,7 @@ export default function PlayerDetailClient({ initialPlayer, playerName }: Props)
               {player.current_team_name && (
                 <div className="flex flex-col items-center md:items-start gap-1">
                   <span className="text-[8px] font-mono text-fg-faint uppercase tracking-widest">Current Club</span>
-                  <Link href={`/scores/team/${player.current_team_id}?name=${encodeURIComponent(player.current_team_name)}`} className="flex items-center gap-2 group cursor-pointer">
+                  <Link prefetch={false} href={`/scores/team/${player.current_team_id}?name=${encodeURIComponent(player.current_team_name)}`} className="flex items-center gap-2 group cursor-pointer">
                     {player.current_team_image_url ? (
                       <Image src={player.current_team_image_url} alt="" width={18} height={18} className="object-contain" unoptimized style={{ width: "auto", height: "auto" }} />
                     ) : (

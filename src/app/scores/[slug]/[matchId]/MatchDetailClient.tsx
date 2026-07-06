@@ -194,9 +194,9 @@ function EventTimeline({ events, full = false }: { events: GoalMatchEvent[]; ful
                   <div className="min-w-0">
                     <div className="text-[13px] font-bold text-fg truncate">
                       {e.scorer ? (
-                        <Link href={`/scores/player/${e.scorer.id}?name=${encodeURIComponent(e.scorer.name)}`} className="hover:text-red-400 transition-colors">{d.main}</Link>
+                        <Link prefetch={false} href={`/scores/player/${e.scorer.id}?name=${encodeURIComponent(e.scorer.name)}`} className="hover:text-red-400 transition-colors">{d.main}</Link>
                       ) : e.player ? (
-                        <Link href={`/scores/player/${e.player.id}?name=${encodeURIComponent(e.player.name)}`} className="hover:text-red-400 transition-colors">{d.main}</Link>
+                        <Link prefetch={false} href={`/scores/player/${e.player.id}?name=${encodeURIComponent(e.player.name)}`} className="hover:text-red-400 transition-colors">{d.main}</Link>
                       ) : e.in_player ? (
                         <span>{d.main}</span>
                       ) : (
@@ -464,7 +464,7 @@ function PitchPlayer({ p, color, textColor, marks }: { p: GoalLineupPlayer; colo
     </div>
   );
   return p.player?.id ? (
-    <Link href={`/scores/player/${p.player.id}?name=${encodeURIComponent(name)}`} className="hover:scale-105 transition-transform duration-200">
+    <Link prefetch={false} href={`/scores/player/${p.player.id}?name=${encodeURIComponent(name)}`} className="hover:scale-105 transition-transform duration-200">
       {inner}
     </Link>
   ) : (
@@ -1058,14 +1058,14 @@ export default function MatchDetailClient({ slug, matchId }: Props) {
                   {match.scorers_team_a?.map((s, i) => (
                     <span key={i} className="text-fg-dim">
                       ⚽ {s.scorer ? (
-                        <Link href={`/scores/player/${s.scorer.id}?name=${encodeURIComponent(s.scorer.name)}`} className="hover:text-red-400 transition-colors">{s.scorer.name}</Link>
+                        <Link prefetch={false} href={`/scores/player/${s.scorer.id}?name=${encodeURIComponent(s.scorer.name)}`} className="hover:text-red-400 transition-colors">{s.scorer.name}</Link>
                       ) : "?"} {s.period?.minute ? `${s.period.minute}'` : ""}
                     </span>
                   ))}
                   {match.scorers_team_b?.map((s, i) => (
                     <span key={i} className="text-fg-dim">
                       ⚽ {s.scorer ? (
-                        <Link href={`/scores/player/${s.scorer.id}?name=${encodeURIComponent(s.scorer.name)}`} className="hover:text-red-400 transition-colors">{s.scorer.name}</Link>
+                        <Link prefetch={false} href={`/scores/player/${s.scorer.id}?name=${encodeURIComponent(s.scorer.name)}`} className="hover:text-red-400 transition-colors">{s.scorer.name}</Link>
                       ) : "?"} {s.period?.minute ? `${s.period.minute}'` : ""}
                     </span>
                   ))}

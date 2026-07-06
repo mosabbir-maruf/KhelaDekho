@@ -117,6 +117,7 @@ export default function TeamDetailClient({ initialTeam, teamName }: Props) {
 
               return (
                 <Link
+                  prefetch={false}
                   key={match.id}
                   href={`/scores/${match.slug}/${match.id}`}
                   className="flex items-center gap-3 py-2.5 px-3 bg-input/30 border border-border-alt rounded hover:border-red-500/20 transition-colors text-xs font-mono"
