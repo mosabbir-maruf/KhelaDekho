@@ -193,10 +193,10 @@ export default function LiveTvPage() {
   }, []);
 
   // -------- Resolve stream when channel selected --------
+  const streamKeyRef = useRef(0);
   useEffect(() => {
     if (!selectedChannel) return;
-    const controller = new AbortController();
-    const signal = controller.signal;
+    const key = ++streamKeyRef.current;
 
     if (selectedChannel.source === 'v5') {
       setIsResolving(true);
@@ -205,22 +205,26 @@ export default function LiveTvPage() {
       const xkey = getXKey();
       const headers: Record<string, string> = { 'Accept': 'application/json' };
       if (xkey) headers['xkey'] = xkey;
+      const controller = new AbortController();
 
-      fetch(`${apiBase}/api/v5/tv/channel/${selectedChannel.v5Id}/stream`, { signal, headers })
+      fetch(`${apiBase}/api/v5/tv/channel/${selectedChannel.v5Id}/stream`, { signal: controller.signal, headers })
         .then(res => { if (!res.ok) throw new Error(); return res.json(); })
         .then(body => {
+          if (key !== streamKeyRef.current) return;
           const streamUrl = body?.data?.stream_url;
           if (streamUrl) setResolvedStreamUrl(streamUrl.startsWith('http') ? streamUrl : apiBase + streamUrl);
         })
-        .catch(() => setResolvedStreamUrl(null))
-        .finally(() => setIsResolving(false));
-    } else if (selectedChannel.source === 'kv' && selectedChannel.directUrl) {
+        .catch(() => { if (key === streamKeyRef.current) setResolvedStreamUrl(null); })
+        .finally(() => { if (key === streamKeyRef.current) setIsResolving(false); });
+
+      return () => controller.abort();
+    }
+
+    if (selectedChannel.source === 'kv' && selectedChannel.directUrl) {
       const url = selectedChannel.directUrl;
       setResolvedStreamUrl(url.startsWith("http://") ? `/api/iptv/proxy?url=${encodeURIComponent(url)}` : url);
       setIsResolving(false);
     }
-
-    return () => controller.abort();
   }, [selectedChannel]);
 
   // -------- Derived data --------
@@ -295,6 +299,8 @@ export default function LiveTvPage() {
     setSelectedChannel(null);
     setResolvedStreamUrl(null);
     setSearchQuery("");
+    setActiveCategory("All");
+    setActiveCountry("All");
     router.replace(`/live-tv`, { scroll: false });
   }, [router]);
 
@@ -343,9 +349,11 @@ export default function LiveTvPage() {
             )}
           </div>
 
+          {!isBrowseMode && (
           <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-3">
             Stream buffering? Switch channel or server.
           </p>
+          )}
         </div>
 
         {/* ─── Loading ─── */}

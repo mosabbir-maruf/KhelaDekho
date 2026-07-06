@@ -26,7 +26,6 @@ import Shield from "lucide-react/dist/esm/icons/shield";
 type Tab = "summary" | "events" | "stats" | "lineups" | "commentary" | "ratings";
 
 interface Props {
-  initialDetail?: GoalMatchDetail;
   slug: string;
   matchId: string;
 }
@@ -912,12 +911,12 @@ function H2HMatchesList({ matches }: { matches: GoalMatch[] }) {
 
 /* ---------------- Main ---------------- */
 
-export default function MatchDetailClient({ initialDetail, slug, matchId }: Props) {
+export default function MatchDetailClient({ slug, matchId }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("summary");
-  const [match, setMatch] = useState(initialDetail);
-  const [initialLoading, setInitialLoading] = useState(!initialDetail);
+  const [match, setMatch] = useState<GoalMatchDetail | undefined>(undefined);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Sync tab from URL on mount/update
   useEffect(() => {
@@ -938,14 +937,17 @@ export default function MatchDetailClient({ initialDetail, slug, matchId }: Prop
   }, []);
 
   const refreshMatch = useCallback(async () => {
-    const detail = await getGoalMatchDetail(matchId, slug);
-    if (detail) setMatch(detail);
+    try {
+      const detail = await getGoalMatchDetail(matchId, slug);
+      if (detail) setMatch(detail);
+    } catch {}
   }, [matchId, slug]);
 
   useEffect(() => {
-    refreshMatch().then(() => setInitialLoading(false));
-    const interval = setInterval(refreshMatch, 30000);
-    return () => clearInterval(interval);
+    let active = true;
+    refreshMatch().then(() => { if (active) setInitialLoading(false); });
+    const interval = setInterval(() => refreshMatch(), 30000);
+    return () => { active = false; clearInterval(interval); };
   }, [refreshMatch]);
 
   if (!match) {
