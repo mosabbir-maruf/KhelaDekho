@@ -351,6 +351,21 @@ export default function DecryptionApiPage() {
             </div>
             <div className="border border-border-alt bg-card p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V5 TV</span>
+                <h3 className="text-sm font-mono font-semibold text-fg">GET /api/v5/tv/channel/:id/stream</h3>
+              </div>
+              <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "id": "dlhd-521",
+    "stream_url": "/api/v5/proxy?t=1",
+    "stream_type": "hls"
+  },
+  "error": null
+}`} />
+            </div>
+            <div className="border border-border-alt bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest border border-border-alt px-2 py-0.5">V4</span>
                 <h3 className="text-sm font-mono font-semibold text-fg">GET /api/v4/channels</h3>
               </div>

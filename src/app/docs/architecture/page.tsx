@@ -125,7 +125,7 @@ const scores = await getGoalScores();          // GET /api/v1/scores
                         </li>
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
-                            <span><strong>Rate Limiting</strong> — Sliding-window IP-based tracking on data endpoints; proxy routes are exempt.</span>
+                            <span><strong>Rate Limiting</strong> — Sliding-window IP-based tracking on data endpoints; proxy routes and TV channel stream resolution are exempt (required for live playlist refreshes).</span>
                         </li>
                     </ul>
                 </div>
