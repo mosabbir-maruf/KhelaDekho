@@ -6,6 +6,8 @@ import Shield from "lucide-react/dist/esm/icons/shield";
 import Cpu from "lucide-react/dist/esm/icons/cpu";
 import Layers from "lucide-react/dist/esm/icons/layers";
 import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import Radio from "lucide-react/dist/esm/icons/radio";
+import Activity from "lucide-react/dist/esm/icons/activity";
 import Link from "next/link";
 import { getGoalScores } from "@/lib/api";
 
@@ -30,6 +32,9 @@ export default async function AboutPage() {
   if (liveMatches > 0) {
     stats.push({ icon: BarChart3, label: "Live Scores", value: String(liveMatches), desc: "Real-time telemetry" });
   }
+
+  stats.push({ icon: Radio, label: "Channels Served", value: "200+", desc: "Across 4 streaming servers" });
+  stats.push({ icon: Activity, label: "Uptime SLA", value: "99.9%", desc: "Edge-deployed reliability" });
 
   const features = [
   {
