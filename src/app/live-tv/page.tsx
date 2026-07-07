@@ -9,7 +9,7 @@ import { getApiBaseUrl, getXKey } from "@/lib/api";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 
-import { Virtuoso } from "react-virtuoso";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Search from "lucide-react/dist/esm/icons/search";
 import X from "lucide-react/dist/esm/icons/x";
@@ -76,7 +76,7 @@ function getLogoUrl(name: string): string | null {
   return null;
 }
 
-function Logo({ src, name, className }: { src: string | null; name: string; className?: string }) {
+function Logo({ src, className }: { src: string | null; name?: string; className?: string }) {
   const [err, setErr] = useState(false);
   if (!src || err) {
     return (
@@ -102,8 +102,8 @@ export default function LiveTvPage() {
   const [showAllCountries, setShowAllCountries] = useState(false);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
-  const virtuosoRef = useRef<any>(null);
-  const mobileVirtuosoRef = useRef<any>(null);
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const mobileVirtuosoRef = useRef<VirtuosoHandle>(null);
   const lastScrolledKeyRef = useRef<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
 

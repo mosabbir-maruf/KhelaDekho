@@ -128,8 +128,8 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const apiBaseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
   const { copied, copy: handleShare } = useCopyButton();
   const listCache = useRef<Map<string, ChannelData[]>>(new Map());
-  const virtuosoRef = useRef<any>(null);
-  const mobileVirtuosoRef = useRef<any>(null);
+  const virtuosoRef = useRef<React.ComponentRef<typeof Virtuoso>>(null);
+  const mobileVirtuosoRef = useRef<React.ComponentRef<typeof Virtuoso>>(null);
   const lastScrolledKeyRef = useRef<string | null>(null);
 
   const meta = {

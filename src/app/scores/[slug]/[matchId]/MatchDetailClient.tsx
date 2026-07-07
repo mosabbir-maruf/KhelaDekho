@@ -944,11 +944,17 @@ export default function MatchDetailClient({ slug, matchId }: Props) {
     } catch {}
   }, [matchId, slug]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { refreshMatch(); }, [refreshMatch]);
+
   useEffect(() => {
-    let active = true;
-    refreshMatch().then(() => { if (active) setInitialLoading(false); });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInitialLoading(false);
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => refreshMatch(), 30000);
-    return () => { active = false; clearInterval(interval); };
+    return () => clearInterval(interval);
   }, [refreshMatch]);
 
   if (!match) {

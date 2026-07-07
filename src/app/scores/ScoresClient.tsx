@@ -57,12 +57,13 @@ function formatKickoff(iso: string): string {
 }
 
 function UpdatedTime({ iso }: { iso: string }) {
-  const [, setTick] = useState(0);
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  const [diff, setDiff] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick(t => t + 1), 30000);
+    const tick = () => setDiff(Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+    tick();
+    const id = setInterval(tick, 30000);
     return () => clearInterval(id);
-  }, []);
+  }, [iso]);
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
