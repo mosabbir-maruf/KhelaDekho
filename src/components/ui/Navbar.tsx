@@ -92,6 +92,14 @@ export function Navbar() {
                 Live Matches
               </Link>
               <Link
+                href="/cricket"
+                prefetch={false}
+                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/cricket") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                  }`}
+              >
+                Cricket
+              </Link>
+              <Link
                 href="/live-tv"
                 className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}

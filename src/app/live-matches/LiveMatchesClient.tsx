@@ -95,7 +95,7 @@ function getUrlParams() {
   return { v: params.get("v"), m: params.get("m"), ch: params.get("ch") };
 }
 
-export default function LiveMatchesClient({ initialVersion }: { initialVersion: ApiVersion }) {
+export default function LiveMatchesClient({ initialVersion, initialSport }: { initialVersion: ApiVersion; initialSport?: string }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -105,6 +105,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
+  const [sport, setSport] = useState(initialSport || "football");
 
   // V3 / V4 flat channels
   const [channels, setChannels] = useState<ChannelData[]>([]);
@@ -248,7 +249,8 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
       setLoading(true);
       try {
         const versionPath = apiVersion === "v5" ? "v5" : "v2";
-        const res = await fetch(`${baseUrl}/api/${versionPath}/matches`, { signal: controller.signal, headers: authHeaders() });
+        const sportQ = apiVersion === "v5" ? `?sport=${sport}` : "";
+        const res = await fetch(`${baseUrl}/api/${versionPath}/matches${sportQ}`, { signal: controller.signal, headers: authHeaders() });
         const body = res.ok ? await res.json() : {};
         const list: MatchItem[] = body?.data?.matches || [];
         if (!active) return;
@@ -265,7 +267,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
       }
     })();
     return () => { active = false; controller.abort(); };
-  }, [apiVersion, versionResolved, apiBaseUrl, authHeaders]);
+  }, [apiVersion, sport, versionResolved, apiBaseUrl, authHeaders]);
 
   // -------- V2 / V5: resolve a channel's stream on demand --------
   const resolveV2 = useRef<AbortController | null>(null);
@@ -514,32 +516,56 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                 {inMatchList ? `${matches.length} match${matches.length !== 1 ? "es" : ""} available` : `${listCount} channel${listCount !== 1 ? "s" : ""} indexed`}
               </p>
             </div>
-            <div className="relative">
-              <button
-                onClick={() => setIsServerDropdownOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03]"
-              >
-                <span className={`w-2 h-2 rounded-full ${meta.color}`} />
-                Switch Server
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isServerDropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
-                  {(["v2", "v3", "v4", "v5"] as ApiVersion[]).map((v) => (
+            <div className="flex items-center gap-2">
+              {apiVersion === "v5" && (
+                <div className="flex border border-border-alt">
+                  {["football", "cricket"].map(s => (
                     <button
-                      key={v}
-                      onClick={() => switchServer(v)}
-                      className={`w-full text-left px-4 py-2 text-xs font-mono transition-all cursor-pointer flex items-center gap-2 ${apiVersion === v
-                          ? "text-red-400 bg-red-500/[0.03] font-semibold"
-                          : "text-fg-dim hover:text-fg hover:bg-hover"
-                        }`}
+                      key={s}
+                      onClick={() => {
+                        setSport(s);
+                        setV2Match(null);
+                        setSearchQuery("");
+                        router.replace(`/live-matches?v=v5${s === "football" ? "" : `&s=${s}`}`, { scroll: false });
+                      }}
+                      className={`px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-all cursor-pointer ${
+                        sport === s
+                          ? "bg-red-500/10 text-red-300 border-b-2 border-red-500"
+                          : "bg-input text-fg-dim hover:text-fg"
+                      }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${VERSION_META[v].color}`} />
-                      {v.toUpperCase()}
+                      {s}
                     </button>
                   ))}
                 </div>
               )}
+              <div className="relative">
+                <button
+                  onClick={() => setIsServerDropdownOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03]"
+                >
+                  <span className={`w-2 h-2 rounded-full ${meta.color}`} />
+                  Switch Server
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isServerDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
+                    {(["v2", "v3", "v4", "v5"] as ApiVersion[]).map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => switchServer(v)}
+                        className={`w-full text-left px-4 py-2 text-xs font-mono transition-all cursor-pointer flex items-center gap-2 ${apiVersion === v
+                            ? "text-red-400 bg-red-500/[0.03] font-semibold"
+                            : "text-fg-dim hover:text-fg hover:bg-hover"
+                          }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${VERSION_META[v].color}`} />
+                        {v.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
