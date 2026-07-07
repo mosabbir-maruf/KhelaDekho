@@ -290,8 +290,10 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     setV2StreamLoading(true);
     try {
       const versionPath = apiVersion === "v5" ? "v5" : "v2";
-      const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/stream?ch=${encodeURIComponent(ch.id)}`, { signal: controller.signal, headers: authHeaders() });
+      const sportQ = apiVersion === "v5" ? `&sport=${sport}` : "";
+      const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/stream?ch=${encodeURIComponent(ch.id)}${sportQ}`, { signal: controller.signal, headers: authHeaders() });
       const body = res.ok ? await res.json() : {};
+
       const d = body?.data;
       if (d?.stream_url) {
         const url = String(d.stream_url).startsWith("http") ? d.stream_url : apiBaseUrl + d.stream_url;
@@ -308,7 +310,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     } finally {
       if (!controller.signal.aborted) setV2StreamLoading(false);
     }
-  }, [apiBaseUrl, apiVersion, v2Match, authHeaders]);
+  }, [apiBaseUrl, apiVersion, v2Match, sport, authHeaders]);
 
   // -------- V2 / V5: channels for the opened match --------
   useEffect(() => {
@@ -322,7 +324,8 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
       setV2StreamError(false);
       try {
         const versionPath = apiVersion === "v5" ? "v5" : "v2";
-        const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/channels`, { signal: controller.signal, headers: authHeaders() });
+        const sportQ = apiVersion === "v5" ? `?sport=${sport}` : "";
+        const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/channels${sportQ}`, { signal: controller.signal, headers: authHeaders() });
         const body = res.ok ? await res.json() : {};
         if (!active) return;
         const channelList = body?.data?.channels || [];
@@ -335,7 +338,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
       }
     })();
     return () => { active = false; controller.abort(); };
-  }, [apiVersion, v2Match, apiBaseUrl, authHeaders, selectV2Channel]);
+  }, [apiVersion, v2Match, sport, apiBaseUrl, authHeaders, selectV2Channel]);
 
   const openMatch = useCallback((m: MatchItem) => {
     setV2Match(m);
