@@ -26,7 +26,7 @@ KhelaDekho-Frontend/
 │   │   ├── manifest.ts / robots.ts / sitemap.ts  # PWA + SEO
 │   │   ├── globals.css              # Global Tailwind styles
 │   │   ├── scores/                  # V1 score provider UI
-│   │   │   ├── page.tsx             # Static shell → ScoresClient
+│   │   │   ├── page.tsx             # Dynamic shell → ScoresClient
 │   │   │   ├── ScoresClient.tsx     # Scores list, tabs, day strip, polling
 │   │   │   ├── [slug]/[matchId]/    # Match detail (events, lineups, stats)
 │   │   │   ├── player/[playerId]/   # Player detail
@@ -36,7 +36,8 @@ KhelaDekho-Frontend/
 │   │   │   ├── layout.tsx           # Metadata
 │   │   │   └── LiveMatchesClient.tsx  # Match list, channels, player, server switch
 │   │   ├── live-tv/                 # Live TV (V5 DLHD 878+ channels, falls back V3 KV)
-│   │   │   ├── page.tsx             # Grid/card layout, category+country filters
+│   │   │   ├── page.tsx             # Server wrapper (dynamic)
+│   │   │   ├── LiveTvClient.tsx     # Grid/card layout, category+country filters
 │   │   │   └── layout.tsx           # Metadata
 │   │   ├── v4/channel/[id]/page.tsx # V4 channel player page
 │   │   ├── admin/                   # Admin panel (default server, V3 playlists)
@@ -53,7 +54,7 @@ KhelaDekho-Frontend/
 │   │       ├── contact/             # Contact form submission
 │   │       └── admin/               # verify · settings · playlists (KV, admin key)
 │   ├── components/
-│   │   ├── ui/                      # Navbar, Sidebar, VideoPlayer, ChannelListItem, PageHero, etc.
+│   │   ├── ui/                      # Navbar, Sidebar, VideoPlayer, ChannelListItem, PageHero, StatsGrid, etc.
 │   │   └── GoogleAnalytics.tsx     # Analytics component
 │   ├── hooks/                       # useCopyButton, useDevicePlatform
 │   ├── lib/                         # api.ts, config.ts, logger.ts, streamSelector.ts, analytics.ts

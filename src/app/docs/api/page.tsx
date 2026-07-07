@@ -320,7 +320,7 @@ export default function DecryptionApiPage() {
   "success": true,
   "data": {
     "name": "Sports 4K",
-    "stream_url": "/api/v5/proxy?url=https%3A%2F%2Fprovider.example.com%2Fplaylist.m3u8%3Ftk%3Dabc123",
+    "stream_url": "/api/v5/proxy?t=1",
     "stream_type": "hls",
     "drm_kid": null,
     "drm_key": null
