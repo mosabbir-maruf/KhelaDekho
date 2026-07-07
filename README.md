@@ -123,8 +123,21 @@ TELEGRAM_CHAT_ID=your-chat-id
 ADMIN_SECRET_KEY=your-admin-secret-key
 ```
 
-The V3 playlist and admin settings are stored in a bound **Cloudflare KV** namespace
-(`KHELA_SETTINGS` in `wrangler.toml`).
+### Cloudflare KV (`KHELA_SETTINGS`)
+
+The V3 playlist system and admin settings use a **Cloudflare KV** namespace bound as
+`KHELA_SETTINGS` in `wrangler.toml`. It stores:
+
+| Key | Purpose |
+|-----|---------|
+| `playlist_sources_live-matches` | V3 source configs for the Live Matches page |
+| `playlist_sources_live-tv` | V3 source configs (fallback for Live TV) |
+| `playlist_overrides_live-matches` | Per-channel overrides (name, order, hidden) |
+| `playlist_overrides_live-tv` | Per-channel overrides for Live TV fallback |
+| `defaultVersion` | Admin-configured default streaming server (V2/V3/V4/V5) |
+
+Managed via the **admin panel** at `/admin`. The Live TV page uses V5 DLHD channels as
+its primary source and falls back to the V3 KV playlist when V5 is unavailable.
 
 ---
 
