@@ -95,12 +95,16 @@ function getUrlParams() {
   return { v: params.get("v"), m: params.get("m"), ch: params.get("ch") };
 }
 
-export default function LiveMatchesClient({ initialVersion, initialSport }: { initialVersion: ApiVersion; initialSport?: string }) {
+export default function LiveMatchesClient({ initialVersion, initialSport, lockedVersion }: {
+  initialVersion: ApiVersion;
+  initialSport?: string;
+  lockedVersion?: ApiVersion;
+}) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [apiVersion, setApiVersion] = useState<ApiVersion>(initialVersion);
-  const [versionResolved, setVersionResolved] = useState(false);
+  const [apiVersion, setApiVersion] = useState<ApiVersion>(lockedVersion || initialVersion);
+  const [versionResolved, setVersionResolved] = useState(!!lockedVersion);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
@@ -128,7 +132,10 @@ export default function LiveMatchesClient({ initialVersion, initialSport }: { in
   const mobileVirtuosoRef = useRef<any>(null);
   const lastScrolledKeyRef = useRef<string | null>(null);
 
-  const meta = VERSION_META[apiVersion];
+  const meta = {
+    ...VERSION_META[apiVersion],
+    label: lockedVersion && apiVersion === "v5" && sport === "cricket" ? "Cricket" : VERSION_META[apiVersion].label,
+  };
   const inMatchList = (apiVersion === "v2" || apiVersion === "v5") && !v2Match;
   const isMatchCentric = apiVersion === "v2" || apiVersion === "v5";
 
@@ -139,8 +146,9 @@ export default function LiveMatchesClient({ initialVersion, initialSport }: { in
     return h;
   }, []);
 
-  // -------- Server resolution: ?v= wins, else admin default --------
+  // -------- Server resolution: ?v= wins, else admin default (skipped when locked) --------
   useEffect(() => {
+    if (lockedVersion) return;
     let active = true;
     const { v } = getUrlParams();
     if (v && ["v2", "v3", "v4", "v5"].includes(v)) {
@@ -164,7 +172,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport }: { in
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [lockedVersion]);
 
   // -------- V3 / V4 flat channel loading --------
   const selectFlatChannel = useCallback((ch: ChannelData) => {
@@ -517,7 +525,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport }: { in
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {apiVersion === "v5" && (
+              {!lockedVersion && apiVersion === "v5" && (
                 <div className="flex border border-border-alt">
                   {["football", "cricket"].map(s => (
                     <button
@@ -539,6 +547,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport }: { in
                   ))}
                 </div>
               )}
+              {!lockedVersion && (
               <div className="relative">
                 <button
                   onClick={() => setIsServerDropdownOpen((prev) => !prev)}
@@ -566,6 +575,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport }: { in
                   </div>
                 )}
               </div>
+              )}
             </div>
           </div>
 
