@@ -80,7 +80,7 @@ export function getCategory(name: string): Category {
   return "Entertainment";
 }
 
-export const LOGO_BASE = process.env.NEXT_PUBLIC_LOGO_BASE_URL || "https://raw.githubusercontent.com/boy653859/m3u8/main/Logo/";
+export const LOGO_BASE = "https://raw.githubusercontent.com/boy653859/m3u8/main/Logo/";
 
 export const LOGO_MAP: Record<string, string> = {
   "somoy tv": "imgi_3_somoyTV.png",
