@@ -8,6 +8,7 @@ import Layers from "lucide-react/dist/esm/icons/layers";
 import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import Radio from "lucide-react/dist/esm/icons/radio";
 import Activity from "lucide-react/dist/esm/icons/activity";
+import Zap from "lucide-react/dist/esm/icons/zap";
 import Link from "next/link";
 import { getGoalScores } from "@/lib/api";
 
@@ -35,6 +36,7 @@ export default async function AboutPage() {
 
   stats.push({ icon: Radio, label: "Channels Served", value: "200+", desc: "Across 4 streaming servers" });
   stats.push({ icon: Activity, label: "Uptime SLA", value: "99.9%", desc: "Edge-deployed reliability" });
+  stats.push({ icon: Zap, label: "Stream Latency", value: "<30ms", desc: "Average CDN response time" });
 
   const features = [
   {
