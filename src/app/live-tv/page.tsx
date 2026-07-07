@@ -529,7 +529,7 @@ export default function LiveTvPage() {
 
         ) : (
           <>
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_240px] gap-6 h-[calc(100vh-300px)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_240px] gap-6 lg:h-[calc(100vh-300px)] lg:overflow-hidden">
             {/* ── Left: Channel List ── */}
             <div className="hidden lg:flex lg:flex-col overflow-y-auto scrollbar-red h-full min-h-0">
               <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Filter channels..." />
