@@ -25,11 +25,11 @@ export function Footer() {
                 <Link prefetch={false} href="/live-matches" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
                   Live Matches
                 </Link>
-                <li>
-                  <Link prefetch={false} href="/cricket" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
-                    Cricket
-                  </Link>
-                </li>
+              </li>
+              <li>
+                <Link prefetch={false} href="/cricket" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">
+                  Cricket
+                </Link>
               </li>
               <li>
                 <Link prefetch={false} href="/scores" className="text-sm font-mono text-fg-dim hover:text-fg transition-colors">

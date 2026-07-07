@@ -99,8 +99,8 @@ export default function RootLayout({
         <meta name="google-site-verification" content="Cak52LH2Ttv-hORQBBU19PZWthnfPruqKLjAd2M3YuQ" />
         {GA_MEASUREMENT_ID && (
           <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
-            <script
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
+            <Script id="gtag-init" strategy="afterInteractive"
               dangerouslySetInnerHTML={{
                 __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}',{send_page_view:false});`,
               }}
