@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import LiveMatchesClient from '../live-matches/LiveMatchesClient';
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export default function CricketPage() {
