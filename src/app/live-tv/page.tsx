@@ -578,7 +578,7 @@ export default function LiveTvPage() {
                 </button>
 
                 {isMobileDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 max-h-[60dvh] flex flex-col">
+                  <div className="absolute top-full left-0 right-0 mt-1.5 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 h-[40dvh] flex flex-col">
                     <div className="flex items-center gap-2 border-b border-border-alt px-3 py-2 bg-card shrink-0">
                       <Search className="w-3.5 h-3.5 text-fg-dim shrink-0" />
                       <input
