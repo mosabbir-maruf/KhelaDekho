@@ -56,8 +56,13 @@ function formatKickoff(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
-function formatUpdated(iso: string): string {
+function UpdatedTime({ iso }: { iso: string }) {
+  const [, setTick] = useState(0);
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
@@ -542,7 +547,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
                     ) : (
                       <>
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        {data?.cached_at ? `Updated ${formatUpdated(data.cached_at)}` : "Nominal State"}
+                        {data?.cached_at ? <><span>Updated </span><UpdatedTime iso={data.cached_at} /></> : "Nominal State"}
                       </>
                     )}
                   </div>
