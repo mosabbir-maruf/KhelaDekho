@@ -11,6 +11,7 @@ import Image from "next/image";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { getGoalScores } from "@/lib/api";
 import type { GoalMatch } from "@/lib/api";
+import { SITE_URL } from "@/lib/config";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -241,9 +242,9 @@ export default async function Home() {
               <div className="absolute top-0 left-0 w-[2px] h-full bg-red-500/50" />
               <div className="flex items-center space-x-3 mr-4 sm:mr-8 text-fg-muted min-w-0 overflow-hidden">
                 <Globe className="w-4 h-4 text-red-500 shrink-0" />
-                <span className="text-fg text-[12px] sm:text-[13px] truncate">Visit us: https://kheladekho.pages.dev</span>
+                <span className="text-fg text-[12px] sm:text-[13px] truncate">Visit us: {SITE_URL}</span>
               </div>
-              <CopyButton text="https://kheladekho.pages.dev" />
+              <CopyButton text={SITE_URL} />
             </div>
           </div>
         </section>

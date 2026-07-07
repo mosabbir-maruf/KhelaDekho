@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/config";
 
-const baseUrl = "https://kheladekho.pages.dev";
+const baseUrl = SITE_URL;
 
 const staticRoutes = [
     { url: baseUrl, changeFrequency: "weekly" as const, priority: 1 },

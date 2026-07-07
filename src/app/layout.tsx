@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ui/ThemeProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { Suspense } from "react";
 import Script from "next/script";
+import { SITE_URL } from "@/lib/config";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import "./globals.css";
 
@@ -23,7 +24,7 @@ const geistMono = Geist_Mono({
   preload: false,
 });
 
-const siteUrl = "https://kheladekho.pages.dev";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   title: {

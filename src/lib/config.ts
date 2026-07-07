@@ -10,3 +10,6 @@ export function isStreamVersion(value: unknown): value is StreamVersion {
 
 // Default streaming server when none is stored.
 export const DEFAULT_STREAM_VERSION: StreamVersion = "v4";
+
+// Production site URL (used for OG tags, sitemap, canonical links, etc.)
+export const SITE_URL = "https://kheladekho.pages.dev";
