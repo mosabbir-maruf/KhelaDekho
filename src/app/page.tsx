@@ -282,7 +282,7 @@ export default async function Home() {
               <div className="space-y-2">
                 <h3 className="text-sm font-mono font-semibold text-fg tracking-wide">Edge-Native Delivery</h3>
                 <p className="text-xs font-mono text-fg-dim leading-relaxed">
-                  Streams are decrypted and served from Cloudflare edge nodes with &lt;15ms latency, ensuring minimal buffering worldwide.
+                  Streams are decrypted and served from Cloudflare edge nodes with &lt;30ms latency, ensuring minimal buffering worldwide.
                 </p>
               </div>
             </div>
@@ -447,7 +447,7 @@ export default async function Home() {
 
               {/* Bottom Stats */}
               <div className="flex flex-wrap items-center justify-center sm:justify-between gap-2 sm:gap-0 px-4 sm:px-6 py-3 border-t border-border bg-white/[0.01] text-[10px] font-mono text-fg-faint tracking-widest uppercase">
-                <span>Edge latency: &lt; 15ms</span>
+                <span>Edge latency: &lt; 30ms</span>
               </div>
             </div>
           </div>
