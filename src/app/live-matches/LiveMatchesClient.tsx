@@ -338,7 +338,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
       }
     })();
     return () => { active = false; controller.abort(); };
-  }, [apiVersion, v2Match, sport, apiBaseUrl, authHeaders, selectV2Channel]);
+  }, [apiVersion, v2Match, apiBaseUrl, authHeaders, selectV2Channel]);
 
   const openMatch = useCallback((m: MatchItem) => {
     setV2Match(m);
