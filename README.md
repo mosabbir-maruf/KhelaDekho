@@ -1,7 +1,7 @@
 # KhelaDekho
 
 <p align="center">
-  <img src="https://kheladekho.pages.dev/meta-graph.webp" alt="KhelaDekho" width="600" />
+  <img src="https://kheladekho.pages.dev/meta-graph.webp" alt="KhelaDekho" width="100%" />
 </p>
 
 Live sports streaming dashboard & aggregator client built with Next.js 16.
