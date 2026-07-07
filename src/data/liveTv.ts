@@ -1,18 +1,5 @@
 export type Category = "All" | "Sports" | "News" | "Entertainment" | "Movies" | "Music" | "Kids" | "Religious" | "Documentary" | "International";
 
-export const CATEGORIES: { label: Category; icon: string }[] = [
-  { label: "All", icon: "Tv" },
-  { label: "Sports", icon: "Zap" },
-  { label: "News", icon: "Monitor" },
-  { label: "Entertainment", icon: "Tv" },
-  { label: "Movies", icon: "Monitor" },
-  { label: "Music", icon: "Tv" },
-  { label: "Kids", icon: "Tv" },
-  { label: "Religious", icon: "Shield" },
-  { label: "Documentary", icon: "Monitor" },
-  { label: "International", icon: "Tv" },
-];
-
 export const CATEGORY_KEYWORDS: Record<Exclude<Category, "All">, string[]> = {
   Sports: [
     "sports", "cricket", "football", "tennis", "espn", "nfl", "nba", "golf",
