@@ -560,40 +560,41 @@ export default function LiveTvPage() {
 
         ) : (
           <>
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_240px] gap-6 lg:h-[calc(100vh-300px)] lg:overflow-hidden">
-            {/* ── Left: Channel List ── */}
-            <div className="hidden lg:flex lg:flex-col overflow-y-auto scrollbar-red h-full min-h-0">
-              <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Filter channels..." />
-              <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1 mt-3 mb-1 shrink-0">
-                {listCount} channel{listCount !== 1 ? 's' : ''}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_240px] gap-6 lg:overflow-hidden">
+            <div className="hidden lg:block relative h-full">
+              <div className="absolute inset-0 flex flex-col overflow-y-auto scrollbar-red">
+                <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Filter channels..." />
+                <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest px-1 mt-3 mb-1 shrink-0">
+                  {listCount} channel{listCount !== 1 ? 's' : ''}
+                </div>
+                {listCount === 0 ? (
+                  <div className="text-center py-10">
+                    <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
+                  </div>
+                ) : (
+                  <div className="flex-1 min-h-0 relative">
+                    <Virtuoso
+                      ref={virtuosoRef}
+                      className="!absolute inset-0 scrollbar-red"
+                      data={listItems}
+                      itemContent={(idx, it) => (
+                        <div className="pb-1">
+                          <ChannelListItem
+                            item={{ name: it.name, logo: it.logo, extra: it.extra }}
+                            selected={it.key === selectedKey}
+                            onClick={() => onItemClick(it.key)}
+                            showExtra
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
-              {listCount === 0 ? (
-                <div className="text-center py-10">
-                  <p className="font-mono text-[10px] text-fg-faint uppercase tracking-widest">No channels found</p>
-                </div>
-              ) : (
-                <div className="flex-1 min-h-0 relative">
-                  <Virtuoso
-                    ref={virtuosoRef}
-                    className="!absolute inset-0 scrollbar-red"
-                    data={listItems}
-                    itemContent={(idx, it) => (
-                      <div className="pb-1">
-                        <ChannelListItem
-                          item={{ name: it.name, logo: it.logo, extra: it.extra }}
-                          selected={it.key === selectedKey}
-                          onClick={() => onItemClick(it.key)}
-                          showExtra
-                        />
-                      </div>
-                    )}
-                  />
-                </div>
-              )}
             </div>
 
             {/* ── Center: Player + Details + Similar ── */}
-            <div ref={playerRef} className="min-w-0 space-y-4 h-full min-h-0">
+            <div ref={playerRef} className="min-w-0 space-y-4">
               {/* Mobile picker */}
               <div className="relative lg:hidden w-full shrink-0">
                 <button
@@ -705,68 +706,69 @@ export default function LiveTvPage() {
 
             </div>
 
-            {/* ── Right: Filters ── */}
-            <div className="hidden lg:flex lg:flex-col overflow-y-auto scrollbar-red h-full min-h-0 border border-border-alt bg-card divide-y divide-border-alt">
-              {/* Search */}
-              <div className="flex items-center gap-3 px-4 py-3">
-                <Search className="w-4 h-4 text-fg-faint shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="bg-transparent text-xs font-mono text-fg placeholder:text-fg-faint outline-none w-full"
-                />
-                {searchQuery && (
-                  <button type="button" onClick={() => setSearchQuery("")} className="text-fg-dim hover:text-fg shrink-0">
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+            <div className="hidden lg:block relative h-full">
+              <div className="absolute inset-0 flex flex-col overflow-y-auto scrollbar-red border border-border-alt bg-card divide-y divide-border-alt">
+                {/* Search */}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Search className="w-4 h-4 text-fg-faint shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search..."
+                    className="bg-transparent text-xs font-mono text-fg placeholder:text-fg-faint outline-none w-full"
+                  />
+                  {searchQuery && (
+                    <button type="button" onClick={() => setSearchQuery("")} className="text-fg-dim hover:text-fg shrink-0">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
 
-              {/* Category */}
-              <div className="px-4 py-3 space-y-2">
-                <p className="text-[9px] font-mono text-fg-faint uppercase tracking-widest">Category</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {CATEGORY_LABELS.map((cat) => {
-                    const count = categoryCounts[cat] || 0;
-                    const isActiveCat = activeCategory === cat;
-                    return (
+                {/* Category */}
+                <div className="px-4 py-3 space-y-2">
+                  <p className="text-[9px] font-mono text-fg-faint uppercase tracking-widest">Category</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CATEGORY_LABELS.map((cat) => {
+                      const count = categoryCounts[cat] || 0;
+                      const isActiveCat = activeCategory === cat;
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => { setActiveCategory(cat); setSearchQuery(""); }}
+                          className={`text-[10px] font-mono tracking-wider px-2.5 py-1.5 border transition-all cursor-pointer ${
+                            isActiveCat
+                              ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                              : 'border-border-alt bg-card text-fg-dim hover:border-red-500/20 hover:text-red-300 hover:bg-red-500/[0.02]'
+                          }`}
+                        >
+                          {cat}
+                          <span className={`ml-1.5 ${isActiveCat ? 'text-red-400/60' : 'text-fg-faint'}`}>{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Country */}
+                <div className="px-4 py-3 space-y-2">
+                  <p className="text-[9px] font-mono text-fg-faint uppercase tracking-widest">Country</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sortedCountries.map(([name, count]) => (
                       <button
-                        key={cat}
-                        onClick={() => { setActiveCategory(cat); setSearchQuery(""); }}
+                        key={name}
+                        onClick={() => { setActiveCountry(name); setSearchQuery(""); }}
                         className={`text-[10px] font-mono tracking-wider px-2.5 py-1.5 border transition-all cursor-pointer ${
-                          isActiveCat
+                          activeCountry === name
                             ? 'bg-red-500/10 border-red-500/30 text-red-300'
                             : 'border-border-alt bg-card text-fg-dim hover:border-red-500/20 hover:text-red-300 hover:bg-red-500/[0.02]'
                         }`}
                       >
-                        {cat}
-                        <span className={`ml-1.5 ${isActiveCat ? 'text-red-400/60' : 'text-fg-faint'}`}>{count}</span>
+                        {name}
+                        <span className={`ml-1.5 ${activeCountry === name ? 'text-red-400/60' : 'text-fg-faint'}`}>{count}</span>
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Country */}
-              <div className="px-4 py-3 space-y-2">
-                <p className="text-[9px] font-mono text-fg-faint uppercase tracking-widest">Country</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {sortedCountries.map(([name, count]) => (
-                    <button
-                      key={name}
-                      onClick={() => { setActiveCountry(name); setSearchQuery(""); }}
-                      className={`text-[10px] font-mono tracking-wider px-2.5 py-1.5 border transition-all cursor-pointer ${
-                        activeCountry === name
-                          ? 'bg-red-500/10 border-red-500/30 text-red-300'
-                          : 'border-border-alt bg-card text-fg-dim hover:border-red-500/20 hover:text-red-300 hover:bg-red-500/[0.02]'
-                      }`}
-                    >
-                      {name}
-                      <span className={`ml-1.5 ${activeCountry === name ? 'text-red-400/60' : 'text-fg-faint'}`}>{count}</span>
-                    </button>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
