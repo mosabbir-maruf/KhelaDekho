@@ -772,7 +772,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                               <div className="flex items-center gap-4 py-2">
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
                                   {m.team_a?.logo ? (
-                                    <img src={m.team_a.logo} alt={m.team_a.name} className="w-8 h-8 rounded-full border border-border-alt object-cover bg-[#000]" />
+                                    <img draggable={false} src={m.team_a.logo} alt={m.team_a.name} className="w-8 h-8 rounded-full border border-border-alt object-cover bg-[#000]" />
                                   ) : (
                                     <div className="w-8 h-8 rounded-full border border-border-alt bg-hover flex items-center justify-center font-mono text-[10px] text-fg-dim">A</div>
                                   )}
@@ -782,7 +782,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                                 <div className="flex items-center gap-2 min-w-0 flex-1 justify-end text-right">
                                   <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_b?.name}</span>
                                   {m.team_b?.logo ? (
-                                    <img src={m.team_b.logo} alt={m.team_b.name} className="w-8 h-8 rounded-full border border-border-alt object-cover bg-[#000]" />
+                                    <img draggable={false} src={m.team_b.logo} alt={m.team_b.name} className="w-8 h-8 rounded-full border border-border-alt object-cover bg-[#000]" />
                                   ) : (
                                     <div className="w-8 h-8 rounded-full border border-border-alt bg-hover flex items-center justify-center font-mono text-[10px] text-fg-dim">B</div>
                                   )}
