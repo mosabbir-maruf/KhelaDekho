@@ -24,7 +24,10 @@ Live sports streaming dashboard & aggregator client built with Next.js 16.
 KhelaDekho-Frontend/
 ├── src/
 │   ├── app/                         # Next.js App Router
-│   │   ├── page.tsx                 # Home (live scores hero + feed)
+│   │   ├── page.tsx                 # Home (live scores hero + feed, auto-refresh 60s)
+│   │   ├── LiveScoresClient.tsx     # Client component: polls scores every 60s
+│   │   ├── ScoreCard.tsx            # Shared MatchCard + ScoreTeamLogo components
+│   │   ├── cricket/page.tsx         # Cricket matches (V5, locked, no server switcher)
 │   │   ├── layout.tsx               # Root layout (injects API URL + XKEY)
 │   │   ├── not-found.tsx            # Custom 404 page
 │   │   ├── manifest.ts / robots.ts / sitemap.ts  # PWA + SEO
@@ -89,6 +92,10 @@ The **Live TV** page uses **V5 DLHD channels** as its primary source (878+ 24/7 
 from `GET /api/v5/tv/channels`), with automatic categorization, country detection, and
 on-demand stream resolution through the V5 proxy. Falls back to the V3 KV playlist
 if the V5 backend is unavailable.
+
+The **Cricket** page (`/cricket`) uses the same V5 match infrastructure with
+`?sport=cricket` — no separate backend, no duplicated logic. It is locked to V5
+with no server switcher or admin override.
 
 ---
 

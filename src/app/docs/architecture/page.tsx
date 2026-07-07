@@ -149,7 +149,7 @@ const scores = await getGoalScores();          // GET /api/v1/scores
                         </li>
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
-                            <span><strong>V5</strong> — match-first API (<code>/api/v5/matches/*</code>) and DLHD 24/7 TV channel list (<code>/api/v5/tv/channels</code> and <code>/api/v5/tv/channel/:id/stream</code>). The Live TV page now sources from the V5 DLHD channel list (878+ channels with auto-categorization). On channel selection, the stream URL is resolved on demand and proxied through <code>/api/v5/proxy</code>.</span>
+                            <span><strong>V5</strong> — match-first API with <code>?sport=football</code> (default) and <code>?sport=cricket</code>. The Cricket page (<code>/cricket</code>) is locked to V5 with no server switcher. Also provides DLHD 24/7 TV channel list (<code>/api/v5/tv/channels</code> and <code>/api/v5/tv/channel/:id/stream</code>). The Live TV page sources from V5 DLHD channels (878+ channels with auto-categorization). On channel selection, the stream URL is resolved on demand and proxied through <code>/api/v5/proxy</code>.</span>
                         </li>
                         <li className="flex gap-3">
                             <span className="text-red-500 mt-0.5">▸</span>
