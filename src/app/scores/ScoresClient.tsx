@@ -649,7 +649,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
               </p>
               <div className="pt-3 border-t border-border/80 text-[10px] text-fg-faint flex flex-col gap-1.5 uppercase">
                 <span>Connections: Nominal</span>
-                <span>Latency: &lt;12ms</span>
+                <span>Latency: &lt;15ms</span>
                 <span>Coverage: Global Leagues</span>
               </div>
             </div>

@@ -36,7 +36,7 @@ export default async function AboutPage() {
 
   stats.push({ icon: Radio, label: "Channels Served", value: "200+", desc: "Across 4 streaming servers" });
   stats.push({ icon: Activity, label: "Uptime SLA", value: "99.9%", desc: "Edge-deployed reliability" });
-  stats.push({ icon: Zap, label: "Stream Latency", value: "<30ms", desc: "Average CDN response time" });
+  stats.push({ icon: Zap, label: "Stream Latency", value: "<15ms", desc: "Average CDN response time" });
 
   const features = [
   {
