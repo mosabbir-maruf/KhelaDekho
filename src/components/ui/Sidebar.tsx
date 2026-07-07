@@ -55,6 +55,15 @@ export function Sidebar() {
             </li>
             <li>
               <Link
+                href="/cricket"
+                className={`${baseLinkClass} ${isActive("/cricket") ? activeLinkClass : inactiveLinkClass}`}
+              >
+                <Tv className="w-4 h-4 text-red-500 animate-pulse" />
+                Cricket
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/scores"
                 className={`${baseLinkClass} ${isActive("/scores") ? activeLinkClass : inactiveLinkClass}`}
               >
