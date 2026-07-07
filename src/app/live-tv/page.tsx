@@ -102,7 +102,11 @@ export default function LiveTvPage() {
   const [showAllCountries, setShowAllCountries] = useState(false);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
+  const virtuosoRef = useRef<any>(null);
+  const mobileVirtuosoRef = useRef<any>(null);
+  const lastScrolledKeyRef = useRef<string | null>(null);
   const { copied, copy: handleShare } = useCopyButton();
+
 
   function getUrlCh(): string | null {
     if (typeof window === "undefined") return null;
@@ -285,6 +289,33 @@ export default function LiveTvPage() {
   }, [filteredChannels]);
 
   const selectedKey = selectedChannel?.id ?? null;
+
+  // Auto-scroll to the playing channel and reset filters if it's filtered out
+  useEffect(() => {
+    if (!selectedKey) {
+      lastScrolledKeyRef.current = null;
+      return;
+    }
+    
+    // Only scroll or adjust filters if the selected channel has actually changed
+    if (selectedKey !== lastScrolledKeyRef.current) {
+      const idx = listItems.findIndex(it => it.key === selectedKey);
+      if (idx !== -1) {
+        lastScrolledKeyRef.current = selectedKey;
+        const timer = setTimeout(() => {
+          virtuosoRef.current?.scrollToIndex({ index: idx, align: "center", behavior: "smooth" });
+          mobileVirtuosoRef.current?.scrollToIndex({ index: idx, align: "center", behavior: "smooth" });
+        }, 200);
+        return () => clearTimeout(timer);
+      } else {
+        // Reset filters to reveal the channel, ref will be updated on the next cycle
+        setActiveCategory("All");
+        setActiveCountry("All");
+        setSearchQuery("");
+      }
+    }
+  }, [selectedKey, listItems]);
+
   const listCount = filteredChannels.length;
 
   // -------- Actions --------
@@ -543,6 +574,7 @@ export default function LiveTvPage() {
               ) : (
                 <div className="flex-1 min-h-0 relative">
                   <Virtuoso
+                    ref={virtuosoRef}
                     className="!absolute inset-0 scrollbar-red"
                     data={listItems}
                     itemContent={(idx, it) => (
@@ -601,6 +633,7 @@ export default function LiveTvPage() {
                     ) : (
                       <div className="flex-1 min-h-0 relative">
                         <Virtuoso
+                          ref={mobileVirtuosoRef}
                           className="!absolute inset-0 scrollbar-red"
                           data={listItems}
                           itemContent={(idx, it) => (

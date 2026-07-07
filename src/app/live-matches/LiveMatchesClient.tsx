@@ -123,6 +123,9 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
   const apiBaseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
   const { copied, copy: handleShare } = useCopyButton();
   const listCache = useRef<Map<string, ChannelData[]>>(new Map());
+  const virtuosoRef = useRef<any>(null);
+  const mobileVirtuosoRef = useRef<any>(null);
+  const lastScrolledKeyRef = useRef<string | null>(null);
 
   const meta = VERSION_META[apiVersion];
   const inMatchList = (apiVersion === "v2" || apiVersion === "v5") && !v2Match;
@@ -380,6 +383,28 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
     return String(selectedChannel.id ?? channelKey(selectedChannel.name));
   }, [apiVersion, isMatchCentric, v2Selected, selectedChannel, selectedVersion]);
 
+  // Auto-scroll to the playing channel and reset search query if it's filtered out
+  useEffect(() => {
+    if (!selectedKey) {
+      lastScrolledKeyRef.current = null;
+      return;
+    }
+
+    if (selectedKey !== lastScrolledKeyRef.current) {
+      const idx = filteredItems.findIndex(it => it.key === selectedKey);
+      if (idx !== -1) {
+        lastScrolledKeyRef.current = selectedKey;
+        const timer = setTimeout(() => {
+          virtuosoRef.current?.scrollToIndex({ index: idx, align: "center", behavior: "smooth" });
+          mobileVirtuosoRef.current?.scrollToIndex({ index: idx, align: "center", behavior: "smooth" });
+        }, 200);
+        return () => clearTimeout(timer);
+      } else {
+        setSearchQuery("");
+      }
+    }
+  }, [selectedKey, filteredItems]);
+
   const onItemClick = useCallback((key: string) => {
     if (isMatchCentric) {
       if (!v2Match) {
@@ -601,6 +626,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                 ) : (
                   <div className="flex-1 min-h-0 relative">
                     <Virtuoso
+                      ref={virtuosoRef}
                       className="!absolute inset-0 scrollbar-red"
                       data={filteredItems}
                       itemContent={(idx, it) => (
@@ -673,6 +699,7 @@ export default function LiveMatchesClient({ initialVersion }: { initialVersion: 
                       ) : (
                         <div className="flex-1 min-h-0 relative">
                           <Virtuoso
+                            ref={mobileVirtuosoRef}
                             className="!absolute inset-0 scrollbar-red"
                             data={filteredItems}
                             itemContent={(idx, it) => (
