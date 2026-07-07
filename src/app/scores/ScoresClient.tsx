@@ -417,7 +417,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
   // Fetch immediately on mount and whenever the date changes, then poll.
   useEffect(() => {
     fetchData(date);
-    const interval = setInterval(() => fetchData(date), 30000);
+    const interval = setInterval(() => fetchData(date), 45000);
     return () => clearInterval(interval);
   }, [date, fetchData]);
 
