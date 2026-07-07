@@ -110,6 +110,8 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
   const [sport, setSport] = useState(initialSport || "football");
+  const sportRef = useRef(sport);
+  sportRef.current = sport;
 
   // V3 / V4 flat channels
   const [channels, setChannels] = useState<ChannelData[]>([]);
@@ -324,7 +326,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
       setV2StreamError(false);
       try {
         const versionPath = apiVersion === "v5" ? "v5" : "v2";
-        const sportQ = apiVersion === "v5" ? `?sport=${sport}` : "";
+        const sportQ = apiVersion === "v5" ? `?sport=${sportRef.current}` : "";
         const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/channels${sportQ}`, { signal: controller.signal, headers: authHeaders() });
         const body = res.ok ? await res.json() : {};
         if (!active) return;
