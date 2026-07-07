@@ -89,7 +89,7 @@ export function MatchCard({ item }: { item: FeedMatch }) {
 function formatMatchTimeBD(iso: string | null): string {
   if (!iso) return "";
   try {
-    return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
   } catch {
     return "";
   }

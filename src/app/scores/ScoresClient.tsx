@@ -53,7 +53,7 @@ function todayStr(): string {
 }
 
 function formatKickoff(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 }
 
 function UpdatedTime({ iso }: { iso: string }) {
@@ -66,7 +66,7 @@ function UpdatedTime({ iso }: { iso: string }) {
   }, [iso]);
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 }
 
 function liveMinute(match: GoalMatch): string {
