@@ -12,7 +12,7 @@ import { getGoalScores } from "@/lib/api";
 import type { GoalMatch } from "@/lib/api";
 import { SITE_URL } from "@/lib/config";
 import LiveScoresClient from "./LiveScoresClient";
-import { ScoreTeamLogo, MatchCard, FeedMatch } from "./ScoreCard";
+import { FeedMatch } from "./ScoreCard";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
