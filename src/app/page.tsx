@@ -14,9 +14,7 @@ import { SITE_URL } from "@/lib/config";
 import LiveScoresClient from "./LiveScoresClient";
 import { FeedMatch } from "./ScoreCard";
 
-export const runtime = "edge";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
 
 
 
