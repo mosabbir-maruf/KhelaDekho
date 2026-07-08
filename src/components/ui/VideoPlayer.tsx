@@ -589,7 +589,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
           <div className="flex items-center justify-between pointer-events-auto">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2.5 py-1 text-[10px] font-bold text-red-500 tracking-widest uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 LIVE
               </div>
             </div>

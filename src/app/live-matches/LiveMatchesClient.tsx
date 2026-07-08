@@ -118,6 +118,32 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const sportRef = useRef(sport);
   sportRef.current = sport;
 
+  const sportDropdownRef = useRef<HTMLDivElement>(null);
+  const serverDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        sportDropdownRef.current &&
+        !sportDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSportDropdownOpen(false);
+      }
+      if (
+        serverDropdownRef.current &&
+        !serverDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsServerDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
   // V3 / V4 flat channels
   const [channels, setChannels] = useState<ChannelData[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<ChannelData | null>(null);
@@ -528,25 +554,28 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                 {meta.label}
               </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-fg font-mono leading-tight">
-                Live Matches<span className="text-red-500">.</span>
+                {sport === "24/7-streams" ? "24/7 Streams" : "Live Matches"}<span className="text-red-500">.</span>
               </h1>
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
-                {inMatchList ? `${matches.length} match${matches.length !== 1 ? "es" : ""} available` : `${listCount} channel${listCount !== 1 ? "s" : ""} indexed`}
+                {sport === "24/7-streams" ? `${matches.length} channel${matches.length !== 1 ? "s" : ""} available` : inMatchList ? `${matches.length} match${matches.length !== 1 ? "es" : ""} available` : `${listCount} channel${listCount !== 1 ? "s" : ""} indexed`}
               </p>
             </div>
             <div className="flex items-center gap-2">
               {!lockedVersion && apiVersion === "v5" && (
-                <div className="relative">
+                <div className="relative" ref={sportDropdownRef}>
                   <button
-                    onClick={() => setIsSportDropdownOpen(p => !p)}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-border-alt text-[10px] font-mono uppercase tracking-widest transition-all cursor-pointer bg-input text-fg-dim hover:text-fg hover:border-red-500/30"
+                    onClick={() => {
+                      setIsSportDropdownOpen(p => !p);
+                      setIsServerDropdownOpen(false);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono uppercase tracking-wider transition-all cursor-pointer bg-input text-fg-dim hover:text-fg hover:border-red-500/30 rounded-lg animate-fade-in"
                   >
                     {getSportLabel(sport)}
                     <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isSportDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isSportDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-50 min-w-[160px] max-h-[60dvh] overflow-y-auto">
-                      {SPORTS.map(({ slug, label }) => (
+                    <div className="absolute top-full left-0 mt-1.5 border border-border-alt bg-card p-1.5 shadow-2xl z-50 rounded-xl min-w-[180px] max-h-[60dvh] overflow-y-auto">
+                      {SPORTS.filter(s => s.slug !== "24/7-streams").map(({ slug, label }) => (
                         <button
                           key={slug}
                           onClick={() => {
@@ -556,9 +585,9 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                             setIsSportDropdownOpen(false);
                             router.replace(`/live-matches?v=v5${slug === DEFAULT_SPORT ? "" : `&s=${slug}`}`, { scroll: false });
                           }}
-                          className={`w-full text-left px-4 py-2 text-xs font-mono transition-colors cursor-pointer ${
+                          className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer ${
                             sport === slug
-                              ? "bg-red-500/10 text-red-300"
+                              ? "bg-red-500/10 text-red-500 font-bold"
                               : "text-fg-dim hover:text-fg hover:bg-hover"
                           }`}
                         >
@@ -570,23 +599,26 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                 </div>
               )}
               {!lockedVersion && (
-              <div className="relative">
+              <div className="relative" ref={serverDropdownRef}>
                 <button
-                  onClick={() => setIsServerDropdownOpen((prev) => !prev)}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03]"
+                  onClick={() => {
+                    setIsServerDropdownOpen((prev) => !prev);
+                    setIsSportDropdownOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] rounded-lg animate-fade-in"
                 >
                   <span className={`w-2 h-2 rounded-full ${meta.color}`} />
                   Switch Server
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
                 {isServerDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-40 min-w-[160px]">
+                  <div className="absolute top-full right-0 mt-1.5 border border-border-alt bg-card p-1.5 shadow-2xl z-40 rounded-xl min-w-[160px]">
                     {(["v2", "v3", "v4", "v5"] as ApiVersion[]).map((v) => (
                       <button
                         key={v}
                         onClick={() => switchServer(v)}
-                        className={`w-full text-left px-4 py-2 text-xs font-mono transition-all cursor-pointer flex items-center gap-2 ${apiVersion === v
-                            ? "text-red-400 bg-red-500/[0.03] font-semibold"
+                        className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-md transition-all cursor-pointer flex items-center gap-2 ${apiVersion === v
+                            ? "text-red-500 bg-red-500/10 font-semibold"
                             : "text-fg-dim hover:text-fg hover:bg-hover"
                           }`}
                       >
@@ -816,10 +848,17 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                           >
                             {/* Card Header */}
                             <div className="flex items-center justify-between w-full">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-red-500/30 bg-red-500/10 text-[9px] font-mono uppercase text-red-400 font-bold rounded-full">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                                {m.is_live ? "LIVE" : "UPCOMING"}
-                              </span>
+                              {m.is_live ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-red-500/30 bg-red-500/10 text-[9px] font-mono uppercase text-red-400 font-bold rounded-full">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                  LIVE
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-blue-500/30 bg-blue-500/10 text-[9px] font-mono uppercase text-blue-400 font-bold rounded-full">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                  UPCOMING
+                                </span>
+                              )}
                               <span className="font-mono text-[9px] text-fg-faint uppercase tracking-widest">
                                 {m.sport || "Football"}
                               </span>

@@ -28,7 +28,7 @@ function HeroStatusBadge({ liveMatch }: { liveMatch: GoalMatch | null }) {
         className="inline-flex items-center border border-border-alt bg-card px-3 py-1.5 text-xs font-mono text-fg-dim mb-6 shadow-2xl hover:border-red-500/30 hover:text-fg transition-colors"
       >
         <span className="flex items-center gap-2 tracking-widest uppercase">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           <span className="text-red-400 font-bold">Live</span>
           <span className="text-fg truncate max-w-[220px] sm:max-w-none normal-case tracking-normal">
             {liveMatch.team_a.name} vs {liveMatch.team_b.name}
@@ -41,7 +41,7 @@ function HeroStatusBadge({ liveMatch }: { liveMatch: GoalMatch | null }) {
   return (
     <div className="inline-flex items-center border border-border-alt bg-card px-3 py-1.5 text-xs font-mono text-fg-dim mb-6 shadow-2xl">
       <span className="flex items-center gap-2 tracking-widest uppercase">
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
         {`> Edge Proxy Connection Status: Nominal`}
       </span>
     </div>

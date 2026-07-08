@@ -17,10 +17,11 @@ import Key from "lucide-react/dist/esm/icons/key";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
 import Dribbble from "lucide-react/dist/esm/icons/dribbble";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Clock from "lucide-react/dist/esm/icons/clock";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CommandSearch, useIsMac } from "@/components/ui/CommandSearch";
 import { event } from "@/lib/analytics";
-import { SPORTS } from "@/lib/config";
+import { SPORTS, getSportUrl } from "@/lib/config";
 
 const getSportIcon = (slug: string) => {
   switch (slug) {
@@ -118,6 +119,8 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSportsOpen, setIsSportsOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const isMac = useIsMac();
   const pathname = usePathname();
 
@@ -175,19 +178,11 @@ export function Navbar() {
             <nav className="hidden md:flex items-center h-full">
               <Link
                 href="/scores"
-                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/scores") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/scores") ? "text-fg bg-hover" : "text-fg-muted hover:text-fg hover:bg-hover"
                   }`}
               >
-                <Trophy className={`w-3.5 h-3.5 transition-colors ${isActive("/scores") ? "text-amber-500" : "text-fg-dim/60"}`} />
+                <Trophy className={`w-3.5 h-3.5 transition-colors ${isActive("/scores") ? "text-amber-500" : "text-fg-muted/70"}`} />
                 Scores
-              </Link>
-              <Link
-                href="/live-matches"
-                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
-                  }`}
-              >
-                <Activity className={`w-3.5 h-3.5 transition-colors ${isActive("/live-matches") ? "text-red-500 animate-pulse" : "text-fg-dim/60"}`} />
-                Live Matches
               </Link>
               <div
                 className="relative h-full"
@@ -196,9 +191,9 @@ export function Navbar() {
               >
                 <button
                   onClick={() => setIsSportsOpen(p => !p)}
-                  className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors cursor-pointer ${isSportsOpen ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                  className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors cursor-pointer ${isSportsOpen ? "text-fg bg-hover" : "text-fg-muted hover:text-fg hover:bg-hover"}`}
                 >
-                  <Dribbble className={`w-3.5 h-3.5 transition-colors ${isSportsOpen ? "text-blue-500" : "text-fg-dim/60"}`} />
+                  <Dribbble className={`w-3.5 h-3.5 transition-colors ${isSportsOpen ? "text-blue-500" : "text-fg-muted/70"}`} />
                   Sports
                   <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isSportsOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -208,21 +203,22 @@ export function Navbar() {
                   >
                     <div className="border border-border-alt bg-card shadow-2xl p-3 rounded-xl min-w-[340px]">
                       <div className="grid grid-cols-2 gap-1">
-                        {SPORTS.map(({ slug, label }) => {
-                          const isSportActive = pathname === (slug === "football" ? "/live-matches" : `/${slug}`) || (slug === "cricket" && pathname === "/cricket");
+                        {SPORTS.filter(s => s.slug !== "24/7-streams").map(({ slug, label }) => {
+                          const sportUrl = getSportUrl(slug);
+                          const isSportActive = pathname === sportUrl || (slug === "cricket" && pathname === "/cricket");
                           return (
                             <Link
                               key={slug}
-                              href={slug === "football" ? "/live-matches" : `/${slug}`}
+                              href={sportUrl}
                               prefetch={false}
                               onClick={() => setIsSportsOpen(false)}
                               className={`flex items-center gap-2.5 px-3 py-2 text-[11px] font-mono uppercase tracking-wider rounded-lg transition-all duration-200 ${
                                 isSportActive
                                   ? "text-red-500 bg-red-500/10 font-bold"
-                                  : "text-fg-dim hover:text-fg hover:bg-hover/80"
+                                  : "text-fg-muted hover:text-fg hover:bg-hover/80"
                               }`}
                             >
-                              <span className={`transition-colors duration-200 ${isSportActive ? "text-red-500" : "text-fg-dim/60"}`}>
+                              <span className={`transition-colors duration-200 ${isSportActive ? "text-red-500" : "text-fg-muted/70"}`}>
                                 {getSportIcon(slug)}
                               </span>
                               <span>{label}</span>
@@ -235,37 +231,143 @@ export function Navbar() {
                 )}
               </div>
               <Link
-                href="/live-tv"
-                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                href="/live-matches"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-muted hover:text-fg hover:bg-hover"
                   }`}
               >
-                <Tv className={`w-3.5 h-3.5 transition-colors ${isActive("/live-tv") ? "text-red-500" : "text-fg-dim/60"}`} />
+                <Activity className={`w-3.5 h-3.5 transition-colors ${isActive("/live-matches") ? "text-red-500 animate-pulse" : "text-fg-muted/70"}`} />
+                Live Matches
+              </Link>
+              <Link
+                href="/live-tv"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-muted hover:text-fg hover:bg-hover"
+                  }`}
+              >
+                <Tv className={`w-3.5 h-3.5 transition-colors ${isActive("/live-tv") ? "text-red-500" : "text-fg-muted/70"}`} />
                 Live TV
               </Link>
               <Link
-                href="/docs/api"
-                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/docs/api") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                href="/24-7-streams"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/24-7-streams") ? "text-fg bg-hover" : "text-fg-muted hover:text-fg hover:bg-hover"
                   }`}
               >
-                <Terminal className={`w-3.5 h-3.5 transition-colors ${isActive("/docs/api") ? "text-emerald-500" : "text-fg-dim/60"}`} />
-                Docs
+                <Clock className={`w-3.5 h-3.5 transition-colors ${isActive("/24-7-streams") ? "text-red-500" : "text-fg-muted/70"}`} />
+                24/7 Streams
               </Link>
-              <Link
-                href="/about"
-                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/about") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
-                  }`}
+              <div
+                className="relative h-full"
+                onMouseEnter={() => setIsMoreOpen(true)}
+                onMouseLeave={() => setIsMoreOpen(false)}
               >
-                <Info className={`w-3.5 h-3.5 transition-colors ${isActive("/about") ? "text-blue-500" : "text-fg-dim/60"}`} />
-                About
-              </Link>
-              <Link
-                href="/contact"
-                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/contact") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
-                  }`}
-              >
-                <Mail className={`w-3.5 h-3.5 transition-colors ${isActive("/contact") ? "text-purple-500" : "text-fg-dim/60"}`} />
-                Contact
-              </Link>
+                <button
+                  onClick={() => setIsMoreOpen(p => !p)}
+                  className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors cursor-pointer ${isMoreOpen ? "text-fg bg-hover" : "text-fg-muted hover:text-fg hover:bg-hover"}`}
+                >
+                  <Info className={`w-3.5 h-3.5 transition-colors ${isMoreOpen ? "text-blue-500" : "text-fg-muted/70"}`} />
+                  Support & Legal
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isMoreOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isMoreOpen && (
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-50"
+                  >
+                    <div className="border border-border-alt bg-card shadow-2xl p-3 rounded-xl min-w-[460px] md:min-w-[520px]">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link
+                          href="/docs/api"
+                          prefetch={false}
+                          onClick={() => setIsMoreOpen(false)}
+                          className={`flex items-start gap-3 p-2.5 rounded-lg transition-all duration-200 ${
+                            isActive("/docs/api")
+                              ? "bg-emerald-500/10"
+                              : "hover:bg-hover/80"
+                          }`}
+                        >
+                          <span className={`mt-0.5 transition-colors duration-200 ${isActive("/docs/api") ? "text-emerald-500" : "text-fg-dim/60"}`}>
+                            <Terminal className="w-4 h-4" />
+                          </span>
+                          <div className="flex flex-col text-left">
+                            <span className={`text-[11px] font-mono uppercase tracking-wider ${isActive("/docs/api") ? "text-emerald-500 font-bold" : "text-fg"}`}>Docs</span>
+                            <span className="text-[10px] text-fg-dim font-sans mt-0.5 normal-case tracking-normal leading-normal">API documentation and guides</span>
+                          </div>
+                        </Link>
+                        <Link
+                          href="/about"
+                          prefetch={false}
+                          onClick={() => setIsMoreOpen(false)}
+                          className={`flex items-start gap-3 p-2.5 rounded-lg transition-all duration-200 ${
+                            isActive("/about")
+                              ? "bg-blue-500/10"
+                              : "hover:bg-hover/80"
+                          }`}
+                        >
+                          <span className={`mt-0.5 transition-colors duration-200 ${isActive("/about") ? "text-blue-500" : "text-fg-dim/60"}`}>
+                            <Info className="w-4 h-4" />
+                          </span>
+                          <div className="flex flex-col text-left">
+                            <span className={`text-[11px] font-mono uppercase tracking-wider ${isActive("/about") ? "text-blue-500 font-bold" : "text-fg"}`}>About</span>
+                            <span className="text-[10px] text-fg-dim font-sans mt-0.5 normal-case tracking-normal leading-normal">Learn more about KhelaDekho</span>
+                          </div>
+                        </Link>
+                        <Link
+                          href="/terms"
+                          prefetch={false}
+                          onClick={() => setIsMoreOpen(false)}
+                          className={`flex items-start gap-3 p-2.5 rounded-lg transition-all duration-200 ${
+                            isActive("/terms")
+                              ? "bg-amber-500/10"
+                              : "hover:bg-hover/80"
+                          }`}
+                        >
+                          <span className={`mt-0.5 transition-colors duration-200 ${isActive("/terms") ? "text-amber-500" : "text-fg-dim/60"}`}>
+                            <FileText className="w-4 h-4" />
+                          </span>
+                          <div className="flex flex-col text-left">
+                            <span className={`text-[11px] font-mono uppercase tracking-wider ${isActive("/terms") ? "text-amber-500 font-bold" : "text-fg"}`}>Terms & Conditions</span>
+                            <span className="text-[10px] text-fg-dim font-sans mt-0.5 normal-case tracking-normal leading-normal">Rules, policies, and guidelines</span>
+                          </div>
+                        </Link>
+                        <Link
+                          href="/privacy"
+                          prefetch={false}
+                          onClick={() => setIsMoreOpen(false)}
+                          className={`flex items-start gap-3 p-2.5 rounded-lg transition-all duration-200 ${
+                            isActive("/privacy")
+                              ? "bg-emerald-500/10"
+                              : "hover:bg-hover/80"
+                          }`}
+                        >
+                          <span className={`mt-0.5 transition-colors duration-200 ${isActive("/privacy") ? "text-emerald-500" : "text-fg-dim/60"}`}>
+                            <Shield className="w-4 h-4" />
+                          </span>
+                          <div className="flex flex-col text-left">
+                            <span className={`text-[11px] font-mono uppercase tracking-wider ${isActive("/privacy") ? "text-emerald-500 font-bold" : "text-fg"}`}>Privacy Policy</span>
+                            <span className="text-[10px] text-fg-dim font-sans mt-0.5 normal-case tracking-normal leading-normal">How your data is protected</span>
+                          </div>
+                        </Link>
+                        <Link
+                          href="/contact"
+                          prefetch={false}
+                          onClick={() => setIsMoreOpen(false)}
+                          className={`flex items-start gap-3 p-2.5 rounded-lg transition-all duration-200 ${
+                            isActive("/contact")
+                              ? "bg-purple-500/10"
+                              : "hover:bg-hover/80"
+                          }`}
+                        >
+                          <span className={`mt-0.5 transition-colors duration-200 ${isActive("/contact") ? "text-purple-500" : "text-fg-dim/60"}`}>
+                            <Mail className="w-4 h-4" />
+                          </span>
+                          <div className="flex flex-col text-left">
+                            <span className={`text-[11px] font-mono uppercase tracking-wider ${isActive("/contact") ? "text-purple-500 font-bold" : "text-fg"}`}>Contact</span>
+                            <span className="text-[10px] text-fg-dim font-sans mt-0.5 normal-case tracking-normal leading-normal">Get in touch with our team</span>
+                          </div>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
 
@@ -347,30 +449,6 @@ export function Navbar() {
                 </Link>
               </div>
 
-              {/* Quick Links */}
-              <div className="border-t border-border-alt pt-4">
-                <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
-                  Quick Links
-                </h4>
-                <div className="space-y-1">
-                  <Link
-                    href="/live-tv"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
-                  >
-                    <Tv className="w-4 h-4 text-red-500" />
-                    Live TV
-                  </Link>
-
-                  <Link
-                    href="/live-matches"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
-                  >
-                    <Activity className="w-4 h-4 text-red-500 animate-pulse" />
-                    Live Matches
-                  </Link>
-                </div>
-              </div>
-
               {/* Sports */}
               <div className="border-t border-border-alt pt-4">
                 <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
@@ -378,11 +456,12 @@ export function Navbar() {
                 </h4>
                 <div className="grid grid-cols-2 gap-1 px-2">
                   {SPORTS.map(({ slug, label }) => {
-                    const isSportActive = pathname === (slug === "football" ? "/live-matches" : `/${slug}`) || (slug === "cricket" && pathname === "/cricket");
+                    const sportUrl = getSportUrl(slug);
+                    const isSportActive = pathname === sportUrl || (slug === "cricket" && pathname === "/cricket");
                     return (
                       <Link
                         key={slug}
-                        href={slug === "football" ? "/live-matches" : `/${slug}`}
+                        href={sportUrl}
                         prefetch={false}
                         onClick={() => setMobileMenuOpen(false)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
@@ -401,78 +480,121 @@ export function Navbar() {
                 </div>
               </div>
 
-              {/* Docs */}
+              {/* Quick Links */}
               <div className="border-t border-border-alt pt-4">
                 <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
-                  Docs
+                  Quick Links
                 </h4>
                 <div className="space-y-1">
                   <Link
-                    href="/docs/api"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/api") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
+                    href="/live-matches"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
                   >
-                    <Terminal className="w-4 h-4 text-emerald-500" />
-                    KhelaDekho API
+                    <Activity className="w-4 h-4 text-red-500 animate-pulse" />
+                    Live Matches
                   </Link>
+
                   <Link
-                    href="/docs/architecture"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/architecture") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
+                    href="/live-tv"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
                   >
-                    <Activity className="w-4 h-4 text-blue-500" />
-                    Architecture
+                    <Tv className="w-4 h-4 text-red-500" />
+                    Live TV
                   </Link>
+
                   <Link
-                    href="/docs/installation"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/installation") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
+                    href="/24-7-streams"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
                   >
-                    <FileText className="w-4 h-4 text-blue-500" />
-                    Installation Guide
-                  </Link>
-                  <Link
-                    href="/docs/request"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/request") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
-                  >
-                    <Key className="w-4 h-4 text-red-500" />
-                    Request API / Repo
+                    <Clock className="w-4 h-4 text-red-500" />
+                    24/7 Streams
                   </Link>
                 </div>
               </div>
 
-              {/* About & Legal */}
+              {/* Support & Legal (Docs, About, Contact, Terms, Privacy) */}
               <div className="border-t border-border-alt pt-4">
-                <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
-                  About & Legal
-                </h4>
-                <div className="space-y-1">
-                  <Link
-                    href="/about"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/about") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
-                  >
-                    <Info className="w-4 h-4 text-blue-500" />
-                    About Us
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/contact") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
-                  >
-                    <Mail className="w-4 h-4 text-purple-500" />
-                    Contact Us
-                  </Link>
-                  <Link
-                    href="/privacy"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/privacy") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
-                  >
-                    <Shield className="w-4 h-4 text-emerald-500" />
-                    Privacy Policy
-                  </Link>
-                </div>
+                <button
+                  onClick={() => setIsMobileMoreOpen(p => !p)}
+                  className="flex items-center justify-between w-full text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-1 px-4 cursor-pointer"
+                >
+                  <span>Support & Legal</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isMobileMoreOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isMobileMoreOpen && (
+                  <div className="space-y-1.5 mt-3 px-2">
+                    <div className="text-[9px] font-mono text-fg-faint uppercase tracking-wider px-2 mt-1">Documentation</div>
+                    <Link
+                      href="/docs/api"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/docs/api") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <Terminal className="w-4 h-4 text-emerald-500" />
+                      KhelaDekho API
+                    </Link>
+                    <Link
+                      href="/docs/architecture"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/docs/architecture") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <Activity className="w-4 h-4 text-blue-500" />
+                      Architecture
+                    </Link>
+                    <Link
+                      href="/docs/installation"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/docs/installation") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <FileText className="w-4 h-4 text-blue-500" />
+                      Installation Guide
+                    </Link>
+                    <Link
+                      href="/docs/request"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/docs/request") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <Key className="w-4 h-4 text-red-500" />
+                      Request API / Repo
+                    </Link>
+
+                    <div className="text-[9px] font-mono text-fg-faint uppercase tracking-wider px-2 mt-3">Information</div>
+                    <Link
+                      href="/about"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/about") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <Info className="w-4 h-4 text-blue-500" />
+                      About Us
+                    </Link>
+                    <Link
+                      href="/contact"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/contact") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <Mail className="w-4 h-4 text-purple-500" />
+                      Contact Us
+                    </Link>
+                    <Link
+                      href="/terms"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/terms") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <FileText className="w-4 h-4 text-amber-500" />
+                      Terms & Conditions
+                    </Link>
+                    <Link
+                      href="/privacy"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive("/privacy") ? "bg-hover-alt text-fg font-bold" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                    >
+                      <Shield className="w-4 h-4 text-emerald-500" />
+                      Privacy Policy
+                    </Link>
+                  </div>
+                )}
               </div>
 
               <div className="border-t border-border-alt pt-4 text-center">

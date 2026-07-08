@@ -15,7 +15,7 @@ import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
-import { SPORTS } from "@/lib/config";
+import { SPORTS, getSportUrl } from "@/lib/config";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -69,13 +69,13 @@ export function Sidebar() {
               {isSportsOpen && (
                 <ul className="mt-1 ml-4 space-y-0.5 border-l border-border-alt pl-2">
                   {SPORTS.map(({ slug, label }) => {
-                    const href = slug === "football" ? "/live-matches" : `/${slug}`;
+                    const sportUrl = getSportUrl(slug);
                     return (
                       <li key={slug}>
                         <Link
-                          href={href}
+                          href={sportUrl}
                           prefetch={false}
-                          className={`${baseLinkClass} text-xs ${isActive(href) || (slug === "cricket" && isActive("/cricket")) ? activeLinkClass : inactiveLinkClass}`}
+                          className={`${baseLinkClass} text-xs ${isActive(sportUrl) || (slug === "cricket" && isActive("/cricket")) ? activeLinkClass : inactiveLinkClass}`}
                         >
                           {label}
                         </Link>

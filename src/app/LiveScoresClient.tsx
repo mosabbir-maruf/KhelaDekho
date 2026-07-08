@@ -40,7 +40,7 @@ export default function LiveScoresClient({ initialData }: { initialData: { displ
       <div className="flex flex-col items-center text-center mb-14">
         <span className="inline-flex items-center gap-2 border border-border-alt bg-card px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-fg-dim mb-5">
           {data.liveCount > 0 ? (
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           ) : (
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           )}

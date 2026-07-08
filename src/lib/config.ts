@@ -14,8 +14,14 @@ export const DEFAULT_STREAM_VERSION: StreamVersion = "v4";
 // Production site URL (used for OG tags, sitemap, canonical links, etc.)
 export const SITE_URL = "https://kheladekho.pages.dev";
 
+export interface SportConfig {
+  slug: string;
+  label: string;
+  urlSlug?: string;
+}
+
 // Supported V5 sport slugs and their display labels.
-export const SPORTS = [
+export const SPORTS: SportConfig[] = [
   { slug: "football", label: "Football" },
   { slug: "cricket", label: "Cricket" },
   { slug: "motorsports", label: "Motorsports" },
@@ -27,10 +33,18 @@ export const SPORTS = [
   { slug: "american-football", label: "American Football" },
   { slug: "afl", label: "AFL" },
   { slug: "volleyball", label: "Volleyball" },
-] as const;
+  { slug: "24/7-streams", label: "24/7 Streams", urlSlug: "24-7-streams" },
+];
 
 export function getSportLabel(slug: string): string {
   return SPORTS.find(s => s.slug === slug)?.label || slug;
+}
+
+export function getSportUrl(slug: string): string {
+  if (slug === "football") return "/live-matches";
+  const sport = SPORTS.find(s => s.slug === slug);
+  if (sport?.urlSlug) return `/${sport.urlSlug}`;
+  return `/${slug}`;
 }
 
 export const DEFAULT_SPORT = "football";

@@ -208,7 +208,7 @@ function CompetitionGroup({ competition }: { competition: GoalCompetition }) {
         </div>
         {liveCount > 0 && (
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[10px] font-bold text-red-500 tracking-wider font-mono uppercase shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             {liveCount} LIVE
           </span>
         )}
@@ -542,7 +542,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
                   <div className="text-[10px] font-mono text-fg-dim uppercase tracking-widest flex items-center gap-2 shrink-0">
                     {refreshing ? (
                       <>
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                         Refreshed feed
                       </>
                     ) : (
