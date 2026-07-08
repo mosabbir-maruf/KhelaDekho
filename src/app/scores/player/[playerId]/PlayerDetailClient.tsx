@@ -102,7 +102,7 @@ export default function PlayerDetailClient({ initialPlayer, playerName }: Props)
               <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-input border border-border-alt flex items-center justify-center overflow-hidden shrink-0 shadow-2xl relative group">
                 <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 {player.image_url ? (
-                  <Image src={player.image_url} alt={player.name} width={112} height={112} className="object-cover w-full h-full" unoptimized loading="eager" style={{ width: "auto", height: "auto" }} />
+                  <Image src={player.image_url} alt={player.name} width={112} height={112} className="object-cover w-full h-full" unoptimized style={{ width: "auto", height: "auto" }} />
                 ) : (
                   <Shirt className="w-10 h-10 text-fg-dim" />
                 )}

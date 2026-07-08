@@ -82,7 +82,7 @@ function TeamLogo({ team, size = 16 }: { team: GoalMatch["team_a"]; size?: numbe
   return (
     <span className="shrink-0 flex items-center justify-center" style={{ width: size, height: size }}>
       {team.image_url ? (
-        <Image src={team.image_url} alt={team.name} width={size} height={size} className="object-contain" unoptimized loading="eager" style={{ width: "auto", height: "auto" }} />
+        <Image src={team.image_url} alt={team.name} width={size} height={size} className="object-contain" unoptimized style={{ width: "auto", height: "auto" }} />
       ) : (
         <span className="text-[8px] text-fg-dim uppercase font-semibold">{team.code || team.name.slice(0, 3)}</span>
       )}
@@ -195,7 +195,7 @@ function CompetitionGroup({ competition }: { competition: GoalCompetition }) {
       <div className="flex items-center gap-3 px-4 h-12 bg-white/[0.01] border-b border-border/80">
         {competition.image_url ? (
           <span className="w-6 h-6 shrink-0 flex items-center justify-center rounded bg-hover border border-border-alt p-1">
-            <Image src={competition.image_url} alt={competition.name} width={24} height={24} className="object-contain" unoptimized loading="eager" style={{ width: "auto", height: "auto" }} />
+            <Image src={competition.image_url} alt={competition.name} width={24} height={24} className="object-contain" unoptimized style={{ width: "auto", height: "auto" }} />
           </span>
         ) : (
           <span className="w-6 h-6 shrink-0 rounded bg-border-alt" />

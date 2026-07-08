@@ -77,7 +77,7 @@ export default function TeamDetailClient({ initialTeam, teamName }: Props) {
           <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-input/50 border border-border-alt flex items-center justify-center overflow-hidden shrink-0">
               {team.image_url ? (
-                <Image src={team.image_url} alt={team.name} width={80} height={80} className="object-contain w-full h-full" unoptimized loading="eager" style={{ width: "auto", height: "auto" }} />
+                <Image src={team.image_url} alt={team.name} width={80} height={80} className="object-contain w-full h-full" unoptimized style={{ width: "auto", height: "auto" }} />
               ) : (
                 <Trophy className="w-8 h-8 text-fg-dim" />
               )}
