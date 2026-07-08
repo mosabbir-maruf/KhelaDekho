@@ -235,7 +235,7 @@ function CompetitionGroup({ competition }: { competition: GoalCompetition }) {
 /* ---------------- Day selector ---------------- */
 
 function DayStrip({ currentDate, onDateChange }: { currentDate: string; onDateChange: (d: string) => void }) {
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  const [showPicker, setShowPicker] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const today = new Date();
   const [days, setDays] = useState<string[]>([]);
@@ -323,24 +323,6 @@ function DayStrip({ currentDate, onDateChange }: { currentDate: string; onDateCh
         })}
       </div>
 
-      <div className="relative shrink-0 flex items-center">
-        <button
-          onClick={() => dateInputRef.current?.showPicker?.()}
-          className="p-2 rounded border border-border-alt bg-card/65 text-fg-dim hover:text-fg hover:bg-hover hover:border-red-500/20 transition-all cursor-pointer"
-          aria-label="Pick a date"
-        >
-          <Calendar className="w-4 h-4" />
-        </button>
-        <input
-          ref={dateInputRef}
-          type="date"
-          value={currentDate}
-          onChange={(e) => e.target.value && onDateChange(e.target.value)}
-          className="absolute inset-0 w-0 h-0 opacity-0 pointer-events-none"
-          aria-hidden
-        />
-      </div>
-
       <button
         onClick={() => shift(1)}
         className="p-2 rounded border border-border-alt bg-card/65 text-fg-dim hover:text-fg hover:bg-hover hover:border-red-500/20 transition-all shrink-0 cursor-pointer"
@@ -348,6 +330,39 @@ function DayStrip({ currentDate, onDateChange }: { currentDate: string; onDateCh
       >
         <ChevronRight className="w-4 h-4" />
       </button>
+
+      <div className="relative shrink-0 flex items-center">
+        <button
+          onClick={() => setShowPicker(p => !p)}
+          className="p-2 rounded border border-border-alt bg-card/65 text-fg-dim hover:text-fg hover:bg-hover hover:border-red-500/20 transition-all cursor-pointer"
+          aria-label="Pick a date"
+        >
+          <Calendar className="w-4 h-4" />
+        </button>
+        {showPicker && (
+          <div className="absolute top-full right-0 mt-1 border border-border-alt bg-card p-2 shadow-2xl z-50 rounded-lg flex gap-1">
+            <input
+              type="text"
+              placeholder="YYYY-MM-DD"
+              defaultValue={currentDate}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const v = (e.target as HTMLInputElement).value.trim();
+                  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) { onDateChange(v); setShowPicker(false); }
+                }
+              }}
+              className="w-28 px-2 py-1.5 text-[10px] bg-input border border-border-alt rounded-sm text-fg placeholder:text-fg-faint font-mono focus:outline-none focus:border-red-500/50"
+              autoFocus
+            />
+            <button
+              onClick={() => { onDateChange(new Date().toISOString().slice(0, 10)); setShowPicker(false); }}
+              className="px-2 py-1 text-[9px] font-mono bg-red-500/10 border border-red-500/30 text-red-400 rounded-sm hover:bg-red-500/20 transition-all cursor-pointer shrink-0"
+            >
+              Today
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
