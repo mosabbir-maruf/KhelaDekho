@@ -665,7 +665,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
             </div>
           </div>
 
-          <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-3">
+          <p className="text-[11px] font-mono text-yellow-500/80 leading-relaxed text-center mt-4">
             Stream buffering? Switch channel or server.
           </p>
         </div>
