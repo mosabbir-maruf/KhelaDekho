@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
-import { NAV_SPORTS, getSportLabel, DEFAULT_SPORT, isNonNavSport } from "@/lib/config";
+import { NAV_SPORTS, getSportLabel, DEFAULT_SPORT, isNonNavSport, POSTER_247_MAP } from "@/lib/config";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
@@ -295,7 +295,9 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
         const body = res.ok ? await res.json() : {};
         const list: MatchItem[] = body?.data?.matches || [];
         if (!active) return;
-        setMatches(list);
+        setMatches(sport === "24/7-streams"
+          ? list.map(m => ({ ...m, poster: POSTER_247_MAP[m.name] || m.poster }))
+          : list);
         const { m } = getUrlParams();
         if (m) {
           const found = list.find(x => x.slug === m);

@@ -77,7 +77,10 @@ KhelaDekho-Frontend/
 │   ├── lib/                         # api.ts, config.ts, logger.ts, routing.ts, streamSelector.ts, analytics.ts
 │   ├── data/                        # liveTv.ts (logo maps, category keywords)
 │   └── types/                       # Global type declarations
-├── public/                          # Logo, meta image, PWA icons
+├── public/                          # Static assets (served by Cloudflare Pages)
+│   ├── meta-graph.webp / logo.png   # OG image, site logo
+│   ├── V5-24:7-Assets/              # 24/7 stream poster images (FamilyGuy.webp, SpongeBob.webp, rallytv.webp, simpsons.webp)
+│   └── _headers                     # Cache-control headers for Cloudflare Pages
 ├── next.config.ts
 └── wrangler.toml                    # Cloudflare Pages config + KV binding
 ```

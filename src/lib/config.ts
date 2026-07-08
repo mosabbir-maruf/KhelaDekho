@@ -58,3 +58,11 @@ export function isNonNavSport(slug: string): boolean {
 
 // Sports shown in navigation dropdowns/menus.
 export const NAV_SPORTS: readonly SportConfig[] = SPORTS.filter(s => !NON_NAV_SPORT_SLUGS.has(s.slug));
+
+// Poster images for 24/7 entertainment channels (served from frontend /public).
+export const POSTER_247_MAP: Record<string, string> = {
+  "Rally TV": "/V5-24:7-Assets/rallytv.webp",
+  "24/7 The Simpsons": "/V5-24:7-Assets/simpsons.webp",
+  "24/7 SpongeBob Squarepants": "/V5-24:7-Assets/SpongeBob.webp",
+  "24/7 Family Guy": "/V5-24:7-Assets/FamilyGuy.webp",
+};

@@ -5,8 +5,9 @@ export function Footer() {
   return (
     <footer className="border-t border-border-alt bg-page relative z-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
-          <div className="space-y-4 col-span-2 lg:col-span-1">
+        <div className="grid grid-cols-3 lg:grid-cols-4 gap-10 lg:gap-8">
+          {/* Brand Info */}
+          <div className="space-y-4 col-span-3 lg:col-span-1">
             <Link prefetch={false} href="/" className="flex items-center gap-3 font-mono text-sm tracking-widest text-fg uppercase hover:text-red-400 transition-colors">
               <Tv className="w-5 h-5 text-red-500" />
               [ KhelaDekho ]
@@ -16,14 +17,15 @@ export function Footer() {
             </p>
           </div>
 
-          <div className="space-y-4">
+          {/* Navigation */}
+          <div className="space-y-4 col-span-1">
             <h4 className="text-[10px] font-mono text-fg-muted uppercase tracking-widest">
               Navigation
             </h4>
             <ul className="space-y-2.5">
               <li>
                 <Link prefetch={false} href="/scores" className="text-sm font-mono text-fg-faint hover:text-fg transition-colors">
-                  Match Scores
+                  Scores
                 </Link>
               </li>
               <li>
@@ -38,18 +40,19 @@ export function Footer() {
               </li>
               <li>
                 <Link prefetch={false} href="/24-7-streams" className="text-sm font-mono text-fg-faint hover:text-fg transition-colors">
-                  24/7 Streams
+                  Streams
                 </Link>
               </li>
               <li>
                 <Link prefetch={false} href="/search" className="text-sm font-mono text-fg-faint hover:text-fg transition-colors">
-                  Search Finder
+                  Search
                 </Link>
               </li>
             </ul>
           </div>
 
-          <div className="space-y-4">
+          {/* Sports */}
+          <div className="space-y-4 col-span-1">
             <h4 className="text-[10px] font-mono text-fg-muted uppercase tracking-widest">
               Sports
             </h4>
@@ -82,7 +85,8 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="space-y-4">
+          {/* Support & Legal */}
+          <div className="space-y-4 col-span-1">
             <h4 className="text-[10px] font-mono text-fg-muted uppercase tracking-widest">
               Support & Legal
             </h4>
@@ -94,22 +98,22 @@ export function Footer() {
               </li>
               <li>
                 <Link prefetch={false} href="/contact" className="text-sm font-mono text-fg-faint hover:text-fg transition-colors">
-                  Contact Us
+                  Contact
                 </Link>
               </li>
               <li>
                 <Link prefetch={false} href="/docs/api" className="text-sm font-mono text-fg-faint hover:text-fg transition-colors">
-                  API Documentation
+                  API Docs
                 </Link>
               </li>
               <li>
                 <Link prefetch={false} href="/terms" className="text-sm font-mono text-fg-faint hover:text-fg transition-colors">
-                  Terms & Conditions
+                  Terms
                 </Link>
               </li>
               <li>
                 <Link prefetch={false} href="/privacy" className="text-sm font-mono text-fg-faint hover:text-fg transition-colors">
-                  Privacy Policy
+                  Privacy
                 </Link>
               </li>
             </ul>
