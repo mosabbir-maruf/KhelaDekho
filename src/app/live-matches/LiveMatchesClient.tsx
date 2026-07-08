@@ -125,6 +125,23 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const sportDropdownRef = useRef<HTMLDivElement>(null);
   const serverDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sync state when URL changes (back/forward navigation)
+  const prevSearchRef = useRef("");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const search = window.location.search;
+    if (search !== prevSearchRef.current) {
+      prevSearchRef.current = search;
+      const { ch: urlCh, m: urlM } = getUrlParams();
+      if (!urlCh && !urlM) {
+        setSelectedChannel(null);
+        setV2Match(null);
+        setV2Selected(null);
+        setV2Stream(null);
+      }
+    }
+  });
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (
@@ -382,7 +399,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const openMatch = useCallback((m: MatchItem) => {
     setV2Match(m);
     setSearchQuery("");
-    router.replace(`${pathname}?v=${apiVersion}&m=${encodeURIComponent(m.slug)}`, { scroll: false });
+    router.push(`${pathname}?v=${apiVersion}&m=${encodeURIComponent(m.slug)}`, { scroll: false });
   }, [pathname, router, apiVersion]);
 
   const backToMatches = useCallback(() => {
@@ -390,7 +407,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     setV2Selected(null);
     setV2Stream(null);
     setSearchQuery("");
-    router.replace(`${pathname}?v=${apiVersion}`, { scroll: false });
+    router.push(`${pathname}?v=${apiVersion}`, { scroll: false });
   }, [pathname, router, apiVersion]);
 
   const switchServer = useCallback((v: ApiVersion) => {
@@ -400,7 +417,8 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     setV2Selected(null);
     setV2Stream(null);
     setSearchQuery("");
-  }, []);
+    router.replace(`${pathname}?v=${v}`, { scroll: false });
+  }, [pathname, router]);
 
   // -------- Normalized list items for the current view --------
   const listItems: ListItem[] = useMemo(() => {
@@ -589,7 +607,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                             setV2Match(null);
                             setSearchQuery("");
                             setIsSportDropdownOpen(false);
-                            router.replace(getSportUrl(slug), { scroll: false });
+                            router.push(getSportUrl(slug), { scroll: false });
                           }}
                           className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer whitespace-nowrap ${
                             sport === slug

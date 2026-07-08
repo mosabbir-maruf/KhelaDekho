@@ -113,6 +113,20 @@ export default function LiveTvPage() {
     return new URLSearchParams(window.location.search).get("ch");
   }
 
+  // Sync channel state when URL changes (back/forward navigation)
+  const prevChRef = useRef<string | null>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const ch = getUrlCh();
+    if (ch !== prevChRef.current) {
+      prevChRef.current = ch;
+      if (!ch) {
+        setSelectedChannel(null);
+        setResolvedStreamUrl(null);
+      }
+    }
+  });
+
   // -------- Fetch channels --------
   useEffect(() => {
     let active = true;
@@ -323,7 +337,9 @@ export default function LiveTvPage() {
     setSelectedChannel(ch);
     setResolvedStreamUrl(null);
     setIsMobileDropdownOpen(false);
-    router.replace(`?ch=${encodeURIComponent(ch.name)}`, { scroll: false });
+    const hasCh = window.location.search.includes("ch=");
+    const fn = hasCh ? router.replace : router.push;
+    fn(`?ch=${encodeURIComponent(ch.name)}`, { scroll: false });
   }, [router]);
 
   const backToBrowse = useCallback(() => {
@@ -332,7 +348,7 @@ export default function LiveTvPage() {
     setSearchQuery("");
     setActiveCategory("All");
     setActiveCountry("All");
-    router.replace(`/live-tv`, { scroll: false });
+    router.push(`/live-tv`, { scroll: false });
   }, [router]);
 
   const onItemClick = useCallback((key: string) => {
