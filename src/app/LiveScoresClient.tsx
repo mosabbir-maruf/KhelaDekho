@@ -30,6 +30,7 @@ export default function LiveScoresClient({ initialData }: { initialData: { displ
   }, []);
 
   useEffect(() => {
+    refresh();
     const id = setInterval(refresh, 60000);
     return () => clearInterval(id);
   }, [refresh]);
