@@ -229,6 +229,13 @@ export function Navbar() {
                     <Tv className="w-4 h-4 text-red-500" />
                     Live Matches
                   </Link>
+                  <Link
+                    href="/cricket"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
+                  >
+                    <Tv className="w-4 h-4 text-red-500" />
+                    Cricket
+                  </Link>
                 </div>
               </div>
 
