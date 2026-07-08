@@ -16,6 +16,9 @@ import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import Search from "lucide-react/dist/esm/icons/search";
 import X from "lucide-react/dist/esm/icons/x";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
+import LayoutGrid from "lucide-react/dist/esm/icons/layout-grid";
+import List from "lucide-react/dist/esm/icons/list";
+
 
 const VideoPlayer = dynamic(() => import("@/components/ui/VideoPlayer").then((mod) => ({ default: mod.VideoPlayer })), { ssr: false });
 
@@ -111,6 +114,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
   const [isSportDropdownOpen, setIsSportDropdownOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sport, setSport] = useState(() => {
     const { s } = getUrlParams();
     return s || initialSport || DEFAULT_SPORT;
@@ -563,6 +567,32 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <div className="flex items-center border border-border-alt bg-input p-0.5 rounded-lg shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  title="Grid view"
+                  className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                    viewMode === "grid"
+                      ? "bg-red-500/10 text-red-500 font-bold shadow-sm"
+                      : "text-fg-dim hover:text-fg hover:bg-hover"
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  title="List view"
+                  className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                    viewMode === "list"
+                      ? "bg-red-500/10 text-red-500 font-bold shadow-sm"
+                      : "text-fg-dim hover:text-fg hover:bg-hover"
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5" />
+                </button>
+              </div>
               {!lockedVersion && apiVersion === "v5" && (
                 <div className="relative" ref={sportDropdownRef}>
                   <button
@@ -839,6 +869,28 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                         <div className="text-center py-12">
                           <p className="font-mono text-xs text-fg-dim">No streams currently available</p>
                         </div>
+                      ) : viewMode === "list" ? (
+                        <div className="flex flex-col gap-2">
+                          {matches.map((m) => (
+                            <button
+                              key={m.slug}
+                              type="button"
+                              onClick={() => openMatch(m)}
+                              className="w-full text-left border border-border-alt bg-input hover:border-red-500/20 hover:bg-red-500/[0.02] transition-all duration-300 rounded-xl cursor-pointer group flex items-center gap-3 p-3"
+                            >
+                              <div className="w-12 h-12 rounded-xl overflow-hidden border border-border-alt bg-hover shrink-0">
+                                {m.poster ? (
+                                  <img draggable={false} src={m.poster} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center"><Tv className="w-5 h-5 text-fg-dim" /></div>
+                                )}
+                              </div>
+                              <span className="font-mono text-sm font-bold text-fg group-hover:text-red-400 transition-colors truncate flex-1 min-w-0">{m.name}</span>
+                              <span className="px-2.5 py-1 border border-emerald-500/30 bg-emerald-500/10 text-[8px] font-mono uppercase text-emerald-400 font-bold rounded-full shrink-0">LIVE</span>
+                              <span className="px-3 py-1.5 border border-border-alt bg-card text-[10px] font-mono text-fg-dim font-bold rounded-lg group-hover:text-red-500 group-hover:bg-red-500/[0.02] transition-all shrink-0">[ Watch ]</span>
+                            </button>
+                          ))}
+                        </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                           {matches.map((m) => (
@@ -849,13 +901,12 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                               className="w-full text-left border border-border-alt bg-input hover:border-red-500/30 hover:bg-red-500/[0.01] transition-all duration-300 rounded-xl cursor-pointer group flex flex-col overflow-hidden hover:shadow-[0_8px_30px_rgba(239,68,68,0.03)]"
                             >
                               {m.poster ? (
-                                <div className="relative w-full h-40 overflow-hidden bg-[#181818] border-b border-border-alt">
+                                <div className="relative w-full aspect-video overflow-hidden bg-[#181818] border-b border-border-alt">
                                   <img
                                     draggable={false}
                                     src={m.poster}
                                     alt={m.name}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    crossOrigin="anonymous"
                                     onError={(e) => { e.currentTarget.style.display = "none"; }}
                                   />
                                   <div className="absolute inset-0 bg-gradient-to-t from-bg-page/40 via-transparent to-transparent" />
@@ -885,7 +936,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                                 <div className="w-full border-t border-border-alt/50 pt-3 flex items-center justify-between text-[10px] font-mono">
                                   <span className="truncate text-fg-dim max-w-[150px]">Category: {m.sport || "General"}</span>
                                   <span className="px-2.5 py-1 border border-border-alt bg-card text-fg-dim font-bold rounded group-hover:text-red-500 group-hover:border-red-500/30 group-hover:bg-red-500/[0.02] transition-all">
-                                    [ Tune In ]
+                                    [ Watch ]
                                   </span>
                                 </div>
                               </div>
@@ -909,8 +960,8 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                         <div className="text-center py-12">
                           <p className="font-mono text-xs text-fg-dim">No live matches currently available</p>
                         </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      ) : viewMode === "list" ? (
+                        <div className="flex flex-col gap-2">
                           {matches.map((m) => {
                             const hasTeams = m.team_a && m.team_b;
                             return (
@@ -918,80 +969,125 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                                 key={m.slug}
                                 type="button"
                                 onClick={() => openMatch(m)}
-                                className="w-full text-left border border-border-alt bg-input hover:border-red-500/30 hover:bg-red-500/[0.01] transition-all duration-300 rounded-xl cursor-pointer group flex flex-col p-5 space-y-4 hover:shadow-[0_4px_20px_rgba(239,68,68,0.03)]"
+                                className={`w-full text-left border ${
+                                  m.is_live
+                                    ? "border-red-500/15 bg-red-500/[0.02] hover:border-red-500/40"
+                                    : "border-border-alt bg-input hover:border-red-500/20"
+                                } transition-all duration-300 rounded-xl cursor-pointer group flex items-center gap-3 p-3`}
                               >
-                                {/* Card Header */}
-                                <div className="flex items-center justify-between w-full">
-                                  {m.is_live ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-red-500/30 bg-red-500/10 text-[9px] font-mono uppercase text-red-400 font-bold rounded-full">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                                      LIVE
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-blue-500/30 bg-blue-500/10 text-[9px] font-mono uppercase text-blue-400 font-bold rounded-full">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                      UPCOMING
-                                    </span>
-                                  )}
-                                  <span className="font-mono text-[9px] text-fg-faint uppercase tracking-widest">
-                                    {m.sport || "Football"}
-                                  </span>
-                                </div>
-
-                                {/* Card Body: Teams Info */}
                                 {hasTeams ? (
-                                  <div className="flex items-center gap-4 py-2">
-                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <div className="w-7 h-7 rounded-full overflow-hidden border border-border-alt bg-hover shrink-0">
                                       {m.team_a?.logo ? (
-                                        <img draggable={false} src={m.team_a.logo} alt={m.team_a.name} className="w-8 h-8 rounded-full border border-border-alt object-cover bg-[#000]" />
+                                        <img draggable={false} src={m.team_a.logo} alt="" className="w-full h-full object-cover" />
                                       ) : (
-                                        <div className="w-8 h-8 rounded-full border border-border-alt bg-hover flex items-center justify-center font-mono text-[10px] text-fg-dim">A</div>
+                                        <div className="w-full h-full flex items-center justify-center font-mono text-[9px] text-fg-dim">A</div>
                                       )}
-                                      <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_a?.name}</span>
                                     </div>
-                                    <span className="font-mono text-[10px] text-fg-faint font-bold shrink-0">VS</span>
-                                    <div className="flex items-center gap-2 min-w-0 flex-1 justify-end text-right">
-                                      <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_b?.name}</span>
+                                    <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_a?.name}</span>
+                                    <span className="font-mono text-[9px] text-fg-faint font-bold shrink-0">VS</span>
+                                    <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_b?.name}</span>
+                                    <div className="w-7 h-7 rounded-full overflow-hidden border border-border-alt bg-hover shrink-0">
                                       {m.team_b?.logo ? (
-                                        <img draggable={false} src={m.team_b.logo} alt={m.team_b.name} className="w-8 h-8 rounded-full border border-border-alt object-cover bg-[#000]" />
+                                        <img draggable={false} src={m.team_b.logo} alt="" className="w-full h-full object-cover" />
                                       ) : (
-                                        <div className="w-8 h-8 rounded-full border border-border-alt bg-hover flex items-center justify-center font-mono text-[10px] text-fg-dim">B</div>
+                                        <div className="w-full h-full flex items-center justify-center font-mono text-[9px] text-fg-dim">B</div>
                                       )}
-                                    </div>
-                                  </div>
-                                ) : m.poster ? (
-                                  <div className="relative -mx-5 -mt-1 w-[calc(100%+2.5rem)] h-44 overflow-hidden bg-[#181818]">
-                                    <img
-                                      draggable={false}
-                                      src={m.poster}
-                                      alt={m.name}
-                                      className="w-full h-full object-cover"
-                                      crossOrigin="anonymous"
-                                      onError={(e) => { e.currentTarget.style.display = "none"; }}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0d] via-[#0c0c0d]/20 to-transparent" />
-                                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                                      <h3 className="font-mono text-sm font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] line-clamp-2 leading-snug">
-                                        {m.name}
-                                      </h3>
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="py-2">
-                                    <h3 className="font-mono text-sm font-bold text-fg group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
+                                  <span className="font-mono text-sm font-bold text-fg group-hover:text-red-400 transition-colors truncate flex-1 min-w-0">{m.name}</span>
+                                )}
+
+                                <span className={`px-2.5 py-1 border text-[8px] font-mono uppercase font-bold rounded-full shrink-0 ${
+                                  m.is_live
+                                    ? "border-red-500/30 bg-red-500/10 text-red-400"
+                                    : "border-blue-500/30 bg-blue-500/10 text-blue-400"
+                                }`}>
+                                  {m.is_live ? "LIVE" : "UPCOMING"}
+                                </span>
+
+                                <span className="px-3 py-1.5 border border-border-alt bg-card text-[10px] font-mono text-fg-dim font-bold rounded-lg group-hover:text-red-500 group-hover:bg-red-500/[0.02] transition-all shrink-0">
+                                  [ Watch ]
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {matches.map((m) => {
+                            const hasTeams = m.team_a && m.team_b;
+                            return (
+                              <button
+                                key={m.slug}
+                                type="button"
+                                onClick={() => openMatch(m)}
+                                className="w-full text-left border border-border-alt bg-input hover:border-red-500/30 hover:bg-red-500/[0.01] transition-all duration-300 rounded-xl cursor-pointer group flex flex-col overflow-hidden hover:shadow-[0_8px_30px_rgba(239,68,68,0.03)]"
+                              >
+                                {m.poster ? (
+                                  <div className="relative w-full aspect-video overflow-hidden bg-[#181818] border-b border-border-alt">
+                              <img
+                                draggable={false}
+                                src={m.poster}
+                                alt={m.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-bg-page/40 via-transparent to-transparent" />
+                              <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-border-alt bg-card text-[8px] font-mono uppercase text-fg font-bold rounded-full">
+                                      <span className={`w-1 h-1 rounded-full animate-pulse ${m.is_live ? "bg-red-500" : "bg-blue-500"}`} />
+                                      {m.is_live ? "LIVE" : "UPCOMING"}
+                                    </span>
+                                  </div>
+                                ) : hasTeams ? (
+                                  <div className="relative w-full h-40 bg-gradient-to-br from-red-500/5 to-purple-500/5 flex items-center justify-between p-6 border-b border-border-alt">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      {m.team_a?.logo ? (
+                                        <img draggable={false} src={m.team_a.logo} alt={m.team_a.name} className="w-10 h-10 rounded-full border border-border-alt object-cover bg-black" />
+                                      ) : (
+                                        <div className="w-10 h-10 rounded-full border border-border-alt bg-hover flex items-center justify-center font-mono text-xs text-fg-dim">A</div>
+                                      )}
+                                      <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors hidden sm:inline">{m.team_a?.name}</span>
+                                    </div>
+                                    <span className="font-mono text-xs text-fg-faint font-bold shrink-0 px-2">VS</span>
+                                    <div className="flex items-center gap-2 min-w-0 flex-1 justify-end text-right">
+                                      <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors hidden sm:inline">{m.team_b?.name}</span>
+                                      {m.team_b?.logo ? (
+                                        <img draggable={false} src={m.team_b.logo} alt={m.team_b.name} className="w-10 h-10 rounded-full border border-border-alt object-cover bg-black" />
+                                      ) : (
+                                        <div className="w-10 h-10 rounded-full border border-border-alt bg-hover flex items-center justify-center font-mono text-xs text-fg-dim">B</div>
+                                      )}
+                                    </div>
+                                    <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-border-alt bg-card text-[8px] font-mono uppercase text-fg font-bold rounded-full">
+                                      <span className={`w-1 h-1 rounded-full animate-pulse ${m.is_live ? "bg-red-500" : "bg-blue-500"}`} />
+                                      {m.is_live ? "LIVE" : "UPCOMING"}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="relative w-full h-40 bg-gradient-to-br from-red-500/5 to-purple-500/5 flex flex-col items-center justify-center p-6 border-b border-border-alt text-center">
+                                    <Tv className="w-8 h-8 text-fg-dim mb-2 group-hover:text-red-500 transition-colors" />
+                                    <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-border-alt bg-card text-[8px] font-mono uppercase text-fg font-bold rounded-full">
+                                      <span className={`w-1 h-1 rounded-full animate-pulse ${m.is_live ? "bg-red-500" : "bg-blue-500"}`} />
+                                      {m.is_live ? "LIVE" : "UPCOMING"}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                                  <div className="space-y-1">
+                                    <span className="font-mono text-[9px] text-red-500 uppercase tracking-widest font-bold">{m.sport || "Match"}</span>
+                                    <h3 className="font-mono text-sm font-bold text-fg group-hover:text-red-400 transition-colors line-clamp-1 leading-snug">
                                       {m.name}
                                     </h3>
                                   </div>
-                                )}
-
-                                {/* Card Footer */}
-                                <div className="w-full border-t border-border-alt/50 pt-3 flex items-center justify-between text-[10px] font-mono">
-                                  <span className="truncate max-w-[180px] text-fg-dim">
-                                    {m.name}
-                                  </span>
-                                  <span className="px-2.5 py-1 border border-border-alt bg-card text-fg-dim font-bold rounded group-hover:text-red-500 group-hover:border-red-500/30 group-hover:bg-red-500/[0.02] transition-all flex items-center gap-1">
-                                    [ View Channels ]
-                                  </span>
+                                  
+                                  <div className="w-full border-t border-border-alt/50 pt-3 flex items-center justify-between text-[10px] font-mono">
+                                    <span className="truncate text-fg-dim max-w-[150px]">{m.name}</span>
+                                    <span className="px-2.5 py-1 border border-border-alt bg-card text-fg-dim font-bold rounded group-hover:text-red-500 group-hover:border-red-500/30 group-hover:bg-red-500/[0.02] transition-all">
+                                      [ Watch ]
+                                    </span>
+                                  </div>
                                 </div>
                               </button>
                             );
