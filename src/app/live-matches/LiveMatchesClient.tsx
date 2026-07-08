@@ -830,7 +830,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                         </div>
                         <div>
                           <h2 className="font-mono text-sm font-bold text-fg uppercase tracking-wider">Select a Stream</h2>
-                          <p className="font-mono text-[10px] text-fg-dim">Browse our premium 24/7 live television and sports broadcasts below</p>
+                          <p className="font-mono text-[10px] text-fg-dim">Access direct 24/7 network feeds, live broadcasts, and media channels</p>
                         </div>
                       </div>
                       {matches.length === 0 ? (
