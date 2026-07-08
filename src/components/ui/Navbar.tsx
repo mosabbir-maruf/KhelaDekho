@@ -15,6 +15,7 @@ import Mail from "lucide-react/dist/esm/icons/mail";
 import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
+import Dribbble from "lucide-react/dist/esm/icons/dribbble";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CommandSearch, useIsMac } from "@/components/ui/CommandSearch";
@@ -174,16 +175,18 @@ export function Navbar() {
             <nav className="hidden md:flex items-center h-full">
               <Link
                 href="/scores"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/scores") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/scores") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
+                <Trophy className={`w-3.5 h-3.5 transition-colors ${isActive("/scores") ? "text-amber-500" : "text-fg-dim/60"}`} />
                 Scores
               </Link>
               <Link
                 href="/live-matches"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-matches") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
+                <Activity className={`w-3.5 h-3.5 transition-colors ${isActive("/live-matches") ? "text-red-500 animate-pulse" : "text-fg-dim/60"}`} />
                 Live Matches
               </Link>
               <div
@@ -195,6 +198,7 @@ export function Navbar() {
                   onClick={() => setIsSportsOpen(p => !p)}
                   className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors cursor-pointer ${isSportsOpen ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
                 >
+                  <Dribbble className={`w-3.5 h-3.5 transition-colors ${isSportsOpen ? "text-blue-500" : "text-fg-dim/60"}`} />
                   Sports
                   <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isSportsOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -202,7 +206,7 @@ export function Navbar() {
                   <div
                     className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-50"
                   >
-                    <div className="border border-border-alt bg-page/90 backdrop-blur-md shadow-2xl p-3 rounded-xl min-w-[340px]">
+                    <div className="border border-border-alt bg-page/80 backdrop-blur-md shadow-2xl p-3 rounded-xl min-w-[340px]">
                       <div className="grid grid-cols-2 gap-1">
                         {SPORTS.map(({ slug, label }) => {
                           const isSportActive = pathname === (slug === "football" ? "/live-matches" : `/${slug}`) || (slug === "cricket" && pathname === "/cricket");
@@ -232,30 +236,34 @@ export function Navbar() {
               </div>
               <Link
                 href="/live-tv"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
+                <Tv className={`w-3.5 h-3.5 transition-colors ${isActive("/live-tv") ? "text-red-500" : "text-fg-dim/60"}`} />
                 Live TV
               </Link>
               <Link
                 href="/docs/api"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/docs/api") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/docs/api") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
+                <Terminal className={`w-3.5 h-3.5 transition-colors ${isActive("/docs/api") ? "text-emerald-500" : "text-fg-dim/60"}`} />
                 Docs
               </Link>
               <Link
                 href="/about"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/about") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/about") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
+                <Info className={`w-3.5 h-3.5 transition-colors ${isActive("/about") ? "text-blue-500" : "text-fg-dim/60"}`} />
                 About
               </Link>
               <Link
                 href="/contact"
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/contact") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
+                className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/contact") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
                   }`}
               >
+                <Mail className={`w-3.5 h-3.5 transition-colors ${isActive("/contact") ? "text-purple-500" : "text-fg-dim/60"}`} />
                 Contact
               </Link>
             </nav>
@@ -326,7 +334,7 @@ export function Navbar() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                     }`}
                 >
-                  <Activity className="w-4 h-4" />
+                  <Activity className="w-4 h-4 text-red-500" />
                   Home
                 </Link>
                 <Link
@@ -334,7 +342,7 @@ export function Navbar() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/scores") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                     }`}
                 >
-                  <Trophy className="w-4 h-4" />
+                  <Trophy className="w-4 h-4 text-amber-500" />
                   Scores
                 </Link>
               </div>
@@ -357,7 +365,7 @@ export function Navbar() {
                     href="/live-matches"
                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
                   >
-                    <Tv className="w-4 h-4 text-red-500" />
+                    <Activity className="w-4 h-4 text-red-500 animate-pulse" />
                     Live Matches
                   </Link>
                 </div>
@@ -368,23 +376,28 @@ export function Navbar() {
                 <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
                   Sports
                 </h4>
-                <div className="space-y-1">
-                  {SPORTS.map(({ slug, label }) => (
-                    <Link
-                      key={slug}
-                      href={slug === "football" ? "/live-matches" : `/${slug}`}
-                      prefetch={false}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
-                        pathname === (slug === "football" ? "/live-matches" : `/${slug}`)
-                          ? "bg-hover-alt text-fg"
-                          : "text-fg-dim hover:text-fg hover:bg-hover"
-                      }`}
-                    >
-                      <Tv className="w-4 h-4 text-red-500" />
-                      {label}
-                    </Link>
-                  ))}
+                <div className="grid grid-cols-2 gap-1 px-2">
+                  {SPORTS.map(({ slug, label }) => {
+                    const isSportActive = pathname === (slug === "football" ? "/live-matches" : `/${slug}`) || (slug === "cricket" && pathname === "/cricket");
+                    return (
+                      <Link
+                        key={slug}
+                        href={slug === "football" ? "/live-matches" : `/${slug}`}
+                        prefetch={false}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
+                          isSportActive
+                            ? "bg-hover-alt text-fg font-bold"
+                            : "text-fg-dim hover:text-fg hover:bg-hover"
+                        }`}
+                      >
+                        <span className={`transition-colors duration-200 ${isSportActive ? "text-red-500" : "text-fg-dim/60"}`}>
+                          {getSportIcon(slug)}
+                        </span>
+                        <span>{label}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -407,7 +420,7 @@ export function Navbar() {
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/architecture") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                       }`}
                   >
-                    <Activity className="w-4 h-4" />
+                    <Activity className="w-4 h-4 text-blue-500" />
                     Architecture
                   </Link>
                   <Link
@@ -415,7 +428,7 @@ export function Navbar() {
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/docs/installation") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                       }`}
                   >
-                    <FileText className="w-4 h-4" />
+                    <FileText className="w-4 h-4 text-blue-500" />
                     Installation Guide
                   </Link>
                   <Link
@@ -440,7 +453,7 @@ export function Navbar() {
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/about") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                       }`}
                   >
-                    <Info className="w-4 h-4" />
+                    <Info className="w-4 h-4 text-blue-500" />
                     About Us
                   </Link>
                   <Link
@@ -448,7 +461,7 @@ export function Navbar() {
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/contact") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                       }`}
                   >
-                    <Mail className="w-4 h-4" />
+                    <Mail className="w-4 h-4 text-purple-500" />
                     Contact Us
                   </Link>
                   <Link
@@ -456,7 +469,7 @@ export function Navbar() {
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-colors ${isActive("/privacy") ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"
                       }`}
                   >
-                    <Shield className="w-4 h-4" />
+                    <Shield className="w-4 h-4 text-emerald-500" />
                     Privacy Policy
                   </Link>
                 </div>
