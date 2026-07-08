@@ -935,7 +935,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                                 
                                 <div className="w-full border-t border-border-alt/50 pt-3 flex items-center justify-between text-[10px] font-mono">
                                   <span className="truncate text-fg-dim max-w-[150px]">Category: {m.sport || "General"}</span>
-                                  <span className="px-2.5 py-1 border border-border-alt bg-card text-fg-dim font-bold rounded group-hover:text-red-500 group-hover:border-red-500/30 group-hover:bg-red-500/[0.02] transition-all">
+                                  <span className="px-2.5 py-1 border border-red-500/30 bg-red-500/10 text-red-400 font-bold rounded group-hover:bg-red-500/20 transition-all">
                                     [ Watch ]
                                   </span>
                                 </div>
@@ -1084,7 +1084,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                                   
                                   <div className="w-full border-t border-border-alt/50 pt-3 flex items-center justify-between text-[10px] font-mono">
                                     <span className="truncate text-fg-dim max-w-[150px]">{m.name}</span>
-                                    <span className="px-2.5 py-1 border border-border-alt bg-card text-fg-dim font-bold rounded group-hover:text-red-500 group-hover:border-red-500/30 group-hover:bg-red-500/[0.02] transition-all">
+                                    <span className="px-2.5 py-1 border border-red-500/30 bg-red-500/10 text-red-400 font-bold rounded group-hover:bg-red-500/20 transition-all">
                                       [ Watch ]
                                     </span>
                                   </div>
