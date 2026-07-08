@@ -129,14 +129,6 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const sp = useSearchParams();
   const urlMatch = sp?.get("m");
   const urlChannel = sp?.get("ch");
-  useEffect(() => {
-    if (!urlChannel && !urlMatch) {
-      setSelectedChannel(null);
-      setV2Match(null);
-      setV2Selected(null);
-      setV2Stream(null);
-    }
-  }, [urlChannel, urlMatch]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {
@@ -174,6 +166,19 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const [v2Stream, setV2Stream] = useState<ResolvedStream | null>(null);
   const [v2StreamLoading, setV2StreamLoading] = useState(false);
   const [v2StreamError, setV2StreamError] = useState(false);
+
+  // Restore/clear state when URL search params change (back/forward navigation)
+  useEffect(() => {
+    if (!urlChannel && !urlMatch) {
+      setSelectedChannel(null);
+      setV2Match(null);
+      setV2Selected(null);
+      setV2Stream(null);
+    } else if (urlMatch && (!v2Match || v2Match.slug !== urlMatch)) {
+      const found = matches.find((x) => x.slug === urlMatch);
+      if (found) setV2Match(found);
+    }
+  }, [urlChannel, urlMatch, matches, v2Match]);
 
   const apiBaseUrl = (getApiBaseUrl() || "").replace(/\/+$/, "");
   const { copied, copy: handleShare } = useCopyButton();
@@ -403,8 +408,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     setV2Selected(null);
     setV2Stream(null);
     setSearchQuery("");
-    router.push(`${pathname}?v=${apiVersion}`, { scroll: false });
-  }, [pathname, router, apiVersion]);
+  }, []);
 
   const switchServer = useCallback((v: ApiVersion) => {
     setApiVersion(v);
