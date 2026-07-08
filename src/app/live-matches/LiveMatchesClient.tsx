@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
 import { SPORTS, getSportLabel, getSportUrl, DEFAULT_SPORT, isNonNavSport, POSTER_247_MAP } from "@/lib/config";
@@ -125,22 +125,18 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const sportDropdownRef = useRef<HTMLDivElement>(null);
   const serverDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Re-sync state when user presses back/forward (URL changes without React re-render)
-  const [popRevision, setPopRevision] = useState(0);
+  // Sync state when URL search params change (back/forward navigation)
+  const sp = useSearchParams();
+  const urlMatch = sp?.get("m");
+  const urlChannel = sp?.get("ch");
   useEffect(() => {
-    const onPop = () => setPopRevision(v => v + 1);
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
-  useEffect(() => {
-    const { ch: urlCh, m: urlM } = getUrlParams();
-    if (!urlCh && !urlM) {
+    if (!urlChannel && !urlMatch) {
       setSelectedChannel(null);
       setV2Match(null);
       setV2Selected(null);
       setV2Stream(null);
     }
-  }, [popRevision]);
+  }, [urlChannel, urlMatch]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {
