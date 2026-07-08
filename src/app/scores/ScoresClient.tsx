@@ -414,6 +414,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
   const [query, setQuery] = useState("");
   const [data, setData] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
+  const [shortcutsExpanded, setShortcutsExpanded] = useState(false);
   // False until the first fetch settles (success OR failure) so we show a
   // skeleton on initial load instead of a premature "no matches" state.
   const [hasLoaded, setHasLoaded] = useState(!!initialData);
@@ -517,7 +518,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
             {/* Control panel for filters & date selector */}
             <div className="border border-border-alt bg-card/50 backdrop-blur p-4 rounded-xl space-y-4 shadow-xl">
               <DayStrip currentDate={date} onDateChange={handleDateChange} />
-              
+
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-border/80">
                 {/* Tabs */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -539,7 +540,7 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
                   ))}
                 </div>
 
-                 {/* Mobile Search & Refresh Group */}
+                  {/* Mobile Search & Refresh Group */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1 justify-end w-full sm:w-auto">
                   {/* Mobile-only Search input */}
                   <div className="relative w-full sm:max-w-[200px] lg:hidden">
@@ -551,6 +552,39 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
                       onChange={(e) => setQuery(e.target.value)}
                       className="w-full pl-8.5 pr-3 py-1.5 bg-input border border-border-alt text-[11px] font-mono text-fg placeholder:text-fg-faint focus:outline-none focus:border-red-500/50 rounded-sm transition-colors"
                     />
+                  </div>
+
+                  {/* Mobile Quick Shortcuts */}
+                  <div className="flex flex-wrap gap-1 lg:hidden">
+                    {(data?.competitions || []).slice(0, shortcutsExpanded ? undefined : 12).map((comp) => (
+                      <button
+                        key={comp.id}
+                        onClick={() => setQuery(comp.name)}
+                        className={`px-2 py-1 text-[8px] font-mono uppercase tracking-wider rounded-sm border transition-all cursor-pointer ${
+                          query.toLowerCase() === comp.name.toLowerCase()
+                            ? "bg-red-500/10 border-red-500/30 text-red-400"
+                            : "bg-hover border-border-alt text-fg-dim hover:text-fg hover:border-red-500/30"
+                        }`}
+                      >
+                        {comp.name}
+                      </button>
+                    ))}
+                    {(data?.competitions?.length || 0) > 12 && (
+                      <button
+                        onClick={() => setShortcutsExpanded(p => !p)}
+                        className="px-2 py-1 text-[8px] font-mono uppercase tracking-wider rounded-sm bg-blue-500/10 border border-blue-500/30 text-blue-400 cursor-pointer"
+                      >
+                        {shortcutsExpanded ? "Show less" : `+${(data?.competitions?.length || 0) - 12}`}
+                      </button>
+                    )}
+                    {query && (
+                      <button
+                        onClick={() => setQuery("")}
+                        className="px-2 py-1 text-[8px] font-mono uppercase tracking-wider rounded-sm bg-red-500/10 border border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all cursor-pointer"
+                      >
+                        Clear [x]
+                      </button>
+                    )}
                   </div>
 
                   {/* Refresh indicator */}
@@ -623,8 +657,8 @@ export default function ScoresClient({ initialData, currentDate }: Props) {
               </div>
             </div>
 
-            {/* Quick Shortcuts */}
-            <div className="border border-border-alt bg-card p-5 rounded-xl shadow-xl space-y-4">
+            {/* Quick Shortcuts - Desktop */}
+            <div className="hidden lg:block border border-border-alt bg-card p-5 rounded-xl shadow-xl space-y-4">
               <h3 className="text-xs font-mono uppercase tracking-widest text-fg font-semibold flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-red-500" />
                 Quick Shortcuts

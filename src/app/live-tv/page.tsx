@@ -504,7 +504,7 @@ export default function LiveTvPage() {
                   {sortedCountries.length > 12 && (
                     <button
                       onClick={() => setShowAllCountries(!showAllCountries)}
-                      className="text-[10px] font-mono tracking-wider px-2.5 py-1.5 border border-border-alt bg-card text-fg-faint hover:text-fg-dim transition-all cursor-pointer"
+                      className="text-[10px] font-mono tracking-wider px-2.5 py-1.5 border border-blue-500/30 bg-blue-500/10 text-blue-400 cursor-pointer"
                     >
                       {showAllCountries ? 'Less' : `+${sortedCountries.length - 12}`}
                     </button>
