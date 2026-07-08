@@ -14,7 +14,7 @@ export function ScoreTeamLogo({ team }: { team: GoalMatch["team_a"] }) {
   if (team.image_url) {
     return (
       <span className="w-9 h-9 rounded-full bg-input/40 border border-border-alt flex items-center justify-center overflow-hidden shrink-0">
-        <Image src={team.image_url} alt={team.name} width={28} height={28} className="object-contain" unoptimized style={{ width: "auto", height: "auto" }} />
+        <Image src={team.image_url} alt={team.name} width={28} height={28} className="object-contain" unoptimized fetchPriority="low" style={{ width: "auto", height: "auto" }} />
       </span>
     );
   }
@@ -52,7 +52,7 @@ export function MatchCard({ item }: { item: FeedMatch }) {
       <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-border-alt/70 bg-input/10">
         <span className="flex items-center gap-2 min-w-0">
           {competitionImage && (
-            <Image src={competitionImage} alt="" width={14} height={14} className="object-contain shrink-0" unoptimized style={{ width: "auto", height: "auto" }} />
+            <Image src={competitionImage} alt="" width={14} height={14} className="object-contain shrink-0" unoptimized fetchPriority="low" style={{ width: "auto", height: "auto" }} />
           )}
           <span className="text-[10px] font-mono text-fg-faint uppercase tracking-widest truncate">
             {m.round?.name || competition}
