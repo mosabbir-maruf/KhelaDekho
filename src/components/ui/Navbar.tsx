@@ -206,7 +206,7 @@ export function Navbar() {
                   <div
                     className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-50"
                   >
-                    <div className="border border-border-alt bg-page/80 backdrop-blur-md shadow-2xl p-3 rounded-xl min-w-[340px]">
+                    <div className="border border-border-alt bg-card shadow-2xl p-3 rounded-xl min-w-[340px]">
                       <div className="grid grid-cols-2 gap-1">
                         {SPORTS.map(({ slug, label }) => {
                           const isSportActive = pathname === (slug === "football" ? "/live-matches" : `/${slug}`) || (slug === "cricket" && pathname === "/cricket");
