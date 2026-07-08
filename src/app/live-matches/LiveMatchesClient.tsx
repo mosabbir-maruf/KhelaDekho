@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
-import { NAV_SPORTS, getSportLabel, DEFAULT_SPORT, isNonNavSport, POSTER_247_MAP } from "@/lib/config";
+import { SPORTS, getSportLabel, getSportUrl, DEFAULT_SPORT, isNonNavSport, POSTER_247_MAP } from "@/lib/config";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
@@ -567,6 +567,75 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {apiVersion === "v5" && (
+                <div className="relative" ref={sportDropdownRef}>
+                  <button
+                    onClick={() => {
+                      setIsSportDropdownOpen(p => !p);
+                      setIsServerDropdownOpen(false);
+                    }}
+                    className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 border border-border-alt text-[9px] sm:text-xs font-mono uppercase tracking-wider transition-all cursor-pointer bg-input text-fg-dim hover:text-fg hover:border-red-500/30 rounded-lg animate-fade-in"
+                  >
+                    {getSportLabel(sport)}
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isSportDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isSportDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 sm:right-auto mt-1.5 border border-border-alt bg-card p-1.5 shadow-2xl z-50 rounded-xl min-w-[160px] sm:min-w-[200px] max-h-[60dvh] overflow-y-auto">
+                      {SPORTS.map(({ slug, label }) => (
+                        <button
+                          key={slug}
+                          onClick={() => {
+                            setSport(slug);
+                            setV2Match(null);
+                            setSearchQuery("");
+                            setIsSportDropdownOpen(false);
+                            router.replace(getSportUrl(slug), { scroll: false });
+                          }}
+                          className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                            sport === slug
+                              ? "bg-red-500/10 text-red-500 font-bold"
+                              : "text-fg-dim hover:text-fg hover:bg-hover"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {!lockedVersion && (
+              <div className="relative" ref={serverDropdownRef}>
+                <button
+                  onClick={() => {
+                    setIsServerDropdownOpen((prev) => !prev);
+                    setIsSportDropdownOpen(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 border border-border-alt text-[10px] sm:text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] rounded-lg animate-fade-in"
+                >
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${meta.color}`} />
+                  <span className="text-nowrap">Switch Server</span>
+                  <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isServerDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 sm:left-auto mt-1.5 border border-border-alt bg-card p-1.5 shadow-2xl z-40 rounded-xl min-w-0 sm:min-w-[160px]">
+                    {(["v2", "v3", "v4", "v5"] as ApiVersion[]).map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => switchServer(v)}
+                        className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-md transition-all cursor-pointer flex items-center gap-2 ${apiVersion === v
+                            ? "text-red-500 bg-red-500/10 font-semibold"
+                            : "text-fg-dim hover:text-fg hover:bg-hover"
+                          }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${VERSION_META[v].color}`} />
+                        {v.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              )}
               <div className="flex items-center border border-border-alt bg-input p-0.5 rounded-lg shrink-0">
                 <button
                   type="button"
@@ -593,75 +662,6 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                   <List className="w-3.5 h-3.5" />
                 </button>
               </div>
-              {!lockedVersion && apiVersion === "v5" && (
-                <div className="relative" ref={sportDropdownRef}>
-                  <button
-                    onClick={() => {
-                      setIsSportDropdownOpen(p => !p);
-                      setIsServerDropdownOpen(false);
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono uppercase tracking-wider transition-all cursor-pointer bg-input text-fg-dim hover:text-fg hover:border-red-500/30 rounded-lg animate-fade-in"
-                  >
-                    {getSportLabel(sport)}
-                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isSportDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {isSportDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1.5 border border-border-alt bg-card p-1.5 shadow-2xl z-50 rounded-xl min-w-[180px] max-h-[60dvh] overflow-y-auto">
-                      {NAV_SPORTS.map(({ slug, label }) => (
-                        <button
-                          key={slug}
-                          onClick={() => {
-                            setSport(slug);
-                            setV2Match(null);
-                            setSearchQuery("");
-                            setIsSportDropdownOpen(false);
-                            router.replace(`/live-matches?v=v5${slug === DEFAULT_SPORT ? "" : `&s=${slug}`}`, { scroll: false });
-                          }}
-                          className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer ${
-                            sport === slug
-                              ? "bg-red-500/10 text-red-500 font-bold"
-                              : "text-fg-dim hover:text-fg hover:bg-hover"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {!lockedVersion && (
-              <div className="relative" ref={serverDropdownRef}>
-                <button
-                  onClick={() => {
-                    setIsServerDropdownOpen((prev) => !prev);
-                    setIsSportDropdownOpen(false);
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-border-alt text-xs font-mono transition-all cursor-pointer shrink-0 bg-input text-fg-dim hover:text-fg hover:border-red-500/30 hover:bg-red-500/[0.03] rounded-lg animate-fade-in"
-                >
-                  <span className={`w-2 h-2 rounded-full ${meta.color}`} />
-                  Switch Server
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isServerDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-                {isServerDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-1.5 border border-border-alt bg-card p-1.5 shadow-2xl z-40 rounded-xl min-w-[160px]">
-                    {(["v2", "v3", "v4", "v5"] as ApiVersion[]).map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => switchServer(v)}
-                        className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-md transition-all cursor-pointer flex items-center gap-2 ${apiVersion === v
-                            ? "text-red-500 bg-red-500/10 font-semibold"
-                            : "text-fg-dim hover:text-fg hover:bg-hover"
-                          }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${VERSION_META[v].color}`} />
-                        {v.toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              )}
             </div>
           </div>
 
