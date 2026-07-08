@@ -870,24 +870,24 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                           <p className="font-mono text-xs text-fg-dim">No streams currently available</p>
                         </div>
                       ) : viewMode === "list" ? (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                           {matches.map((m) => (
                             <button
                               key={m.slug}
                               type="button"
                               onClick={() => openMatch(m)}
-                              className="w-full text-left border border-border-alt bg-input hover:border-red-500/20 hover:bg-red-500/[0.02] transition-all duration-300 rounded-xl cursor-pointer group flex items-center gap-3 p-3"
+                              className="w-full text-left border border-border-alt bg-input hover:border-red-500/20 hover:bg-red-500/[0.02] transition-all duration-300 rounded-xl cursor-pointer group flex flex-wrap items-center gap-3 p-4 pt-9 sm:pt-7 relative"
                             >
-                              <div className="w-12 h-12 rounded-xl overflow-hidden border border-border-alt bg-hover shrink-0">
+                              <span className="absolute top-2 left-2 px-2 py-0.5 border border-emerald-500/30 bg-emerald-500/10 text-[7px] sm:text-[8px] font-mono uppercase text-emerald-400 font-bold rounded-full">LIVE</span>
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-border-alt bg-hover shrink-0">
                                 {m.poster ? (
                                   <img draggable={false} src={m.poster} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center"><Tv className="w-5 h-5 text-fg-dim" /></div>
                                 )}
                               </div>
-                              <span className="font-mono text-sm font-bold text-fg group-hover:text-red-400 transition-colors truncate flex-1 min-w-0">{m.name}</span>
-                              <span className="px-2.5 py-1 border border-emerald-500/30 bg-emerald-500/10 text-[8px] font-mono uppercase text-emerald-400 font-bold rounded-full shrink-0">LIVE</span>
-                              <span className="px-3 py-1.5 border border-border-alt bg-card text-[10px] font-mono text-fg-dim font-bold rounded-lg group-hover:text-red-500 group-hover:bg-red-500/[0.02] transition-all shrink-0">[ Watch ]</span>
+                              <span className="font-mono text-sm sm:text-base font-bold text-fg group-hover:text-red-400 transition-colors truncate flex-1 min-w-0 w-full sm:w-auto">{m.name}</span>
+                              <span className="w-full sm:w-auto mx-auto sm:mx-0 sm:ml-auto px-2.5 sm:px-3 py-2 sm:py-1.5 border border-red-500/30 bg-red-500/10 text-[10px] sm:text-xs font-mono text-red-400 font-bold rounded-lg group-hover:bg-red-500/20 group-hover:text-red-300 transition-all shrink-0 text-center">[ Watch ]</span>
                             </button>
                           ))}
                         </div>
@@ -961,7 +961,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                           <p className="font-mono text-xs text-fg-dim">No live matches currently available</p>
                         </div>
                       ) : viewMode === "list" ? (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                           {matches.map((m) => {
                             const hasTeams = m.team_a && m.team_b;
                             return (
@@ -969,25 +969,33 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                                 key={m.slug}
                                 type="button"
                                 onClick={() => openMatch(m)}
-                                className={`w-full text-left border ${
+                                 className={`w-full text-left border ${
                                   m.is_live
                                     ? "border-red-500/15 bg-red-500/[0.02] hover:border-red-500/40"
                                     : "border-border-alt bg-input hover:border-red-500/20"
-                                } transition-all duration-300 rounded-xl cursor-pointer group flex items-center gap-3 p-3`}
+                                } transition-all duration-300 rounded-xl cursor-pointer group flex flex-wrap items-center gap-3 p-4 pt-9 sm:pt-7 relative`}
                               >
+                                <span className={`absolute top-2 left-2 px-2 py-0.5 border text-[7px] sm:text-[8px] font-mono uppercase font-bold rounded-full ${
+                                  m.is_live
+                                    ? "border-red-500/30 bg-red-500/10 text-red-400"
+                                    : "border-blue-500/30 bg-blue-500/10 text-blue-400"
+                                }`}>
+                                  {m.is_live ? "LIVE" : "UPCOMING"}
+                                </span>
+
                                 {hasTeams ? (
-                                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    <div className="w-7 h-7 rounded-full overflow-hidden border border-border-alt bg-hover shrink-0">
+                                  <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
+                                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-border-alt bg-hover shrink-0">
                                       {m.team_a?.logo ? (
                                         <img draggable={false} src={m.team_a.logo} alt="" className="w-full h-full object-cover" />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center font-mono text-[9px] text-fg-dim">A</div>
                                       )}
                                     </div>
-                                    <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_a?.name}</span>
-                                    <span className="font-mono text-[9px] text-fg-faint font-bold shrink-0">VS</span>
-                                    <span className="font-mono text-xs font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_b?.name}</span>
-                                    <div className="w-7 h-7 rounded-full overflow-hidden border border-border-alt bg-hover shrink-0">
+                                    <span className="font-mono text-sm font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_a?.name}</span>
+                                    <span className="font-mono text-[10px] text-fg-faint font-bold shrink-0">VS</span>
+                                    <span className="font-mono text-sm font-bold text-fg truncate group-hover:text-red-400 transition-colors">{m.team_b?.name}</span>
+                                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-border-alt bg-hover shrink-0">
                                       {m.team_b?.logo ? (
                                         <img draggable={false} src={m.team_b.logo} alt="" className="w-full h-full object-cover" />
                                       ) : (
@@ -996,18 +1004,10 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                                     </div>
                                   </div>
                                 ) : (
-                                  <span className="font-mono text-sm font-bold text-fg group-hover:text-red-400 transition-colors truncate flex-1 min-w-0">{m.name}</span>
+                                  <span className="font-mono text-base font-bold text-fg group-hover:text-red-400 transition-colors truncate flex-1 min-w-0 w-full sm:w-auto">{m.name}</span>
                                 )}
 
-                                <span className={`px-2.5 py-1 border text-[8px] font-mono uppercase font-bold rounded-full shrink-0 ${
-                                  m.is_live
-                                    ? "border-red-500/30 bg-red-500/10 text-red-400"
-                                    : "border-blue-500/30 bg-blue-500/10 text-blue-400"
-                                }`}>
-                                  {m.is_live ? "LIVE" : "UPCOMING"}
-                                </span>
-
-                                <span className="px-3 py-1.5 border border-border-alt bg-card text-[10px] font-mono text-fg-dim font-bold rounded-lg group-hover:text-red-500 group-hover:bg-red-500/[0.02] transition-all shrink-0">
+                                <span className="w-full sm:w-auto mx-auto sm:mx-0 sm:ml-auto px-3 sm:px-4 py-2.5 sm:py-2 border border-red-500/30 bg-red-500/10 text-[10px] sm:text-xs font-mono text-red-400 font-bold rounded-lg group-hover:bg-red-500/20 group-hover:text-red-300 transition-all shrink-0 text-center">
                                   [ Watch ]
                                 </span>
                               </button>
