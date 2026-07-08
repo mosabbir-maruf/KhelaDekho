@@ -885,6 +885,23 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                                   )}
                                 </div>
                               </div>
+                            ) : m.poster ? (
+                              <div className="relative -mx-5 -mt-1 w-[calc(100%+2.5rem)] h-44 overflow-hidden bg-[#181818]">
+                                <img
+                                  draggable={false}
+                                  src={m.poster}
+                                  alt={m.name}
+                                  className="w-full h-full object-cover"
+                                  crossOrigin="anonymous"
+                                  onError={(e) => { e.currentTarget.style.display = "none"; }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0d] via-[#0c0c0d]/20 to-transparent" />
+                                <div className="absolute bottom-0 left-0 right-0 p-4">
+                                  <h3 className="font-mono text-sm font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] line-clamp-2 leading-snug">
+                                    {m.name}
+                                  </h3>
+                                </div>
+                              </div>
                             ) : (
                               <div className="py-2">
                                 <h3 className="font-mono text-sm font-bold text-fg group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
