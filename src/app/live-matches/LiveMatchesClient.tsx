@@ -270,9 +270,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
         if (fetched.length > 0) {
           const { ch: urlCh } = getUrlParams();
           const idOf = (ch: ChannelData) => String(ch.id ?? channelKey(ch.name));
-          const target = (urlCh && fetched.find(ch => idOf(ch) === urlCh))
-            || fetched.find(ch => ch.isDefault)
-            || fetched[0];
+          const target = urlCh && fetched.find(ch => idOf(ch) === urlCh);
           if (target) selectFlatChannel(target);
         }
       } catch {
