@@ -15,13 +15,108 @@ import Mail from "lucide-react/dist/esm/icons/mail";
 import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CommandSearch, useIsMac } from "@/components/ui/CommandSearch";
 import { event } from "@/lib/analytics";
+import { SPORTS } from "@/lib/config";
+
+const getSportIcon = (slug: string) => {
+  switch (slug) {
+    case "football":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          <path d="M2 12h20" />
+        </svg>
+      );
+    case "cricket":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="6" y1="18" x2="18" y2="6" />
+          <circle cx="18" cy="6" r="3" />
+          <path d="M6 18l-3 3" />
+        </svg>
+      );
+    case "motorsports":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="2" y="4" width="20" height="8" rx="2" />
+          <circle cx="6" cy="18" r="2" />
+          <circle cx="18" cy="18" r="2" />
+          <path d="M8 18h8" />
+        </svg>
+      );
+    case "basketball":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M6.2 6.2c2.4 2.4 2.4 6.4 0 8.8M17.8 6.2c-2.4 2.4-2.4 6.4 0 8.8" />
+          <path d="M2 12h20M12 2v20" />
+        </svg>
+      );
+    case "fight":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+      );
+    case "rugby":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
+          <path d="M12 2v20M2 12h20" />
+        </svg>
+      );
+    case "tennis":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a14.5 14.5 0 0 0 0 20M2 12a14.5 14.5 0 0 0 20 0" />
+        </svg>
+      );
+    case "golf":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="8" r="3" />
+          <path d="M12 11v8M10 19h4" />
+        </svg>
+      );
+    case "american-football":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2C6.5 2 2 7.5 2 12s4.5 10 10 10 10-7.5 10-10S17.5 2 12 2z" />
+          <path d="M7 12h10M9 9l6 6M15 9l-6 6" />
+        </svg>
+      );
+    case "afl":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <ellipse cx="12" cy="12" rx="10" ry="6" transform="rotate(-45 12 12)" />
+        </svg>
+      );
+    case "volleyball":
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a10 10 0 0 1 0 20" />
+          <path d="M2 12a10 10 0 0 1 20 0" />
+        </svg>
+      );
+    default:
+      return (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+      );
+  }
+};
 
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSportsOpen, setIsSportsOpen] = useState(false);
   const isMac = useIsMac();
   const pathname = usePathname();
 
@@ -91,14 +186,50 @@ export function Navbar() {
               >
                 Live Matches
               </Link>
-              <Link
-                href="/cricket"
-                prefetch={false}
-                className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/cricket") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
-                  }`}
+              <div
+                className="relative h-full"
+                onMouseEnter={() => setIsSportsOpen(true)}
+                onMouseLeave={() => setIsSportsOpen(false)}
               >
-                Cricket
-              </Link>
+                <button
+                  onClick={() => setIsSportsOpen(p => !p)}
+                  className={`px-3 lg:px-4 flex items-center gap-1.5 h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors cursor-pointer ${isSportsOpen ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
+                >
+                  Sports
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isSportsOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isSportsOpen && (
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 pt-1 z-50"
+                  >
+                    <div className="border border-border-alt bg-page/90 backdrop-blur-md shadow-2xl p-3 rounded-xl min-w-[340px]">
+                      <div className="grid grid-cols-2 gap-1">
+                        {SPORTS.map(({ slug, label }) => {
+                          const isSportActive = pathname === (slug === "football" ? "/live-matches" : `/${slug}`) || (slug === "cricket" && pathname === "/cricket");
+                          return (
+                            <Link
+                              key={slug}
+                              href={slug === "football" ? "/live-matches" : `/${slug}`}
+                              prefetch={false}
+                              onClick={() => setIsSportsOpen(false)}
+                              className={`flex items-center gap-2.5 px-3 py-2 text-[11px] font-mono uppercase tracking-wider rounded-lg transition-all duration-200 ${
+                                isSportActive
+                                  ? "text-red-500 bg-red-500/10 font-bold"
+                                  : "text-fg-dim hover:text-fg hover:bg-hover/80"
+                              }`}
+                            >
+                              <span className={`transition-colors duration-200 ${isSportActive ? "text-red-500" : "text-fg-dim/60"}`}>
+                                {getSportIcon(slug)}
+                              </span>
+                              <span>{label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <Link
                 href="/live-tv"
                 className={`px-3 lg:px-4 flex items-center h-full border-r border-border text-[11px] font-mono uppercase tracking-widest transition-colors ${isActive("/live-tv") ? "text-fg bg-hover" : "text-fg-dim hover:text-fg hover:bg-hover"
@@ -229,13 +360,31 @@ export function Navbar() {
                     <Tv className="w-4 h-4 text-red-500" />
                     Live Matches
                   </Link>
-                  <Link
-                    href="/cricket"
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-fg-dim hover:text-fg hover:bg-hover transition-colors"
-                  >
-                    <Tv className="w-4 h-4 text-red-500" />
-                    Cricket
-                  </Link>
+                </div>
+              </div>
+
+              {/* Sports */}
+              <div className="border-t border-border-alt pt-4">
+                <h4 className="text-[10px] font-semibold text-fg-dim uppercase tracking-widest mb-3 px-4">
+                  Sports
+                </h4>
+                <div className="space-y-1">
+                  {SPORTS.map(({ slug, label }) => (
+                    <Link
+                      key={slug}
+                      href={slug === "football" ? "/live-matches" : `/${slug}`}
+                      prefetch={false}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
+                        pathname === (slug === "football" ? "/live-matches" : `/${slug}`)
+                          ? "bg-hover-alt text-fg"
+                          : "text-fg-dim hover:text-fg hover:bg-hover"
+                      }`}
+                    >
+                      <Tv className="w-4 h-4 text-red-500" />
+                      {label}
+                    </Link>
+                  ))}
                 </div>
               </div>
 

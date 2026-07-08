@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
+import { SPORTS, getSportLabel, DEFAULT_SPORT } from "@/lib/config";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
@@ -90,9 +91,9 @@ function channelKey(name: string): string {
 }
 
 function getUrlParams() {
-  if (typeof window === "undefined") return { v: null, m: null, ch: null };
+  if (typeof window === "undefined") return { v: null, m: null, ch: null, s: null };
   const params = new URLSearchParams(window.location.search);
-  return { v: params.get("v"), m: params.get("m"), ch: params.get("ch") };
+  return { v: params.get("v"), m: params.get("m"), ch: params.get("ch"), s: params.get("s") };
 }
 
 export default function LiveMatchesClient({ initialVersion, initialSport, lockedVersion }: {
@@ -109,7 +110,11 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
-  const [sport, setSport] = useState(initialSport || "football");
+  const [isSportDropdownOpen, setIsSportDropdownOpen] = useState(false);
+  const [sport, setSport] = useState(() => {
+    const { s } = getUrlParams();
+    return s || initialSport || DEFAULT_SPORT;
+  });
   const sportRef = useRef(sport);
   sportRef.current = sport;
 
@@ -136,7 +141,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
 
   const meta = {
     ...VERSION_META[apiVersion],
-    label: lockedVersion && apiVersion === "v5" && sport === "cricket" ? "Cricket" : VERSION_META[apiVersion].label,
+    label: apiVersion === "v5" ? getSportLabel(sport) : VERSION_META[apiVersion].label,
   };
   const inMatchList = (apiVersion === "v2" || apiVersion === "v5") && !v2Match;
   const isMatchCentric = apiVersion === "v2" || apiVersion === "v5";
@@ -531,25 +536,37 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
             </div>
             <div className="flex items-center gap-2">
               {!lockedVersion && apiVersion === "v5" && (
-                <div className="flex border border-border-alt">
-                  {["football", "cricket"].map(s => (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setSport(s);
-                        setV2Match(null);
-                        setSearchQuery("");
-                        router.replace(`/live-matches?v=v5${s === "football" ? "" : `&s=${s}`}`, { scroll: false });
-                      }}
-                      className={`px-3 py-2 text-[10px] font-mono uppercase tracking-widest transition-all cursor-pointer ${
-                        sport === s
-                          ? "bg-red-500/10 text-red-300 border-b-2 border-red-500"
-                          : "bg-input text-fg-dim hover:text-fg"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsSportDropdownOpen(p => !p)}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-border-alt text-[10px] font-mono uppercase tracking-widest transition-all cursor-pointer bg-input text-fg-dim hover:text-fg hover:border-red-500/30"
+                  >
+                    {getSportLabel(sport)}
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isSportDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isSportDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 border border-border-alt bg-[#0c0c0d] py-1 shadow-2xl z-50 min-w-[160px] max-h-[60dvh] overflow-y-auto">
+                      {SPORTS.map(({ slug, label }) => (
+                        <button
+                          key={slug}
+                          onClick={() => {
+                            setSport(slug);
+                            setV2Match(null);
+                            setSearchQuery("");
+                            setIsSportDropdownOpen(false);
+                            router.replace(`/live-matches?v=v5${slug === DEFAULT_SPORT ? "" : `&s=${slug}`}`, { scroll: false });
+                          }}
+                          className={`w-full text-left px-4 py-2 text-xs font-mono transition-colors cursor-pointer ${
+                            sport === slug
+                              ? "bg-red-500/10 text-red-300"
+                              : "text-fg-dim hover:text-fg hover:bg-hover"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               {!lockedVersion && (

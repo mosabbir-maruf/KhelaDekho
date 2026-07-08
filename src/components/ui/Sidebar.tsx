@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Tv from "lucide-react/dist/esm/icons/tv";
@@ -13,9 +14,12 @@ import Mail from "lucide-react/dist/esm/icons/mail";
 import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import { SPORTS } from "@/lib/config";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [isSportsOpen, setIsSportsOpen] = useState(true);
 
   const isActive = (path: string) => pathname === path;
 
@@ -54,13 +58,32 @@ export function Sidebar() {
               </Link>
             </li>
             <li>
-              <Link
-                href="/cricket"
-                className={`${baseLinkClass} ${isActive("/cricket") ? activeLinkClass : inactiveLinkClass}`}
+              <button
+                onClick={() => setIsSportsOpen(p => !p)}
+                className={`${baseLinkClass} w-full ${isSportsOpen ? "bg-hover-alt text-fg" : "text-fg-dim hover:text-fg hover:bg-hover"}`}
               >
                 <Tv className="w-4 h-4 text-red-500 animate-pulse" />
-                Cricket
-              </Link>
+                Sports
+                <ChevronDown className={`w-3 h-3 ml-auto transition-transform duration-200 ${isSportsOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isSportsOpen && (
+                <ul className="mt-1 ml-4 space-y-0.5 border-l border-border-alt pl-2">
+                  {SPORTS.map(({ slug, label }) => {
+                    const href = slug === "football" ? "/live-matches" : `/${slug}`;
+                    return (
+                      <li key={slug}>
+                        <Link
+                          href={href}
+                          prefetch={false}
+                          className={`${baseLinkClass} text-xs ${isActive(href) || (slug === "cricket" && isActive("/cricket")) ? activeLinkClass : inactiveLinkClass}`}
+                        >
+                          {label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </li>
             <li>
               <Link
