@@ -286,6 +286,12 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       if (shakaPlayerRef.current) { try { shakaPlayerRef.current.destroy(); } catch {} shakaPlayerRef.current = null; }
       if (mpegtsPlayerRef.current) { try { mpegtsPlayerRef.current.destroy(); } catch {} mpegtsPlayerRef.current = null; }
       if (cleanupNativeListeners) { cleanupNativeListeners(); cleanupNativeListeners = null; }
+      const el = videoRef.current;
+      if (el) {
+        el.pause();
+        el.removeAttribute('src');
+        el.load();
+      }
     };
 
     const loadStream = async () => {
