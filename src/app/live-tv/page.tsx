@@ -113,19 +113,19 @@ export default function LiveTvPage() {
     return new URLSearchParams(window.location.search).get("ch");
   }
 
-  // Sync channel state when URL changes (back/forward navigation)
-  const prevChRef = useRef<string | null>(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Re-sync state when user presses back/forward (URL changes without React re-render)
+  const [popRevision, setPopRevision] = useState(0);
   useEffect(() => {
-    const ch = getUrlCh();
-    if (ch !== prevChRef.current) {
-      prevChRef.current = ch;
-      if (!ch) {
-        setSelectedChannel(null);
-        setResolvedStreamUrl(null);
-      }
+    const onPop = () => setPopRevision(v => v + 1);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  useEffect(() => {
+    if (!getUrlCh()) {
+      setSelectedChannel(null);
+      setResolvedStreamUrl(null);
     }
-  });
+  }, [popRevision]);
 
   // -------- Fetch channels --------
   useEffect(() => {

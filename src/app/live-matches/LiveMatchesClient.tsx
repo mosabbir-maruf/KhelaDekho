@@ -125,22 +125,22 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
   const sportDropdownRef = useRef<HTMLDivElement>(null);
   const serverDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Sync state when URL changes (back/forward navigation)
-  const prevSearchRef = useRef("");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Re-sync state when user presses back/forward (URL changes without React re-render)
+  const [popRevision, setPopRevision] = useState(0);
   useEffect(() => {
-    const search = window.location.search;
-    if (search !== prevSearchRef.current) {
-      prevSearchRef.current = search;
-      const { ch: urlCh, m: urlM } = getUrlParams();
-      if (!urlCh && !urlM) {
-        setSelectedChannel(null);
-        setV2Match(null);
-        setV2Selected(null);
-        setV2Stream(null);
-      }
+    const onPop = () => setPopRevision(v => v + 1);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  useEffect(() => {
+    const { ch: urlCh, m: urlM } = getUrlParams();
+    if (!urlCh && !urlM) {
+      setSelectedChannel(null);
+      setV2Match(null);
+      setV2Selected(null);
+      setV2Stream(null);
     }
-  });
+  }, [popRevision]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {
