@@ -21,7 +21,8 @@ import Clock from "lucide-react/dist/esm/icons/clock";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CommandSearch, useIsMac } from "@/components/ui/CommandSearch";
 import { event } from "@/lib/analytics";
-import { SPORTS, getSportUrl } from "@/lib/config";
+import { NAV_SPORTS, getSportUrl } from "@/lib/config";
+import { useIsActive } from "@/lib/routing";
 
 const getSportIcon = (slug: string) => {
   switch (slug) {
@@ -154,7 +155,7 @@ export function Navbar() {
     };
   }, [mobileMenuOpen]);
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = useIsActive();
 
   return (
     <>
@@ -203,7 +204,7 @@ export function Navbar() {
                   >
                     <div className="border border-border-alt bg-card shadow-2xl p-3 rounded-xl min-w-[340px]">
                       <div className="grid grid-cols-2 gap-1">
-                        {SPORTS.filter(s => s.slug !== "24/7-streams").map(({ slug, label }) => {
+                        {NAV_SPORTS.map(({ slug, label }) => {
                           const sportUrl = getSportUrl(slug);
                           const isSportActive = pathname === sportUrl || (slug === "cricket" && pathname === "/cricket");
                           return (
@@ -455,7 +456,7 @@ export function Navbar() {
                   Sports
                 </h4>
                 <div className="grid grid-cols-2 gap-1 px-2">
-                  {SPORTS.map(({ slug, label }) => {
+                  {NAV_SPORTS.map(({ slug, label }) => {
                     const sportUrl = getSportUrl(slug);
                     const isSportActive = pathname === sportUrl || (slug === "cricket" && pathname === "/cricket");
                     return (

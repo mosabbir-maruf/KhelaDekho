@@ -177,7 +177,7 @@ export default function DecryptionApiPage() {
                   </tr>
                   <tr className="border-b border-border-alt">
                     <td className="py-3 pr-4 text-fg font-bold">GET /api/v5/matches?sport=</td>
-                    <td className="py-3 pr-4">Match list (<code>?sport=football</code> or <code>?sport=cricket</code>; defaults to football)</td>
+                    <td className="py-3 pr-4">Match list (12 sports: football, cricket, motorsports, basketball, fight, rugby, tennis, golf, american-football, afl, volleyball, 24/7-streams; defaults to football)</td>
                     <td className="py-3 text-fg-faint">X-Key</td>
                   </tr>
                   <tr className="border-b border-border-alt">

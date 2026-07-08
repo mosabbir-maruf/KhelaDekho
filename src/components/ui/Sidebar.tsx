@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Search from "lucide-react/dist/esm/icons/search";
 import Home from "lucide-react/dist/esm/icons/home";
@@ -15,13 +14,13 @@ import Terminal from "lucide-react/dist/esm/icons/terminal";
 import Key from "lucide-react/dist/esm/icons/key";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
-import { SPORTS, getSportUrl } from "@/lib/config";
+import { NAV_SPORTS, getSportUrl } from "@/lib/config";
+import { useIsActive } from "@/lib/routing";
 
 export function Sidebar() {
-  const pathname = usePathname();
   const [isSportsOpen, setIsSportsOpen] = useState(true);
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = useIsActive();
 
   const baseLinkClass =
     "flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 border font-mono";
@@ -68,7 +67,7 @@ export function Sidebar() {
               </button>
               {isSportsOpen && (
                 <ul className="mt-1 ml-4 space-y-0.5 border-l border-border-alt pl-2">
-                  {SPORTS.map(({ slug, label }) => {
+                  {NAV_SPORTS.map(({ slug, label }) => {
                     const sportUrl = getSportUrl(slug);
                     return (
                       <li key={slug}>

@@ -27,7 +27,17 @@ KhelaDekho-Frontend/
 │   │   ├── page.tsx                 # Home (live scores hero + feed, auto-refresh 60s)
 │   │   ├── LiveScoresClient.tsx     # Client component: polls scores every 60s
 │   │   ├── ScoreCard.tsx            # Shared MatchCard + ScoreTeamLogo components
-│   │   ├── cricket/page.tsx         # Cricket matches (V5, locked, no server switcher)
+│   │   ├── cricket/               # Cricket (V5 locked)
+│   │   ├── motorsports/           # Motorsports (V5 locked)
+│   │   ├── basketball/            # Basketball (V5 locked)
+│   │   ├── fight/                 # Fight sports (V5 locked)
+│   │   ├── rugby/                 # Rugby (V5 locked)
+│   │   ├── tennis/                # Tennis (V5 locked)
+│   │   ├── golf/                  # Golf (V5 locked)
+│   │   ├── american-football/     # American Football (V5 locked)
+│   │   ├── afl/                   # AFL (V5 locked)
+│   │   ├── volleyball/            # Volleyball (V5 locked)
+│   │   ├── 24-7-streams/          # 24/7 entertainment channels (V5 locked)
 │   │   ├── layout.tsx               # Root layout (injects API URL + XKEY)
 │   │   ├── not-found.tsx            # Custom 404 page
 │   │   ├── manifest.ts / robots.ts / sitemap.ts  # PWA + SEO
@@ -64,7 +74,7 @@ KhelaDekho-Frontend/
 │   │   ├── ui/                      # Navbar, Sidebar, VideoPlayer, ChannelListItem, PageHero, StatsGrid, etc.
 │   │   └── GoogleAnalytics.tsx     # Analytics component
 │   ├── hooks/                       # useCopyButton, useDevicePlatform
-│   ├── lib/                         # api.ts, config.ts, logger.ts, streamSelector.ts, analytics.ts
+│   ├── lib/                         # api.ts, config.ts, logger.ts, routing.ts, streamSelector.ts, analytics.ts
 │   ├── data/                        # liveTv.ts (logo maps, category keywords)
 │   └── types/                       # Global type declarations
 ├── public/                          # Logo, meta image, PWA icons
@@ -93,9 +103,15 @@ from `GET /api/v5/tv/channels`), with automatic categorization, country detectio
 on-demand stream resolution through the V5 proxy. Falls back to the V3 KV playlist
 if the V5 backend is unavailable.
 
-The **Cricket** page (`/cricket`) uses the same V5 match infrastructure with
-`?sport=cricket` — no separate backend, no duplicated logic. It is locked to V5
-with no server switcher or admin override.
+All **sport-specific pages** (`/cricket`, `/motorsports`, `/basketball`, etc.) share
+the same V5 match infrastructure with their respective `?sport=` parameter — no
+separate backend, no duplicated logic (11 identically-structured route files). The
+`/24-7-streams` page uses `sport=24/7-streams` for 24/7 entertainment channels.
+
+The sport config lives in `src/lib/config.ts` as a single `SPORTS` array with 12
+entries. A `NAV_SPORTS` constant (filtered via `NON_NAV_SPORT_SLUGS`) excludes
+`24/7-streams` from dropdowns while keeping it accessible via direct URL or
+dedicated navbar link.
 
 ---
 

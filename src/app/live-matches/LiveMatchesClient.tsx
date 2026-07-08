@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getApiBaseUrl, getXKey, sanitizeBaseUrl } from "@/lib/api";
-import { SPORTS, getSportLabel, DEFAULT_SPORT } from "@/lib/config";
+import { NAV_SPORTS, getSportLabel, DEFAULT_SPORT, isNonNavSport } from "@/lib/config";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { ChannelListItem } from "@/components/ui/ChannelListItem";
 import { StatsGrid } from "@/components/ui/StatsGrid";
@@ -554,10 +554,10 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                 {meta.label}
               </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-fg font-mono leading-tight">
-                {sport === "24/7-streams" ? "24/7 Streams" : "Live Matches"}<span className="text-red-500">.</span>
+                {isNonNavSport(sport) ? getSportLabel(sport) : "Live Matches"}<span className="text-red-500">.</span>
               </h1>
               <p className="text-sm font-mono text-fg-dim max-w-2xl leading-relaxed">
-                {sport === "24/7-streams" ? `${matches.length} channel${matches.length !== 1 ? "s" : ""} available` : inMatchList ? `${matches.length} match${matches.length !== 1 ? "es" : ""} available` : `${listCount} channel${listCount !== 1 ? "s" : ""} indexed`}
+                {isNonNavSport(sport) ? `${matches.length} channel${matches.length !== 1 ? "s" : ""} available` : inMatchList ? `${matches.length} match${matches.length !== 1 ? "s" : ""} available` : `${listCount} channel${listCount !== 1 ? "s" : ""} indexed`}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -575,7 +575,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                   </button>
                   {isSportDropdownOpen && (
                     <div className="absolute top-full left-0 mt-1.5 border border-border-alt bg-card p-1.5 shadow-2xl z-50 rounded-xl min-w-[180px] max-h-[60dvh] overflow-y-auto">
-                      {SPORTS.filter(s => s.slug !== "24/7-streams").map(({ slug, label }) => (
+                      {NAV_SPORTS.map(({ slug, label }) => (
                         <button
                           key={slug}
                           onClick={() => {

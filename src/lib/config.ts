@@ -48,3 +48,13 @@ export function getSportUrl(slug: string): string {
 }
 
 export const DEFAULT_SPORT = "football";
+
+// Sports excluded from navigation dropdowns (but still accessible via direct links).
+export const NON_NAV_SPORT_SLUGS: ReadonlySet<string> = new Set(["24/7-streams"]);
+
+export function isNonNavSport(slug: string): boolean {
+  return NON_NAV_SPORT_SLUGS.has(slug);
+}
+
+// Sports shown in navigation dropdowns/menus.
+export const NAV_SPORTS: readonly SportConfig[] = SPORTS.filter(s => !NON_NAV_SPORT_SLUGS.has(s.slug));
