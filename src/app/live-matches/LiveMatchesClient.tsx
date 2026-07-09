@@ -336,7 +336,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
 
   // -------- V2 / V5: resolve a channel's stream on demand --------
   const resolveV2 = useRef<AbortController | null>(null);
-  const selectV2Channel = useCallback(async (ch: V2Channel) => {
+  const selectV2Channel = useCallback(async (ch: V2Channel, fresh = false) => {
     if (!v2Match) return;
     resolveV2.current?.abort();
     const controller = new AbortController();
@@ -348,7 +348,8 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     try {
       const versionPath = apiVersion === "v5" ? "v5" : "v2";
       const sportQ = apiVersion === "v5" ? `&sport=${sport}` : "";
-      const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/stream?ch=${encodeURIComponent(ch.id)}${sportQ}`, { signal: controller.signal, headers: authHeaders() });
+      const freshQ = fresh ? "&fresh=1" : "";
+      const res = await fetch(`${apiBaseUrl}/api/${versionPath}/matches/${encodeURIComponent(v2Match.slug)}/stream?ch=${encodeURIComponent(ch.id)}${sportQ}${freshQ}`, { signal: controller.signal, headers: authHeaders() });
       const body = res.ok ? await res.json() : {};
 
       const d = body?.data;
@@ -368,6 +369,13 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
       if (!controller.signal.aborted) setV2StreamLoading(false);
     }
   }, [apiBaseUrl, apiVersion, v2Match, sport, authHeaders]);
+
+  // Re-resolve the current stream with a fresh URL (bypasses the backend 45s
+  // stream cache). Used by the player's stall watchdog so a dead/expired stream
+  // auto-recovers without a manual page reload.
+  const reresolveV2Stream = useCallback(() => {
+    if (v2Selected) selectV2Channel(v2Selected, true);
+  }, [v2Selected, selectV2Channel]);
 
   // -------- V2 / V5: channels for the opened match --------
   useEffect(() => {
@@ -1173,7 +1181,7 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
                       {copied ? "Copied!" : "Share"}
                     </button>
                   </div>
-                  <VideoPlayer streamUrl={playerConfig.streamUrl} streamType={playerConfig.streamType} clearKeys={playerConfig.clearKeys} />
+                  <VideoPlayer streamUrl={playerConfig.streamUrl} streamType={playerConfig.streamType} clearKeys={playerConfig.clearKeys} onStall={reresolveV2Stream} />
                   <StatsGrid items={playerConfig.stats} />
                 </>
               )}

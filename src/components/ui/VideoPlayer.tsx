@@ -34,6 +34,7 @@ interface VideoPlayerProps {
   clearKeys?: Record<string, string> | null;
   fallbackSources?: StreamSource[];
   className?: string;
+  onStall?: () => void;
 }
 
 function base64ToHex(b64: string): string {
@@ -100,7 +101,7 @@ function detectType(url: string, hint: string): string {
   return "hls";
 }
 
-export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources, className }: VideoPlayerProps) {
+export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources, className, onStall }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -110,6 +111,9 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   const [showControls, setShowControls] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasPlayedRef = useRef(false);
+  const stallSinceRef = useRef<number | null>(null);
+  const stallHandledRef = useRef(false);
   const [levels, setLevels] = useState<{ id: number; name: string }[]>([]);
   const [currentLevel, setCurrentLevel] = useState<number>(-1);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
@@ -190,8 +194,21 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
     if (!video) return;
     const handlePlay = () => { setIsPlaying(true); resetControlsTimeout(); };
     const handlePause = () => { setIsPlaying(false); resetControlsTimeout(); };
-    const handleWaiting = () => { setIsLoading(true); setPlayerError(null); };
-    const handlePlaying = () => { setIsLoading(false); setPlayerError(null); if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; } };
+    const handleWaiting = () => {
+      setIsLoading(true);
+      setPlayerError(null);
+      // Only track stalls for a stream that has played at least once, so we
+      // never interrupt a slow initial load or a stream that never started.
+      if (hasPlayedRef.current) stallSinceRef.current = Date.now();
+    };
+    const handlePlaying = () => {
+      setIsLoading(false);
+      setPlayerError(null);
+      hasPlayedRef.current = true;
+      stallSinceRef.current = null;
+      stallHandledRef.current = false;
+      if (loadingTimeoutRef.current) { clearTimeout(loadingTimeoutRef.current); loadingTimeoutRef.current = null; }
+    };
     const handleLoadedMetadata = () => setIsLoading(false);
     video.addEventListener("play", handlePlay);
     video.addEventListener("pause", handlePause);
@@ -210,6 +227,27 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [resetControlsTimeout]);
+
+  // Stall watchdog: if a stream that was playing stalls (continuous "waiting")
+  // for longer than the threshold and auto-recovery (startLoad/recoverMediaError)
+  // hasn't cleared it, ask the parent to re-resolve a fresh stream URL instead
+  // of leaving the user stuck until a manual reload.
+  useEffect(() => {
+    if (!onStall) return;
+    const STALL_THRESHOLD_MS = 10000;
+    const id = setInterval(() => {
+      if (
+        hasPlayedRef.current &&
+        stallSinceRef.current !== null &&
+        !stallHandledRef.current &&
+        Date.now() - stallSinceRef.current >= STALL_THRESHOLD_MS
+      ) {
+        stallHandledRef.current = true;
+        onStall();
+      }
+    }, 2000);
+    return () => clearInterval(id);
+  }, [onStall]);
 
   const volumeRef = useRef(volume);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
@@ -252,6 +290,9 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
 
     const newType = detectType(effectiveUrl, effectiveType);
     /* eslint-disable react-hooks/set-state-in-effect */
+    hasPlayedRef.current = false;
+    stallSinceRef.current = null;
+    stallHandledRef.current = false;
     setIsLoading(true);
     setIsPlaying(false);
     setLevels([]);
