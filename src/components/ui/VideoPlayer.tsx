@@ -231,10 +231,11 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
   // Stall watchdog: if a stream that was playing stalls (continuous "waiting")
   // for longer than the threshold and auto-recovery (startLoad/recoverMediaError)
   // hasn't cleared it, ask the parent to re-resolve a fresh stream URL instead
-  // of leaving the user stuck until a manual reload.
+  // of leaving the user stuck until a manual reload. Threshold is kept short so
+  // recovery is near-instant; brief live rebuffers (< threshold) self-heal.
   useEffect(() => {
     if (!onStall) return;
-    const STALL_THRESHOLD_MS = 10000;
+    const STALL_THRESHOLD_MS = 5000;
     const id = setInterval(() => {
       if (
         hasPlayedRef.current &&
@@ -245,7 +246,7 @@ export function VideoPlayer({ streamUrl, streamType, clearKeys, fallbackSources,
         stallHandledRef.current = true;
         onStall();
       }
-    }, 2000);
+    }, 1000);
     return () => clearInterval(id);
   }, [onStall]);
 

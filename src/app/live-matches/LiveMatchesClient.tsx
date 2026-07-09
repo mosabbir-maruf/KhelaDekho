@@ -342,9 +342,15 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     const controller = new AbortController();
     resolveV2.current = controller;
     setV2Selected(ch);
-    setV2Stream(null);
-    setV2StreamError(false);
-    setV2StreamLoading(true);
+    if (fresh) {
+      // Re-resolve in place: keep the current player mounted and just swap the
+      // source on success (no "Resolving stream…" skeleton/unmount) so recovery
+      // from a stall is fast and seamless.
+      setV2StreamError(false);
+    } else {
+      setV2Stream(null);
+      setV2StreamLoading(true);
+    }
     try {
       const versionPath = apiVersion === "v5" ? "v5" : "v2";
       const sportQ = apiVersion === "v5" ? `&sport=${sport}` : "";
