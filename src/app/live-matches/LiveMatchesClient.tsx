@@ -416,7 +416,11 @@ export default function LiveMatchesClient({ initialVersion, initialSport, locked
     setV2Selected(null);
     setV2Stream(null);
     setSearchQuery("");
-  }, []);
+    // Strip ?m so the URL matches native browser back: the sync effect's clear
+    // branch then fires and the match view returns to the list. Without this,
+    // the stale ?m= keeps the match open (sync effect re-sets v2Match).
+    router.replace(`${pathname}?v=${apiVersion}`, { scroll: false });
+  }, [pathname, router, apiVersion]);
 
   const switchServer = useCallback((v: ApiVersion) => {
     setApiVersion(v);
